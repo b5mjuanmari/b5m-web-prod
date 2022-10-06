@@ -24,6 +24,7 @@ pas="web+"
 bd="bdet"
 usup="genasys"
 hosp="explogenamap"
+crn="$(echo "$0" | gawk 'BEGIN{FS="/"}{print NF}')"
 scr="$(echo "$0" | gawk 'BEGIN{FS="/"}{print $NF}')"
 log="$(echo "$0" | gawk -v dir="$dir" -v dat="$(date '+%Y%m%d')" 'BEGIN{FS="/"}{split($NF,a,".");print dir"/log/"a[1]"_"dat".log"}')"
 rm "$log" 2> /dev/null
@@ -34,7 +35,10 @@ source "${dir}/gpkg_sql.sh"
 # Funciones
 function msg {
 	# echo mensaje
-	echo -e "$1"
+	if [ $crn -le 2 ]
+	then
+		echo -e "$1"
+	fi
 	echo -e "$1" >> "$log"
 }
 
