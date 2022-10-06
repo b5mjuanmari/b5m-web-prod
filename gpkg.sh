@@ -5,9 +5,6 @@
 # Generación de Geopackages para los servicios de localización y consulta del b5m
 #
 
-# Dependencias
-source gpkg_sql.sh
-
 # Variables de entorno
 export ORACLE_HOME="/opt/oracle/instantclient"
 export LD_LIBRARY_PATH="$ORACLE_HOME"
@@ -31,6 +28,9 @@ scr="$(echo "$0" | gawk 'BEGIN{FS="/"}{print $NF}')"
 log="$(echo "$0" | gawk -v dir="$dir" -v dat="$(date '+%Y%m%d')" 'BEGIN{FS="/"}{split($NF,a,".");print dir"/log/"a[1]"_"dat".log"}')"
 rm "$log" 2> /dev/null
 
+# Dependencias
+source "${dir}/gpkg_sql.sh"
+
 # Funciones
 function msg {
 	# echo mensaje
@@ -42,7 +42,7 @@ function hacer_gpkg {
 	# Geopackage
 	t="GIPUTZ"
 	rm "$fgpkg" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" ${fgpkg} OCI:${usu}/${pas}@${bd}:${t} -nln "${nom}" -sql "${sql_a["${nom}"]}"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$fgpkg" OCI:${usu}/${pas}@${bd}:${t} -nln "$nom" -sql "${sql_a["$nom"]}"
 }
 
 function copiar_gpkg {
