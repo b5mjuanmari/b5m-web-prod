@@ -24,9 +24,14 @@ pas="web+"
 bd="bdet"
 usup="genasys"
 hosp="explogenamap"
+logd="${dir}/log"
 crn="$(echo "$0" | gawk 'BEGIN{FS="/"}{print NF}')"
 scr="$(echo "$0" | gawk 'BEGIN{FS="/"}{print $NF}')"
-log="$(echo "$0" | gawk -v dir="$dir" -v dat="$(date '+%Y%m%d')" 'BEGIN{FS="/"}{split($NF,a,".");print dir"/log/"a[1]"_"dat".log"}')"
+log="$(echo "$0" | gawk -v logd="$logd" -v dat="$(date '+%Y%m%d')" 'BEGIN{FS="/"}{split($NF,a,".");print logd"/"a[1]"_"dat".log"}')"
+if [ ! -d "$logd" ]
+then
+	mkdir "$logd" 2> /dev/null
+fi
 rm "$log" 2> /dev/null
 
 # Dependencias
