@@ -7,7 +7,8 @@
 
 declare -A sql_a
 
-# 1. m_municipalities (municipios)
+# 1. m_municipalities (municipios) (carga: 1')
+des_a["m_municipalities"]="Udalerriak / Municipios / Municipalities"
 sql_a["m_municipalities"]="select \
 b.idut idut, \
 a.url_2d b5mcode, \
@@ -24,7 +25,8 @@ where a.url_2d='M_'||b.codmuni \
 and b.codmuni=c.codmuni \
 and a.id_nombre1<>'996'"
 
-# 2. d_postaladdresses (direcciones postales)
+# 2. d_postaladdresses (direcciones postales) (carga: 8')
+des_a["d_postaladdresses"]="Posta helbideak / Direcciones postales / Postal Addresses"
 sql_a["d_postaladdresses"]="select \
 b.idut idut, \
 a.idnombre idname, \
@@ -51,7 +53,7 @@ where a.idnombre=c.idpostal \
 and c.idut=b.idut \
 order by a.idnombre"
 
-# 3. sg_geodeticbenchmarks (señales geodésicas)
+# 3. sg_geodeticbenchmarks (señales geodésicas) (carga: 25")
 sg_aju_eu="Doikuntza geodesikoa"
 sg_sen_eu="Seinale geodesikoa"
 sg_aju_es="Ajuste geodésico"
@@ -59,6 +61,7 @@ sg_sen_es="Señal geodésica"
 sg_aju_en="Geodetic Adjustment"
 sg_sen_en="Geodetic Benchmark"
 sg_url="https://b5m.gipuzkoa.eus/geodesia/pdf"
+des_a["sg_geodeticbenchmarks"]="Seinale geodesikoak / Señales geodésicas / Geodetic Benchmarks"
 sql_a["sg_geodeticbenchmarks"]="select \
 a.pgeod_id idgeodb, \
 'SG_'||a.pgeod_id b5mcode, \
@@ -79,6 +82,7 @@ and a.visible_web=1 \
 order by a.pgeod_id"
 
 # 4. dm_distancemunicipalities (distancia entre municipios) (carga: 14h)
+des_a["dm_distancemunicipalities"]="Udalerrien arteko distantzia / Distancia entre municipios / Distance Between Municipalities"
 sql_a["dm_distancemunicipalities"]="select \
 c.idut iddm, \
 'DM_'||a.codmuni||'_'||b.codmuni b5mcode, \
