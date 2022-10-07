@@ -54,22 +54,16 @@ function copiar_gpkg {
 	gpkg="${nom}.gpkg"
 	tmp="${nom}_tmp.gpkg"
 	/usr/bin/ssh ${usu2}@${hos2} <<-EOF1 > /dev/null 2> /dev/null
-	cd /tmp
-	rm "$gpkg"
+	cd "$gpkgp"
+	rm "$tmp"
 	EOF1
 	/usr/bin/sftp ${usup}@${hosp} <<-EOF1 > /dev/null 2> /dev/null
-	cd /tmp
-	put "$fgpkg"
+	cd "$gpkgp"
+	put "$fgpkg" "$tmp"
 	EOF1
 	/usr/bin/ssh ${usup}@${hosp} <<-EOF1 > /dev/null 2> /dev/null
 	cd "$gpkgp"
-	rm "$tmp"
-	cd /tmp
-	rm "$tmp"
-	mv "$gpkg" "$tmp"
 	rm "$gpkg"
-	mv "$tmp" "$gpkgp"
-	cd "$gpkgp"
 	mv "$tmp" "$gpkg"
 	rm "$tmp"
 	EOF1
