@@ -77,3 +77,33 @@ from o_mw_bta.puntogeodesicobta a,b5mweb_nombres.n_municipios b \
 where a.codmuni=b.codmuni \
 and a.visible_web=1 \
 order by a.pgeod_id"
+
+# 4. dm_distancemunicipalities (distancia entre municipios) (carga: 14h)
+sql_a["dm_distancemunicipalities"]="select \
+c.idut iddm, \
+'DM_'||a.codmuni||'_'||b.codmuni b5mcode, \
+a.codmuni codmuni1, \
+a.muni_eu muni1_eu, \
+a.muni_es muni1_es, \
+a.muni_fr muni1_fr, \
+decode(a.ter_eu,'Gipuzkoa','001','Araba','002','Bizkaia','003','Nafarroa','004','005') codterm1, \
+a.ter_eu term1_eu, \
+a.ter_es term1_es, \
+a.ter_fr term1_fr, \
+a.id_area id_area1, \
+b.codmuni codmuni2, \
+b.muni_eu muni2_eu, \
+b.muni_es muni2_es, \
+b.muni_fr muni2_fr, \
+decode(b.ter_eu,'Gipuzkoa','001','Araba','002','Bizkaia','003','Nafarroa','004','005') codterm2, \
+b.ter_eu term2_eu, \
+b.ter_es term2_es, \
+b.ter_fr term2_fr, \
+b.id_area id_area2, \
+c.dist_r, \
+c.dist_c, \
+c.fecha dm_date, \
+c.geom \
+from mapas_otros.dist_ayunta2_muni a,mapas_otros.dist_ayunta2_muni b,mapas_otros.dist_ayunta2 c \
+where a.codmuni=c.codmuni1 \
+and b.codmuni=c.codmuni2"
