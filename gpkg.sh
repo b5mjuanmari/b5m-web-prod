@@ -46,7 +46,7 @@ function hacer_gpkg {
 	# Geopackage
 	t="GIPUTZ"
 	rm "$fgpkg" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$fgpkg" OCI:${usu}/${pas}@${bd}:${t} -nln "$nom" -sql "${sql_a["$nom"]}"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -lco DESCRIPTION="${des_a["$nom"]}" "$fgpkg" OCI:${usu}/${pas}@${bd}:${t} -nln "$nom" -sql "${sql_a["$nom"]}"
 }
 
 function copiar_gpkg {
