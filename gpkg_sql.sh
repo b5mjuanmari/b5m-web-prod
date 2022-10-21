@@ -5,7 +5,9 @@
 # Sentencias SQL para la generación de geopakages
 #
 
+declare -A des_a
 declare -A sql_a
+declare -A idx_a
 
 # 1. m_municipalities (municipios) (carga: 1')
 des_a["m_municipalities"]="Udalerriak / Municipios / Municipalities"
@@ -24,8 +26,9 @@ from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.giputz b,b5mweb_nombres
 where a.url_2d='M_'||b.codmuni \
 and b.codmuni=c.codmuni \
 and a.id_nombre1<>'996'"
+idx_a["m_municipalities"]="b5mcode"
 
-# 2. d_postaladdresses (direcciones postales) (carga: 8')
+# 2. d_postaladdresses (direcciones postales) (carga: 4')
 des_a["d_postaladdresses"]="Posta helbideak / Direcciones postales / Postal Addresses"
 sql_a["d_postaladdresses"]="select \
 b.idut idut, \
@@ -52,8 +55,9 @@ from b5mweb_nombres.solr_edifdirpos a,b5mweb_25830.a_edifind b,b5mweb_nombres.n_
 where a.idnombre=c.idpostal \
 and c.idut=b.idut \
 order by a.idnombre"
+idx_a["d_postaladdresses"]="b5mcode"
 
-# 3. sg_geodeticbenchmarks (señales geodésicas) (carga: 25")
+# 3. sg_geodeticbenchmarks (señales geodésicas) (carga: 30")
 sg_aju_eu="Doikuntza geodesikoa"
 sg_sen_eu="Seinale geodesikoa"
 sg_aju_es="Ajuste geodésico"
@@ -80,6 +84,7 @@ from o_mw_bta.puntogeodesicobta a,b5mweb_nombres.n_municipios b \
 where a.codmuni=b.codmuni \
 and a.visible_web=1 \
 order by a.pgeod_id"
+idx_a["sg_geodeticbenchmarks"]="b5mcode"
 
 # 4. dm_distancemunicipalities (distancia entre municipios) (carga: 14h)
 des_a["dm_distancemunicipalities"]="Udalerrien arteko distantzia / Distancia entre municipios / Distance Between Municipalities"
@@ -111,3 +116,4 @@ c.geom \
 from mapas_otros.dist_ayunta2_muni a,mapas_otros.dist_ayunta2_muni b,mapas_otros.dist_ayunta2 c \
 where a.codmuni=c.codmuni1 \
 and b.codmuni=c.codmuni2"
+idx_a["dm_distancemunicipalities"]="b5mcode"
