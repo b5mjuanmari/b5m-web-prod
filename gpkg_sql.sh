@@ -57,7 +57,25 @@ and c.idut=b.idut \
 order by a.idnombre"
 idx_a["d_postaladdresses"]="b5mcode"
 
-# 3. sg_geodeticbenchmarks (señales geodésicas) (carga: 30")
+# 3. i_hydrography (hidrografía) (carga: 3')
+des_a["i_hydrography"]="Hidrografia / Hidrografía / Hydrography"
+sql_a["i_hydrography"]="select \
+a.idut idut, \
+a.idnombre idname, \
+'I_A'||a.idnombre b5mcode, \
+a.nom_e name_eu, \
+a.nom_c name_es, \
+a.idnomcuenca idbasinname, \
+a.cuenca_e basinname_eu, \
+a.cuenca_c basinname_es, \
+b.oculto hidden, \
+b.nivel \"LEVEL\", \
+b.polyline geom \
+from b5mweb_nombres.r_riotramo a,b5mweb_25830.ibai_plus b \
+where a.idut=b.idut"
+idx_a["i_hydrography"]="b5mcode"
+
+# 4. sg_geodeticbenchmarks (señales geodésicas) (carga: 30")
 sg_aju_eu="Doikuntza geodesikoa"
 sg_sen_eu="Seinale geodesikoa"
 sg_aju_es="Ajuste geodésico"
@@ -86,7 +104,7 @@ and a.visible_web=1 \
 order by a.pgeod_id"
 idx_a["sg_geodeticbenchmarks"]="b5mcode"
 
-# 4. dm_distancemunicipalities (distancia entre municipios) (carga: 14h)
+# 5. dm_distancemunicipalities (distancia entre municipios) (carga: 14h)
 des_a["dm_distancemunicipalities"]="Udalerrien arteko distantzia / Distancia entre municipios / Distance Between Municipalities"
 sql_a["dm_distancemunicipalities"]="select \
 c.idut iddm, \
@@ -117,3 +135,29 @@ from mapas_otros.dist_ayunta2_muni a,mapas_otros.dist_ayunta2_muni b,mapas_otros
 where a.codmuni=c.codmuni1 \
 and b.codmuni=c.codmuni2"
 idx_a["dm_distancemunicipalities"]="b5mcode"
+
+# 6. q_municipalcartography (cartografía municipal) (carga: 1'50")
+des_a["q_municipalcartography"]="Udal kartografiaren inbentarioa / Inventario de cartografía municipal / Municipal Cartography Inventory"
+sql_a["q_municipalcartography"]="select \
+a.id_levan, \
+'Q_' || a.id_levan b5mcode, \
+b.codmuni, \
+trim(regexp_substr(c.municipio,'[^/]+',1,1)) muni_eu, \
+decode(trim(regexp_substr(c.municipio,'[^/]+',1,2)),null,c.municipio,trim(regexp_substr(c.municipio,'[^/]+',1,2))) muni_es, \
+replace(a.nombre,'&#34;','') nombre_eu, \
+replace(a.nombre,'&#34;','') nombre_es, \
+a.propietario propietario_eu, \
+a.propietario propietario_es, \
+a.escala escala, \
+to_char(a.f_digitalizacion,'YYYY-MM-DD') f_digitalizacion, \
+to_char(a.f_levanoriginal,'YYYY-MM-DD') f_levanoriginal, \
+to_char(a.f_ultactua,'YYYY-MM-DD') f_ultactua, \
+a.empresa empresa, \
+'https://b5m.gipuzkoa.eus/map-2022/eu/Q_' || a.id_levan map_link_eu, \
+'https://b5m.gipuzkoa.eus/map-2022/es/Q_' || a.id_levan map_link_es, \
+d.polygon geom \
+from b5mweb_nombres.g_levancarto a,b5mweb_nombres.g_rel_muni_levan b,b5mweb_nombres.n_municipios c,b5mweb_25830.cardigind d \
+where a.tag=b.tag \
+and b.codmuni=c.codmuni \
+and a.tag=d.tag"
+idx_a["q_municipalcartography"]="b5mcode"
