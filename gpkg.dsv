@@ -1,0 +1,18 @@
+# Fichero de configuración para la creación de los geopackages (GPKG)
+# para los servicios de consulta y localización del b5m
+#
+# Descripción de los campos:
+#	Campo 1:
+#		0: no hacer gpkg
+#		1: hacer gpkg
+#		2: hacer gpkg y pasar a producción
+#		3: pasar a producción solo
+#	Campo 2: nombre del gpkg
+#	Campo 3: descripción
+
+0|m_municipalities|Municipios
+0|d_postaladdresses|Edificios con dirección postal
+2|i_hydrography|Hidrografía
+0|sg_geodeticbenchmarks|Señales geodésicas
+0|dm_distancemunicipalities|Distancias entre municipios
+0|q_municipalcartography|Cartografía municipal
