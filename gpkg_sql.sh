@@ -57,22 +57,24 @@ and c.idut=b.idut \
 order by a.idnombre"
 idx_a["d_postaladdresses"]="b5mcode"
 
-# 3. i_hydrography (hidrografía) (carga: 3')
+# 3. i_hydrography (hidrografía) (carga: 5')
 des_a["i_hydrography"]="Hidrografia / Hidrografía / Hydrography"
 sql_a["i_hydrography"]="select \
-a.idut idut, \
-a.idnombre idname, \
-'I_A'||a.idnombre b5mcode, \
-a.nom_e name_eu, \
-a.nom_c name_es, \
-a.idnomcuenca idbasinname, \
-a.cuenca_e basinname_eu, \
-a.cuenca_c basinname_es, \
-b.oculto hidden, \
-b.nivel \"LEVEL\", \
-b.polyline geom \
-from b5mweb_nombres.r_riotramo a,b5mweb_25830.ibai_plus b \
-where a.idut=b.idut"
+idut idut, \
+idnombre idname, \
+decode(idnombre,null,null,'I_A'||idnombre) b5mcode, \
+nom_e name_eu, \
+nom_c name_es, \
+idnomcuenca idbasinname, \
+cuenca_e basinname_eu, \
+cuenca_c basinname_es, \
+decode(subtipo,'ibarbidea / vaguada','ibarbidea','erreka / arroyo','erreka','ubidea / canal','ubidea','ibai ahoa / desembocadura','ibai ahoa','ibaia / río','ibaia',subtipo) type_eu, \
+decode(subtipo,'ibarbidea / vaguada','vaguada','erreka / arroyo','arroyo','ubidea / canal','canal','ibai ahoa / desembocadura','desembocadura','ibaia / río','río',subtipo) type_es, \
+decode(subtipo,'ibarbidea / vaguada','thalweg','erreka / arroyo','stream','ubidea / canal','channel','ibai ahoa / desembocadura','mouth','ibaia / río','river',subtipo) type_en, \
+oculto hidden, \
+nivel \"LEVEL\", \
+polyline geom \
+from b5mweb_25830.ibaiak"
 idx_a["i_hydrography"]="b5mcode"
 
 # 4. sg_geodeticbenchmarks (señales geodésicas) (carga: 30")
