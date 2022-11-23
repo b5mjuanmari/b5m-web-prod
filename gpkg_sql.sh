@@ -18,6 +18,7 @@ a.nombre_e name_eu, \
 a.nombre_c name_es, \
 b.codmuni codmuni, \
 c.comarca region, \
+b.idnomcomarca codregion, \
 a.tipo_e type_eu, \
 a.tipo_c type_es, \
 a.tipo_i type_en, \
