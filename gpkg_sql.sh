@@ -61,25 +61,24 @@ idx_a["d_postaladdresses"]="b5mcode"
 # 3. i_hydrography (hidrografía) (carga: 5')
 des_a["i_hydrography"]="Hidrografia / Hidrografía / Hydrography"
 sql_a["i_hydrography"]="select
-a.idut idut,
-a.idnombre idname,
-decode(a.idnombre,null,null,'I_A'||a.idnombre) b5mcode,
-a.nom_e name_eu,
-a.nom_c name_es,
-a.idnomcuenca idbasinname,
-a.cuenca_e basinname_eu,
-a.cuenca_c basinname_es,
-decode(a.subtipo,'ibarbidea / vaguada','ibarbidea','erreka / arroyo','erreka','ubidea / canal','ubidea','ibai ahoa / desembocadura','ibai ahoa','ibaia / río','ibaia',a.subtipo) type_eu,
-decode(a.subtipo,'ibarbidea / vaguada','vaguada','erreka / arroyo','arroyo','ubidea / canal','canal','ibai ahoa / desembocadura','desembocadura','ibaia / río','río',a.subtipo) type_es,
-decode(a.subtipo,'ibarbidea / vaguada','thalweg','erreka / arroyo','stream','ubidea / canal','channel','ibai ahoa / desembocadura','mouth','ibaia / río','river',a.subtipo) type_en,
-a.oculto hidden,
-a.nivel"LEVEL\",
-b.codmunis,
-b.muni_e muni_eu,
-b.muni_c muni_es,
-a.polyline geom
-from b5mweb_25830.ibaiak a, b5mweb_nombres.solr_gen_toponimia_2d b
-where to_char(a.idnombre)=b.id_nombre1"
+a.id_topo idtopo,
+a.id_nombre1 idname,
+a.url_2d b5mcode,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+a.tipo_e type_eu,
+a.tipo_c type_es,
+a.tipo_i type_en,
+b.idnomcuenca idbasinname,
+b.cuenca_e basinname_eu,
+b.cuenca_c basinname_es,
+a.codmunis idmunis,
+a.muni_e munis_eu,
+a.muni_c munis_es,
+sdo_aggr_concat_lines(b.polyline) geom
+from b5mweb_nombres.solr_gen_toponimia_2d a, b5mweb_25830.ibaiak b
+where a.id_nombre1=to_char(b.idnombre)
+group by(a.id_topo,a.id_nombre1,a.url_2d,a.nombre_e,a.nombre_c,b.idnomcuenca,b.cuenca_e,b.cuenca_c,a.tipo_e,a.tipo_c,a.tipo_i,a.codmunis,a.muni_e,a.muni_c)"
 idx_a["i_hydrography"]="b5mcode"
 
 # 4. sg_geodeticbenchmarks (señales geodésicas) (carga: 30")
