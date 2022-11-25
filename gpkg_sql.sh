@@ -28,7 +28,23 @@ and b.codmuni=c.codmuni
 group by (a.url_2d,b.codmuni,a.nombre_e,a.nombre_c,b.idnomcomarca,c.comarca,a.tipo_e,a.tipo_c,a.tipo_i)"
 idx_a["m_municipalities"]="b5mcode"
 
-# 2. d_postaladdresses (direcciones postales) (carga: 5')
+# 2. s_regions (comarcas) (carga: 1')
+des_a["s_regions"]="Eskualdeak / Comarcas / Regions"
+sql_a["s_regions"]="select
+a.url_2d b5mcode,
+b.idnomcomarca codregion,
+a.nom_e region_eu,
+a.nom_c region_es,
+a.tipo_e type_eu,
+a.tipo_c type_es,
+'region' type_en,
+sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.giputz b
+where a.url_2d='S_'||b.idnomcomarca
+group by (a.url_2d,b.idnomcomarca,a.nom_e,a.nom_c,a.tipo_e,a.tipo_c)"
+idx_a["s_regions"]="b5mcode"
+
+# 3. d_postaladdresses (direcciones postales) (carga: 5')
 des_a["d_postaladdresses"]="Posta helbideak / Direcciones postales / Postal Addresses"
 sql_a["d_postaladdresses"]="select
 a.idnombre idname,
@@ -57,7 +73,7 @@ group by(a.idnombre,a.idnombre,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,
 order by a.idnombre"
 idx_a["d_postaladdresses"]="b5mcode"
 
-# 3. i_hydrography (hidrografía) (carga: 3')
+# 4. i_hydrography (hidrografía) (carga: 3')
 des_a["i_hydrography"]="Hidrografia / Hidrografía / Hydrography"
 sql_a["i_hydrography"]="select
 a.id_topo idtopo,
@@ -80,7 +96,7 @@ where a.id_nombre1=to_char(b.idnombre)
 group by(a.id_topo,a.id_nombre1,a.url_2d,a.nombre_e,a.nombre_c,b.idnomcuenca,b.cuenca_e,b.cuenca_c,a.tipo_e,a.tipo_c,a.tipo_i,a.codmunis,a.muni_e,a.muni_c)"
 idx_a["i_hydrography"]="b5mcode"
 
-# 4. sg_geodeticbenchmarks (señales geodésicas) (carga: 30")
+# 5. sg_geodeticbenchmarks (señales geodésicas) (carga: 30")
 sg_aju_eu="Doikuntza geodesikoa"
 sg_sen_eu="Seinale geodesikoa"
 sg_aju_es="Ajuste geodésico"
@@ -109,7 +125,7 @@ and a.visible_web=1
 order by a.pgeod_id"
 idx_a["sg_geodeticbenchmarks"]="b5mcode"
 
-# 5. dm_distancemunicipalities (distancia entre municipios) (carga: 14h)
+# 6. dm_distancemunicipalities (distancia entre municipios) (carga: 14h)
 des_a["dm_distancemunicipalities"]="Udalerrien arteko distantzia / Distancia entre municipios / Distance Between Municipalities"
 sql_a["dm_distancemunicipalities"]="select
 c.idut iddm,
