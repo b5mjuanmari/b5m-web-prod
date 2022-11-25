@@ -17,15 +17,17 @@ b.codmuni codmuni,
 a.nombre_e name_eu,
 a.nombre_c name_es,
 b.idnomcomarca codregion,
-c.comarca region,
+d.nombre_e region_eu,
+d.nombre_c region_es,
 a.tipo_e type_eu,
 a.tipo_c type_es,
 a.tipo_i type_en,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
-from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.giputz b,b5mweb_nombres.n_municipios c
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.giputz b,b5mweb_nombres.n_municipios c,b5mweb_nombres.solr_gen_toponimia_2d d
 where a.url_2d='M_'||b.codmuni
 and b.codmuni=c.codmuni
-group by (a.url_2d,b.codmuni,a.nombre_e,a.nombre_c,b.idnomcomarca,c.comarca,a.tipo_e,a.tipo_c,a.tipo_i)"
+and to_char(b.idnomcomarca)=d.id_nombre1
+group by (a.url_2d,b.codmuni,a.nombre_e,a.nombre_c,b.idnomcomarca,d.nombre_e,d.nombre_c,a.tipo_e,a.tipo_c,a.tipo_i)"
 idx_a["m_municipalities"]="b5mcode"
 
 # 2. s_regions (comarcas) (carga: 1')
@@ -33,15 +35,15 @@ des_a["s_regions"]="Eskualdeak / Comarcas / Regions"
 sql_a["s_regions"]="select
 a.url_2d b5mcode,
 b.idnomcomarca codregion,
-a.nom_e region_eu,
-a.nom_c region_es,
+a.nombre_e region_eu,
+a.nombre_c region_es,
 a.tipo_e type_eu,
 a.tipo_c type_es,
 'region' type_en,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.giputz b
 where a.url_2d='S_'||b.idnomcomarca
-group by (a.url_2d,b.idnomcomarca,a.nom_e,a.nom_c,a.tipo_e,a.tipo_c)"
+group by (a.url_2d,b.idnomcomarca,a.nombre_e,a.nombre_c,a.tipo_e,a.tipo_c)"
 idx_a["s_regions"]="b5mcode"
 
 # 3. d_postaladdresses (direcciones postales) (carga: 5')
