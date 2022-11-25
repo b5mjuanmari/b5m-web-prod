@@ -28,12 +28,11 @@ and b.codmuni=c.codmuni
 group by (a.url_2d,b.codmuni,a.nombre_e,a.nombre_c,b.idnomcomarca,c.comarca,a.tipo_e,a.tipo_c,a.tipo_i)"
 idx_a["m_municipalities"]="b5mcode"
 
-# 2. d_postaladdresses (direcciones postales) (carga: 4')
+# 2. d_postaladdresses (direcciones postales) (carga: 5')
 des_a["d_postaladdresses"]="Posta helbideak / Direcciones postales / Postal Addresses"
 sql_a["d_postaladdresses"]="select
-b.idut idut,
 a.idnombre idname,
-'D_A'||idnombre b5mcode,
+'D_A'||a.idnombre b5mcode,
 a.codmuni codmuni,
 a.muni_e muni_eu,
 a.muni_c muni_es,
@@ -47,17 +46,18 @@ a.distrito coddistr,
 a.seccion codsec,
 a.nomedif_e name_eu,
 a.nomedif_c name_es,
-'ERAIKINA' type_eu,
-'EDIFICIO' type_es,
-'BUILDING' type_en,
-b.polygon geom
+'eraikina' type_eu,
+'edificio' type_es,
+'building' type_en,
+sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_edifdirpos a,b5mweb_25830.a_edifind b,b5mweb_nombres.n_rel_area_dirpos c
 where a.idnombre=c.idpostal
 and c.idut=b.idut
+group by(a.idnombre,a.idnombre,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c)
 order by a.idnombre"
 idx_a["d_postaladdresses"]="b5mcode"
 
-# 3. i_hydrography (hidrografía) (carga: 5')
+# 3. i_hydrography (hidrografía) (carga: 3')
 des_a["i_hydrography"]="Hidrografia / Hidrografía / Hydrography"
 sql_a["i_hydrography"]="select
 a.id_topo idtopo,
