@@ -85,16 +85,16 @@ a.distrito coddistr,
 a.seccion codsec,
 a.nomedif_e name_eu,
 a.nomedif_e name_es,
-'Z_A'||e.idnombre b5mcodes_district,
+decode(e.idnombre,null,null,'Z_A'||e.idnombre) b5mcodes_district,
 e.nom_e districts_eu,
 e.nom_c districts_es,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_edifdirpos a,b5mweb_25830.a_edifind b,b5mweb_nombres.n_rel_area_dirpos c,b5mweb_25830.barrioind d,b5mweb_nombres.b_barrios e
 where a.idnombre=c.idpostal
 and c.idut=b.idut
-and d.idut=e.idut
-and sdo_relate(b.polygon,d.polygon,'mask=ANYINTERACT')='TRUE'
-and e.tipout_e='auzoa1'
+and d.idut=e.idut(+)
+and sdo_relate(b.polygon,d.polygon(+),'mask=ANYINTERACT')='TRUE'
+and e.tipout_e(+)='auzoa1'
 group by (a.idnombre,a.idnombre,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,e.idnombre,e.nom_e,e.nom_c)
 order by a.idnombre)
 group by(idname,b5mcode,codmuni,muni_eu,muni_es,codstreet,street_eu,street_es,door_number,bis,postal_code,coddistr,codsec,name_eu,name_es)"
