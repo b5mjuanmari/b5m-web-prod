@@ -216,7 +216,25 @@ group by (a.idnombre,a.idnombre,a.codmuni,a.municipio_e,a.municipio_c,a.codcalle
 idx_a["d_postaladdresses"]="b5mcode"
 or2_a["d_postaladdresses"]="drop table gpkg_$$_dp_au_tmp;"
 
-# 4. i_hydrography (hidrografía) (carga: 3')
+# 4. c_basins (cuencas) (carga: 32")
+des_a["c_basins"]="Arroak / Cuencas / Basins"
+sql_a["c_basins"]="select
+a.url_2d b5mcode,
+b.idnombre b5mcode_basin,
+a.nombre_e basin_eu,
+a.nombre_c basin_es,
+a.tipo_e type_eu,
+a.tipo_c type_es,
+a.tipo_i type_en,
+a.codmunis idmunis,
+a.muni_e munis_eu,
+a.muni_c munis_es,
+b.polygon geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.cuencap b
+where a.url_2d='C_A'||b.idnombre"
+idx_a["c_basins"]="b5mcode"
+
+# 5. i_hydrography (hidrografía) (carga: 3')
 des_a["i_hydrography"]="Hidrografia / Hidrografía / Hydrography"
 sql_a["i_hydrography"]="select
 a.id_topo idtopo,
@@ -239,7 +257,7 @@ where a.id_nombre1=to_char(b.idnombre)
 group by(a.id_topo,a.id_nombre1,a.url_2d,a.nombre_e,a.nombre_c,b.idnomcuenca,b.cuenca_e,b.cuenca_c,a.tipo_e,a.tipo_c,a.tipo_i,a.codmunis,a.muni_e,a.muni_c)"
 idx_a["i_hydrography"]="b5mcode"
 
-# 5. sg_geodeticbenchmarks (señales geodésicas) (carga: 30")
+# 6. sg_geodeticbenchmarks (señales geodésicas) (carga: 30")
 sg_aju_eu="Doikuntza geodesikoa"
 sg_sen_eu="Seinale geodesikoa"
 sg_aju_es="Ajuste geodésico"
@@ -268,7 +286,7 @@ and a.visible_web=1
 order by a.pgeod_id"
 idx_a["sg_geodeticbenchmarks"]="b5mcode"
 
-# 6. dm_distancemunicipalities (distancia entre municipios) (carga: 14h)
+# 7. dm_distancemunicipalities (distancia entre municipios) (carga: 14h)
 des_a["dm_distancemunicipalities"]="Udalerrien arteko distantzia / Distancia entre municipios / Distance Between Municipalities"
 sql_a["dm_distancemunicipalities"]="select
 c.idut iddm,
@@ -300,7 +318,7 @@ where a.codmuni=c.codmuni1
 and b.codmuni=c.codmuni2"
 idx_a["dm_distancemunicipalities"]="b5mcode"
 
-# 6. q_municipalcartography (cartografía municipal) (carga: 1'50")
+# 8. q_municipalcartography (cartografía municipal) (carga: 1'50")
 des_a["q_municipalcartography"]="Udal kartografiaren inbentarioa / Inventario de cartografía municipal / Municipal Cartography Inventory"
 sql_a["q_municipalcartography"]="select
 a.id_levan,
