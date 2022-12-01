@@ -48,11 +48,31 @@ function msg {
 }
 
 function hacer_gpkg {
+	# Tareas Oracle 1
+	if [ "${or1_a["$nom"]}" != "" ]
+	then
+		sqlplus -s ${usu}/${pas}@${bd} <<-EOF2 > /dev/null
+		${or1_a["$nom"]}
+		
+		exit;
+		EOF2
+	fi
+	
 	# Geopackage
 	t="GIPUTZ"
 	rm "$fgpkg" 2> /dev/null
 	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -lco DESCRIPTION="${des_a["$nom"]}" "$fgpkg" OCI:${usu}/${pas}@${bd}:${t} -nln "$nom" -sql "${sql_a["$nom"]}" > /dev/null
 	ogrinfo -sql "create index ${nom}_idx1 on $nom (${idx_a["$nom"]})" "$fgpkg" > /dev/null
+	
+	# Tareas Oracle 2
+	if [ "${or2_a["$nom"]}" != "" ]
+	then
+		sqlplus -s ${usu}/${pas}@${bd} <<-EOF2 > /dev/null
+		${or2_a["$nom"]}
+		
+		exit;
+		EOF2
+	fi
 }
 
 function copiar_gpkg {
