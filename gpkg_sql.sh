@@ -49,55 +49,92 @@ idx_a["s_regions"]="b5mcode"
 # 3. d_postaladdresses (direcciones postales) (carga: 5')
 des_a["d_postaladdresses"]="Posta helbideak / Direcciones postales / Postal Addresses"
 sql_a["d_postaladdresses"]="select
-idname,
-b5mcode,
-codmuni,
-muni_eu,
-muni_es,
-codstreet,
-street_eu,
-street_es,
-door_number,
-bis,
-postal_code,
-coddistr,
-codsec,
-name_eu,
-name_es,
-listagg(b5mcodes_district,',') within group (order by districts_eu) b5mcodes_district,
-listagg(districts_eu,',') within group (order by districts_eu) districts_eu,
-listagg(districts_es,',') within group (order by districts_es) districts_es,
-sdo_aggr_union(sdoaggrtype(geom,0.005)) geom
-from (
-select
 a.idnombre idname,
 'D_A'||a.idnombre b5mcode,
 a.codmuni codmuni,
-a.muni_e muni_eu,
-a.muni_c muni_es,
+a.municipio_e muni_eu,
+a.municipio_c muni_es,
 a.codcalle codstreet,
 a.calle_e street_eu,
 a.calle_c street_es,
 a.noportal door_number,
 a.bis bis,
-decode(a.codpostal,' ',null,to_number(a.codpostal)) postal_code,
+decode(a.cp,' ',null,to_number(a.cp)) postal_code,
 a.distrito coddistr,
 a.seccion codsec,
 a.nomedif_e name_eu,
 a.nomedif_e name_es,
-decode(e.idnombre,null,null,'Z_A'||e.idnombre) b5mcodes_district,
-e.nom_e districts_eu,
-e.nom_c districts_es,
+d.b5mcodes_district,
+d.districts_eu,
+d.districts_es,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
-from b5mweb_nombres.solr_edifdirpos a,b5mweb_25830.a_edifind b,b5mweb_nombres.n_rel_area_dirpos c,b5mweb_25830.barrioind d,b5mweb_nombres.b_barrios e
+from b5mweb_nombres.solr_edifdirpos_2d a,b5mweb_25830.a_edifind b,b5mweb_nombres.n_rel_area_dirpos c,b5mweb_25830.dirpos_auzo d
 where a.idnombre=c.idpostal
 and c.idut=b.idut
-and d.idut=e.idut(+)
-and sdo_relate(b.polygon,d.polygon(+),'mask=ANYINTERACT')='TRUE'
-and e.tipout_e(+)='auzoa1'
-group by (a.idnombre,a.idnombre,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,e.idnombre,e.nom_e,e.nom_c)
-order by a.idnombre)
-group by(idname,b5mcode,codmuni,muni_eu,muni_es,codstreet,street_eu,street_es,door_number,bis,postal_code,coddistr,codsec,name_eu,name_es)"
+and a.idnombre=d.idnombre(+)
+group by (a.idnombre,a.idnombre,a.codmuni,a.municipio_e,a.municipio_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.cp,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,d.b5mcodes_district,d.districts_eu,d.districts_es)
+union all
+select
+a.idnombre idname,
+'D_A'||a.idnombre b5mcode,
+a.codmuni codmuni,
+a.municipio_e muni_eu,
+a.municipio_c muni_es,
+a.codcalle codstreet,
+a.calle_e street_eu,
+a.calle_c street_es,
+a.noportal door_number,
+a.bis bis,
+decode(a.cp,' ',null,to_number(a.cp)) postal_code,
+a.distrito coddistr,
+a.seccion codsec,
+a.nomedif_e name_eu,
+a.nomedif_e name_es,
+d.b5mcodes_district,
+d.districts_eu,
+d.districts_es,
+sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
+from b5mweb_nombres.solr_edifdirpos_2d a,b5mweb_25830.o_edifind b,b5mweb_nombres.n_rel_area_dirpos c,b5mweb_25830.dirpos_auzo d
+where a.idnombre=c.idpostal
+and c.idut=b.idut
+and a.idnombre=d.idnombre(+)
+and a.idnombre not in (
+select z.idpostal
+from b5mweb_25830.a_edifind y,b5mweb_nombres.n_rel_area_dirpos z
+where y.idut=z.idut
+)
+group by (a.idnombre,a.idnombre,a.codmuni,a.municipio_e,a.municipio_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.cp,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,d.b5mcodes_district,d.districts_eu,d.districts_es)
+union all
+select
+a.idnombre idname,
+'D_A'||a.idnombre b5mcode,
+a.codmuni codmuni,
+a.municipio_e muni_eu,
+a.municipio_c muni_es,
+a.codcalle codstreet,
+a.calle_e street_eu,
+a.calle_c street_es,
+a.noportal door_number,
+a.bis bis,
+decode(a.cp,' ',null,to_number(a.cp)) postal_code,
+a.distrito coddistr,
+a.seccion codsec,
+a.nomedif_e name_eu,
+a.nomedif_e name_es,
+d.b5mcodes_district,
+d.districts_eu,
+d.districts_es,
+sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
+from b5mweb_nombres.solr_edifdirpos_2d a,b5mweb_25830.s_edifind b,b5mweb_nombres.n_rel_area_dirpos c,b5mweb_25830.dirpos_auzo d
+where a.idnombre=c.idpostal
+and c.idut=b.idut
+and a.idnombre=d.idnombre(+)
+and a.idnombre not in (
+select z.idpostal
+from b5mweb_25830.a_edifind y,b5mweb_nombres.n_rel_area_dirpos z
+where y.idut=z.idut
+)
+group by (a.idnombre,a.idnombre,a.codmuni,a.municipio_e,a.municipio_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.cp,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,d.b5mcodes_district,d.districts_eu,d.districts_es)"
 idx_a["d_postaladdresses"]="b5mcode"
 
 # 4. i_hydrography (hidrografía) (carga: 3')
