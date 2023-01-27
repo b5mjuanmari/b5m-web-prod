@@ -11,7 +11,7 @@ declare -A idx_a
 declare -A or1_a
 declare -A or2_a
 
-# 1. m_municipalities (municipios) (carga: 1')
+# 1. m_municipalities (municipios) (carga: 10")
 des_a["m_municipalities"]="Udalerriak / Municipios / Municipalities"
 sql_a["m_municipalities"]="select
 a.url_2d b5mcode,
@@ -32,7 +32,7 @@ and to_char(b.idnomcomarca)=d.id_nombre1(+)
 group by (a.url_2d,b.codmuni,a.nombre_e,a.nombre_c,b.idnomcomarca,d.nombre_e,d.nombre_c,a.tipo_e,a.tipo_c,a.tipo_i)"
 idx_a["m_municipalities"]="b5mcode"
 
-# 2. s_regions (comarcas) (carga: 1')
+# 2. s_regions (comarcas) (carga: 24")
 des_a["s_regions"]="Eskualdeak / Comarcas / Regions"
 sql_a["s_regions"]="select
 a.url_2d b5mcode,
@@ -48,10 +48,10 @@ where a.url_2d='S_'||b.idnomcomarca
 group by (a.url_2d,b.idnomcomarca,a.nombre_e,a.nombre_c,a.tipo_e,a.tipo_c)"
 idx_a["s_regions"]="b5mcode"
 
-# 3. d_postaladdresses (direcciones postales) (carga: 7')
+# 3. d_postaladdresses (direcciones postales) (carga: 4')
 des_a["d_postaladdresses"]="Posta helbideak / Direcciones postales / Postal Addresses"
-or1_a["d_postaladdresses"]="drop table gpkg_$$_dp_au_tmp;
-create table gpkg_$$_dp_au_tmp as
+or1_a["d_postaladdresses"]="drop table gpkg_$$_d_tmp;
+create table gpkg_$$_d_tmp as
 select
 idnombre,
 listagg(b5mcodes_district,',') within group (order by districts_eu) b5mcodes_district,
@@ -124,8 +124,8 @@ where y.idut=z.idut
 group by (a.idnombre,e.idnombre,e.nom_e,e.nom_c)
 order by a.idnombre)
 group by(idnombre);
-alter table gpkg_$$_dp_au_tmp
-add constraint gpkg_$$_dp_au_tmp_pk primary key(idnombre);"
+alter table gpkg_$$_d_tmp
+add constraint gpkg_$$_d_tmp_pk primary key(idnombre);"
 sql_a["d_postaladdresses"]="select
 a.idnombre idname,
 'D_A'||a.idnombre b5mcode,
@@ -146,7 +146,7 @@ d.b5mcodes_district,
 d.districts_eu,
 d.districts_es,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
-from b5mweb_nombres.solr_edifdirpos_2d a,b5mweb_25830.a_edifind b,b5mweb_nombres.n_rel_area_dirpos c,b5mweb_25830.gpkg_$$_dp_au_tmp d
+from b5mweb_nombres.solr_edifdirpos_2d a,b5mweb_25830.a_edifind b,b5mweb_nombres.n_rel_area_dirpos c,b5mweb_25830.gpkg_$$_d_tmp d
 where a.idnombre=c.idpostal
 and c.idut=b.idut
 and a.idnombre=d.idnombre(+)
@@ -172,7 +172,7 @@ d.b5mcodes_district,
 d.districts_eu,
 d.districts_es,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
-from b5mweb_nombres.solr_edifdirpos_2d a,b5mweb_25830.o_edifind b,b5mweb_nombres.n_rel_area_dirpos c,b5mweb_25830.gpkg_$$_dp_au_tmp d
+from b5mweb_nombres.solr_edifdirpos_2d a,b5mweb_25830.o_edifind b,b5mweb_nombres.n_rel_area_dirpos c,b5mweb_25830.gpkg_$$_d_tmp d
 where a.idnombre=c.idpostal
 and c.idut=b.idut
 and a.idnombre=d.idnombre(+)
@@ -203,7 +203,7 @@ d.b5mcodes_district,
 d.districts_eu,
 d.districts_es,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
-from b5mweb_nombres.solr_edifdirpos_2d a,b5mweb_25830.s_edifind b,b5mweb_nombres.n_rel_area_dirpos c,b5mweb_25830.gpkg_$$_dp_au_tmp d
+from b5mweb_nombres.solr_edifdirpos_2d a,b5mweb_25830.s_edifind b,b5mweb_nombres.n_rel_area_dirpos c,b5mweb_25830.gpkg_$$_d_tmp d
 where a.idnombre=c.idpostal
 and c.idut=b.idut
 and a.idnombre=d.idnombre(+)
@@ -214,9 +214,151 @@ where y.idut=z.idut
 )
 group by (a.idnombre,a.idnombre,a.codmuni,a.municipio_e,a.municipio_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.cp,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,d.b5mcodes_district,d.districts_eu,d.districts_es)"
 idx_a["d_postaladdresses"]="b5mcode"
-or2_a["d_postaladdresses"]="drop table gpkg_$$_dp_au_tmp;"
+or2_a["d_postaladdresses"]="drop table gpkg_$$_d_tmp;"
 
-# 4. c_basins (cuencas) (carga: 32")
+# 4. e_buildings (Edficios) (carga: 30")
+des_a["e_buildings"]="Eraikinak / Edficios / Buildings"
+or1_a["e_buildings"]="drop table gpkg_$$_e_tmp;
+create table gpkg_$$_e_tmp as
+select
+idut,
+listagg(b5mcodes_district,',') within group (order by districts_eu) b5mcodes_district,
+listagg(districts_eu,',') within group (order by districts_eu) districts_eu,
+listagg(districts_es,',') within group (order by districts_es) districts_es
+from (
+select
+a.idut idut,
+decode(d.idnombre,null,null,'Z_A'||d.idnombre) b5mcodes_district,
+d.nom_e districts_eu,
+d.nom_c districts_es
+from b5mweb_nombres.n_edifgen a,b5mweb_25830.a_edifind b,b5mweb_25830.barrioind c,b5mweb_nombres.b_barrios d
+where a.idut=b.idut
+and c.idut=d.idut
+and sdo_relate(b.polygon,c.polygon,'mask=ANYINTERACT')='TRUE'
+and d.tipout_e='auzoa1'
+group by (a.idut,d.idnombre,d.nom_e,d.nom_c)
+order by a.idut)
+group by(idut)
+union
+select
+idut,
+listagg(b5mcodes_district,',') within group (order by districts_eu) b5mcodes_district,
+listagg(districts_eu,',') within group (order by districts_eu) districts_eu,
+listagg(districts_es,',') within group (order by districts_es) districts_es
+from (
+select
+a.idut idut,
+decode(d.idnombre,null,null,'Z_A'||d.idnombre) b5mcodes_district,
+d.nom_e districts_eu,
+d.nom_c districts_es
+from b5mweb_nombres.n_edifgen a,b5mweb_25830.o_edifind b,b5mweb_25830.barrioind c,b5mweb_nombres.b_barrios d
+where a.idut=b.idut
+and c.idut=d.idut
+and sdo_relate(b.polygon,c.polygon,'mask=ANYINTERACT')='TRUE'
+and d.tipout_e='auzoa1'
+group by (a.idut,d.idnombre,d.nom_e,d.nom_c)
+order by a.idut)
+group by(idut)
+union
+select
+idut,
+listagg(b5mcodes_district,',') within group (order by districts_eu) b5mcodes_district,
+listagg(districts_eu,',') within group (order by districts_eu) districts_eu,
+listagg(districts_es,',') within group (order by districts_es) districts_es
+from (
+select
+a.idut idut,
+decode(d.idnombre,null,null,'Z_A'||d.idnombre) b5mcodes_district,
+d.nom_e districts_eu,
+d.nom_c districts_es
+from b5mweb_nombres.n_edifgen a,b5mweb_25830.s_edifind b,b5mweb_25830.barrioind c,b5mweb_nombres.b_barrios d
+where a.idut=b.idut
+and c.idut=d.idut
+and sdo_relate(b.polygon,c.polygon,'mask=ANYINTERACT')='TRUE'
+and d.tipout_e='auzoa1'
+group by (a.idut,d.idnombre,d.nom_e,d.nom_c)
+order by a.idut)
+group by(idut);
+alter table gpkg_$$_e_tmp
+add constraint gpkg_$$_e_tmp_pk primary key(idut);"
+sql_a["e_buildings"]="select
+a.idut idname,
+'E_A'||a.idut b5mcode,
+a.codmuni codmuni,
+a.muni_e muni_eu,
+a.muni_c muni_es,
+a.codcalle codstreet,
+a.calle_e street_eu,
+a.calle_c street_es,
+a.noportal door_number,
+a.bis bis,
+decode(a.codpostal,' ',null,to_number(a.codpostal)) postal_code,
+a.distrito coddistr,
+a.seccion codsec,
+a.nomedif_e name_eu,
+a.nomedif_e name_es,
+c.b5mcodes_district,
+c.districts_eu,
+c.districts_es,
+sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
+from b5mweb_nombres.n_edifgen a,b5mweb_25830.a_edifind b,b5mweb_25830.gpkg_$$_e_tmp c
+where a.idut=b.idut
+and a.idut=c.idut(+)
+group by (a.idut,a.idut,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,c.b5mcodes_district,c.districts_eu,c.districts_es)
+union all
+select
+a.idut idname,
+'E_A'||a.idut b5mcode,
+a.codmuni codmuni,
+a.muni_e muni_eu,
+a.muni_c muni_es,
+a.codcalle codstreet,
+a.calle_e street_eu,
+a.calle_c street_es,
+a.noportal door_number,
+a.bis bis,
+decode(a.codpostal,' ',null,to_number(a.codpostal)) postal_code,
+a.distrito coddistr,
+a.seccion codsec,
+a.nomedif_e name_eu,
+a.nomedif_e name_es,
+c.b5mcodes_district,
+c.districts_eu,
+c.districts_es,
+sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
+from b5mweb_nombres.n_edifgen a,b5mweb_25830.o_edifind b,b5mweb_25830.gpkg_$$_e_tmp c
+where a.idut=b.idut
+and a.idut=c.idut(+)
+group by (a.idut,a.idut,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,c.b5mcodes_district,c.districts_eu,c.districts_es)
+union all
+select
+a.idut idname,
+'E_A'||a.idut b5mcode,
+a.codmuni codmuni,
+a.muni_e muni_eu,
+a.muni_c muni_es,
+a.codcalle codstreet,
+a.calle_e street_eu,
+a.calle_c street_es,
+a.noportal door_number,
+a.bis bis,
+decode(a.codpostal,' ',null,to_number(a.codpostal)) postal_code,
+a.distrito coddistr,
+a.seccion codsec,
+a.nomedif_e name_eu,
+a.nomedif_e name_es,
+c.b5mcodes_district,
+c.districts_eu,
+c.districts_es,
+sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
+from b5mweb_nombres.n_edifgen a,b5mweb_25830.s_edifind b,b5mweb_25830.gpkg_$$_e_tmp c
+where a.idut=b.idut
+and a.idut=c.idut(+)
+group by (a.idut,a.idut,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,c.b5mcodes_district,c.districts_eu,c.districts_es)"
+idx_a["e_buildings"]="b5mcode"
+or2_a["e_buildings"]="drop table gpkg_$$_e_tmp;"
+
+# 5. c_basins (cuencas) (carga: 4")
 des_a["c_basins"]="Arroak / Cuencas / Basins"
 sql_a["c_basins"]="select
 a.url_2d b5mcode,
@@ -234,7 +376,7 @@ from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.cuencap b
 where a.url_2d='C_A'||b.idnombre"
 idx_a["c_basins"]="b5mcode"
 
-# 5. i_hydrography (hidrografía) (carga: 3')
+# 6. i_hydrography (hidrografía) (carga: 45")
 des_a["i_hydrography"]="Hidrografia / Hidrografía / Hydrography"
 sql_a["i_hydrography"]="select
 a.id_topo idtopo,
@@ -257,7 +399,7 @@ where a.id_nombre1=to_char(b.idnombre)
 group by(a.id_topo,a.id_nombre1,a.url_2d,a.nombre_e,a.nombre_c,b.idnomcuenca,b.cuenca_e,b.cuenca_c,a.tipo_e,a.tipo_c,a.tipo_i,a.codmunis,a.muni_e,a.muni_c)"
 idx_a["i_hydrography"]="b5mcode"
 
-# 6. sg_geodeticbenchmarks (señales geodésicas) (carga: 30")
+# 7. sg_geodeticbenchmarks (señales geodésicas) (carga: 5")
 sg_aju_eu="Doikuntza geodesikoa"
 sg_sen_eu="Seinale geodesikoa"
 sg_aju_es="Ajuste geodésico"
@@ -286,7 +428,7 @@ and a.visible_web=1
 order by a.pgeod_id"
 idx_a["sg_geodeticbenchmarks"]="b5mcode"
 
-# 7. dm_distancemunicipalities (distancia entre municipios) (carga: 14h)
+# 8. dm_distancemunicipalities (distancia entre municipios) (carga: 14h)
 des_a["dm_distancemunicipalities"]="Udalerrien arteko distantzia / Distancia entre municipios / Distance Between Municipalities"
 sql_a["dm_distancemunicipalities"]="select
 c.idut iddm,
@@ -318,7 +460,7 @@ where a.codmuni=c.codmuni1
 and b.codmuni=c.codmuni2"
 idx_a["dm_distancemunicipalities"]="b5mcode"
 
-# 8. q_municipalcartography (cartografía municipal) (carga: 1'50")
+# 9. q_municipalcartography (cartografía municipal) (carga: 20")
 des_a["q_municipalcartography"]="Udal kartografiaren inbentarioa / Inventario de cartografía municipal / Municipal Cartography Inventory"
 sql_a["q_municipalcartography"]="select
 a.id_levan,
