@@ -11,8 +11,11 @@
 #	Campo 3: descripción
 
 0|m_municipalities|Municipios
+2|s_regions|Comarcas
 0|d_postaladdresses|Edificios con dirección postal
-2|i_hydrography|Hidrografía
+0|e_buildings|Edificios con nombre y/o dirección postal
+0|c_basins|Cuencas
+0|i_hydrography|Hidrografía
 0|sg_geodeticbenchmarks|Señales geodésicas
 0|dm_distancemunicipalities|Distancias entre municipios
 0|q_municipalcartography|Cartografía municipal
