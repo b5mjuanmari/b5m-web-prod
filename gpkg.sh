@@ -87,6 +87,21 @@ function hacer_gpkg {
 	rm "$fgpkg1" 2> /dev/null
 	# Geopackage fin
 
+	# Oracle carga inicio
+	tabo="gi_${nom}"
+	geom="geom"
+	sqlplus -s ${usu}/${pas}@${bd} <<-EOF1 > /dev/null
+	drop table $tabo;
+	delete from user_sdo_geom_metadata
+	where lower(table_name)='${tabo}'
+	and lower(column_name)='${geom}';
+	commit;
+
+	exit;
+	EOF1
+	ogr2ogr -update -f "OCI" OCI:${usu}/${pas}@${bd}:${t} -lco OVERWRITE=yes -nln "$tabo" -lco DIM=2 -lco GEOMETRY_NAME=${geom} -lco SRID=25830 -s_srs "EPSG:25830" -t_srs "EPSG:25830" OCI:${usu}/${pas}@${bd}:${t} -sql "${sql_a["$nom"]}" > /dev/null
+	# Oracle carga fin
+
 	# Tareas Oracle 2
 	if [ "${or2_a["$nom"]}" != "" ]
 	then
@@ -102,7 +117,7 @@ function copiar_gpkg {
 	# Copiar a producción
 	gpkg="${nom}.gpkg"
 	tmp="${nom}_tmp.gpkg"
-	/usr/bin/ssh ${usu2}@${hos2} <<-EOF1 > /dev/null 2> /dev/null
+	/usr/bin/ssh ${usup}@${hosp} <<-EOF1 > /dev/null 2> /dev/null
 	cd "$gpkgp"
 	rm "$tmp"
 	EOF1
