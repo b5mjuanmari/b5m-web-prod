@@ -16,14 +16,23 @@ export NLS_LANG=.AL32UTF8
 set NLS_LANG=.UTF8
 
 # Variables
-gpkgd="/home/data/datos_explotacion/CUR/gpkg"
-gpkgp="/home5/GPKG"
+gpkgd1="/home/data/datos_explotacion/CUR/gpkg"
+gpkgd2="/home/data/gpkg"
+gpkgp1="/home5/GPKG"
+gpkgp2="/home/data/gpkg"
 dir="${HOME}/SCRIPTS/GPKG"
 usu="b5mweb_25830"
 pas="web+"
 bd="bdet"
-usup="genasys"
-hosp="explogenamap"
+usud1a="juanmari"
+usud1b="develop"
+hosd1="b5mdev"
+usup1="genasys"
+hosp1="explogenamap"
+usup2a="juanmari"
+usup2b="live"
+hosp2a="b5mlive1.gipuzkoa.eus"
+hosp2b="b5mlive2.gipuzkoa.eus"
 logd="${dir}/log"
 crn="$(echo "$0" | gawk 'BEGIN{FS="/"}{print NF}')"
 scr="$(echo "$0" | gawk 'BEGIN{FS="/"}{print $NF}')"
@@ -82,24 +91,47 @@ function hacer_gpkg {
 
 	# Crear índice
 	ogrinfo -sql "create index ${nom}_idx1 on $nom (${idx_a["$nom"]})" "$fgpkg1" > /dev/null
+
+	# Copiar a destino
+	/usr/bin/ssh ${usud1a}@${hosd1} <<-EOF1 > /dev/null 2> /dev/null
+	cd /tmp
+	rm "$tmp"
+	EOF1
+	/usr/bin/sftp ${usud1a}@${hosd1} <<-EOF1 > /dev/null 2> /dev/null
+	cd /tmp
+	put "$fgpkg1" "$tmp"
+	EOF1
+	/usr/bin/ssh ${usud1a}@${hosd1} <<-EOF1 > /dev/null 2> /dev/null
+	cd "$gpkgd2"
+	rm "$gpkg"
+	sudo mv "/tmp/${tmp}" "$gpkg"
+	sudo chown ${usud1b}:${usud1b} "$gpkg"
+	rm "/tmp/${tmp}"
+	EOF1
 	rm "$fgpkg2" 2> /dev/null
 	mv "$fgpkg1" "$fgpkg2" 2> /dev/null
 	rm "$fgpkg1" 2> /dev/null
 	# Geopackage fin
 
 	# Oracle carga inicio
-	tabo="gi_${nom}"
-	geom="geom"
-	sqlplus -s ${usu}/${pas}@${bd} <<-EOF1 > /dev/null
-	drop table $tabo;
-	delete from user_sdo_geom_metadata
-	where lower(table_name)='${tabo}'
-	and lower(column_name)='${geom}';
-	commit;
+	# En el caso de las distancias entre municipios, provisonalmente
+	# se hace la carga a Oracle ya que el rendimiento de la consulta
+	# es mejor
+	if [ "$nom" = "dm_distancemunicipalities" ]
+	then
+		tabo="gi_${nom}"
+		geom="geom"
+		sqlplus -s ${usu}/${pas}@${bd} <<-EOF2 > /dev/null
+		drop table $tabo;
+		delete from user_sdo_geom_metadata
+		where lower(table_name)='${tabo}'
+		and lower(column_name)='${geom}';
+		commit;
 
-	exit;
-	EOF1
-	ogr2ogr -update -f "OCI" OCI:${usu}/${pas}@${bd}:${t} -lco OVERWRITE=yes -nln "$tabo" -lco DIM=2 -lco GEOMETRY_NAME=${geom} -lco SRID=25830 -s_srs "EPSG:25830" -t_srs "EPSG:25830" OCI:${usu}/${pas}@${bd}:${t} -sql "${sql_a["$nom"]}" > /dev/null
+		exit;
+		EOF2
+		ogr2ogr -update -f "OCI" OCI:${usu}/${pas}@${bd}:${t} -lco OVERWRITE=yes -nln "$tabo" -lco DIM=2 -lco GEOMETRY_NAME=${geom} -lco SRID=25830 -s_srs "EPSG:25830" -t_srs "EPSG:25830" OCI:${usu}/${pas}@${bd}:${t} -sql "${sql_a["$nom"]}" > /dev/null
+	fi
 	# Oracle carga fin
 
 	# Tareas Oracle 2
@@ -114,23 +146,42 @@ function hacer_gpkg {
 }
 
 function copiar_gpkg {
-	# Copiar a producción
-	gpkg="${nom}.gpkg"
-	tmp="${nom}_tmp.gpkg"
-	/usr/bin/ssh ${usup}@${hosp} <<-EOF1 > /dev/null 2> /dev/null
-	cd "$gpkgp"
+	# Copiar a producción 1
+	/usr/bin/ssh ${usup1}@${hosp1} <<-EOF1 > /dev/null 2> /dev/null
+	cd "$gpkgp1"
 	rm "$tmp"
 	EOF1
-	/usr/bin/sftp ${usup}@${hosp} <<-EOF1 > /dev/null 2> /dev/null
-	cd "$gpkgp"
+	/usr/bin/sftp ${usup1}@${hosp1} <<-EOF1 > /dev/null 2> /dev/null
+	cd "$gpkgp1"
 	put "$fgpkg2" "$tmp"
 	EOF1
-	/usr/bin/ssh ${usup}@${hosp} <<-EOF1 > /dev/null 2> /dev/null
-	cd "$gpkgp"
+	/usr/bin/ssh ${usup1}@${hosp1} <<-EOF1 > /dev/null 2> /dev/null
+	cd "$gpkgp1"
 	rm "$gpkg"
 	mv "$tmp" "$gpkg"
 	rm "$tmp"
 	EOF1
+
+	# Copiar a producción 2
+	hosp2_a=("$hosp2a" "$hosp2b")
+	for hosp2 in "${hosp2_a[@]}"
+	do
+		/usr/bin/ssh ${usup2a}@${hosp2} <<-EOF2 > /dev/null 2> /dev/null
+		cd /tmp
+		rm "$tmp"
+		EOF2
+		/usr/bin/sftp ${usup2a}@${hosp2} <<-EOF2 > /dev/null 2> /dev/null
+		cd /tmp
+		put "$fgpkg2" "$tmp"
+		EOF2
+		/usr/bin/ssh ${usup2a}@${hosp2} <<-EOF2 > /dev/null 2> /dev/null
+		cd "$gpkgd2"
+		rm "$gpkg"
+		sudo mv "/tmp/${tmp}" "$gpkg"
+		sudo chown ${usup2b}:${usup2b} "$gpkg"
+		rm "/tmp/${tmp}"
+		EOF2
+	done
 }
 
 # Ver si existe el fichero de configuración
@@ -162,7 +213,9 @@ do
 	nom="${aconf[1]}"
 	des="${aconf[2]}"
 	fgpkg1="/tmp/${nom}.gpkg"
-	fgpkg2="${gpkgd}/${nom}.gpkg"
+	fgpkg2="${gpkgd1}/${nom}.gpkg"
+	gpkg="${nom}.gpkg"
+	tmp="${nom}_tmp.gpkg"
 	if [ $j -eq 0 ]
 	then
 		msg "0/${j}: $(date '+%Y-%m-%d %H:%M:%S') - No se hace nada"
