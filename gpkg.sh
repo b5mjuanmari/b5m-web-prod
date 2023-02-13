@@ -16,10 +16,9 @@ export NLS_LANG=.AL32UTF8
 set NLS_LANG=.UTF8
 
 # Variables
-gpkgd1="/home/data/datos_explotacion/CUR/gpkg"
-gpkgd2="/home/data/gpkg"
+gpkgd1="/home/data/gpkg"
 gpkgp1="/home5/GPKG"
-gpkgp2="/home/data/gpkg"
+gpkgp2="$gpkgd1"
 dir="${HOME}/SCRIPTS/GPKG"
 usu="b5mweb_25830"
 pas="web+"
@@ -54,6 +53,28 @@ function msg {
 		echo -e "$1"
 	fi
 	echo -e "$1" >> "$log"
+}
+
+function conx {
+	# Conexión a servidores externos con comprobación de errores
+	nc=10
+	for c in $(seq 1 $nc)
+	do
+		a=`/usr/bin/${2} $1 <<-EOF2 2>&1 > /dev/null
+		$3
+		EOF2`
+		b="$(echo "$a" | gawk 'END{print $1}')"
+		if [ "$b" != "ssh_exchange_identification:" ] && [ "$b" != "Connection" ]
+		then
+			break
+		fi
+		if [ $c -eq $nc ] && { [ "$b" = "ssh_exchange_identification:" ] || [ "$b" = "Connection" ]; }
+		then
+				echo "Error $2 $1 #${3}# "
+		else
+				sleep 10
+		fi
+	done
 }
 
 function hacer_gpkg {
@@ -93,24 +114,17 @@ function hacer_gpkg {
 	ogrinfo -sql "create index ${nom}_idx1 on $nom (${idx_a["$nom"]})" "$fgpkg1" > /dev/null
 
 	# Copiar a destino
-	/usr/bin/ssh ${usud1a}@${hosd1} <<-EOF1 > /dev/null 2> /dev/null
-	cd /tmp
-	rm "$tmp"
-	EOF1
-	/usr/bin/sftp ${usud1a}@${hosd1} <<-EOF1 > /dev/null 2> /dev/null
-	cd /tmp
-	put "$fgpkg1" "$tmp"
-	EOF1
-	/usr/bin/ssh ${usud1a}@${hosd1} <<-EOF1 > /dev/null 2> /dev/null
-	cd "$gpkgd2"
-	rm "$gpkg"
-	sudo mv "/tmp/${tmp}" "$gpkg"
-	sudo chown ${usud1b}:${usud1b} "$gpkg"
-	rm "/tmp/${tmp}"
-	EOF1
-	rm "$fgpkg2" 2> /dev/null
-	mv "$fgpkg1" "$fgpkg2" 2> /dev/null
-	rm "$fgpkg1" 2> /dev/null
+	ta01="rm \"/tmp/${tmp}\""
+	tb01="$(conx "${usud1a}@${hosd1}" "ssh" "$ta01")"
+	ta02="put \"$fgpkg1\" \"/tmp/${tmp}\""
+	tb02="$(conx "${usud1a}@${hosd1}" "sftp" "$ta02")"
+	ta03="cd \"$gpkgd1\";if [ -f \"/tmp/${tmp}\" ];then sudo rm \"$gpkg\";else exit;fi;sudo mv \"/tmp/${tmp}\" \"$gpkg\";sudo chown ${usud1b}:${usud1b} \"$gpkg\";rm \"/tmp/${tmp}\""
+	tb03="$(conx "${usud1a}@${hosd1}" "ssh" "$ta03")"
+	tbs01="${tb01}${tb02}${tb03}"
+	if [ "$tbs01" != "" ]
+	then
+		msg " - $tbs01\c"
+	fi
 	# Geopackage fin
 
 	# Oracle carga inicio
@@ -147,41 +161,53 @@ function hacer_gpkg {
 
 function copiar_gpkg {
 	# Copiar a producción 1
-	/usr/bin/ssh ${usup1}@${hosp1} <<-EOF1 > /dev/null 2> /dev/null
-	cd "$gpkgp1"
-	rm "$tmp"
-	EOF1
-	/usr/bin/sftp ${usup1}@${hosp1} <<-EOF1 > /dev/null 2> /dev/null
-	cd "$gpkgp1"
-	put "$fgpkg2" "$tmp"
-	EOF1
-	/usr/bin/ssh ${usup1}@${hosp1} <<-EOF1 > /dev/null 2> /dev/null
-	cd "$gpkgp1"
-	rm "$gpkg"
-	mv "$tmp" "$gpkg"
-	rm "$tmp"
-	EOF1
+	#/usr/bin/ssh ${usup1}@${hosp1} <<-EOF1 > /dev/null 2> /dev/null
+	#cd "$gpkgp1"
+	#rm "$tmp"
+	#EOF1
+	#/usr/bin/sftp ${usup1}@${hosp1} <<-EOF1 > /dev/null 2> /dev/null
+	#cd "$gpkgp1"
+	#put "$fgpkg1" "$tmp"
+	#EOF1
+	#/usr/bin/ssh ${usup1}@${hosp1} <<-EOF1 > /dev/null 2> /dev/null
+	#cd "$gpkgp1"
+	#rm "$gpkg"
+	#mv "$tmp" "$gpkg"
+	#rm "$tmp"
+	#EOF1
+	ta04="cd \"$gpkgp1\";rm \"${tmp}\""
+	tb04="$(conx "${usup1}@${hosp1}" "ssh" "$ta04")"
+	ta05="put \"$fgpkg1\" \"${gpkgp1}/${tmp}\""
+	tb05="$(conx "${usup1}@${hosp1}" "sftp" "$ta05")"
+	ta06="cd \"$gpkgp1\";if [ -f \"${tmp}\" ];then rm \"$gpkg\";else exit;fi;mv \"${tmp}\" \"$gpkg\";rm \"${tmp}\""
+	tb06="$(conx "${usup1}@${hosp1}" "ssh" "$ta06")"
+	tbs02="${tb04}${tb05}${tb06}"
+	if [ "$tbs02" != "" ]
+	then
+		msg " - $tbs02\c"
+	fi
 
 	# Copiar a producción 2
 	hosp2_a=("$hosp2a" "$hosp2b")
 	for hosp2 in "${hosp2_a[@]}"
 	do
-		/usr/bin/ssh ${usup2a}@${hosp2} <<-EOF2 > /dev/null 2> /dev/null
-		cd /tmp
-		rm "$tmp"
-		EOF2
-		/usr/bin/sftp ${usup2a}@${hosp2} <<-EOF2 > /dev/null 2> /dev/null
-		cd /tmp
-		put "$fgpkg2" "$tmp"
-		EOF2
-		/usr/bin/ssh ${usup2a}@${hosp2} <<-EOF2 > /dev/null 2> /dev/null
-		cd "$gpkgd2"
-		rm "$gpkg"
-		sudo mv "/tmp/${tmp}" "$gpkg"
-		sudo chown ${usup2b}:${usup2b} "$gpkg"
-		rm "/tmp/${tmp}"
-		EOF2
+		ta07="rm \"/tmp/${tmp}\""
+		tb07="$(conx "${usup2a}@${hosp2}" "ssh" "$ta07")"
+		ta08="put \"$fgpkg1\" \"/tmp/${tmp}\""
+		tb08="$(conx "${usup2a}@${hosp2}" "sftp" "$ta08")"
+		ta09="cd \"$gpkgd1\";if [ -f \"/tmp/${tmp}\" ];then sudo rm \"$gpkg\";else exit;fi;sudo mv \"/tmp/${tmp}\" \"$gpkg\";sudo chown ${usup2b}:${usup2b} \"$gpkg\";rm \"/tmp/${tmp}\""
+		tb09="$(conx "${usup2a}@${hosp2}" "ssh" "$ta09")"
+		tbs03="${tb07}${tb08}${tb09}"
+		if [ "$tbs03" != "" ]
+		then
+			msg " - $tbs03\c"
+		fi
 	done
+}
+
+function borrar_gpkg {
+	# Borrar el gpkg temporal
+	rm "$fgpkg1" 2> /dev/null
 }
 
 # Ver si existe el fichero de configuración
@@ -213,7 +239,6 @@ do
 	nom="${aconf[1]}"
 	des="${aconf[2]}"
 	fgpkg1="/tmp/${nom}.gpkg"
-	fgpkg2="${gpkgd1}/${nom}.gpkg"
 	gpkg="${nom}.gpkg"
 	tmp="${nom}_tmp.gpkg"
 	if [ $j -eq 0 ]
@@ -234,6 +259,7 @@ do
 		copiar_gpkg
 		msg " - ok\c"
 	fi
+	borrar_gpkg
 	msg ""
 	let i=$i+1
 done <<-EOF
