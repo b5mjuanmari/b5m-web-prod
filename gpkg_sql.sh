@@ -11,7 +11,7 @@ declare -A idx_a
 declare -A or1_a
 declare -A or2_a
 
-# 1. m_municipalities (municipios) (carga: 10")
+# 1. m_municipalities (municipios) (carga: 19")
 des_a["m_municipalities"]="Udalerriak / Municipios / Municipalities"
 sql_a["m_municipalities"]="select
 a.url_2d b5mcode,
@@ -32,7 +32,7 @@ and to_char(b.idnomcomarca)=d.id_nombre1(+)
 group by (a.url_2d,b.codmuni,a.nombre_e,a.nombre_c,b.idnomcomarca,d.nombre_e,d.nombre_c,a.tipo_e,a.tipo_c,a.tipo_i)"
 idx_a["m_municipalities"]="b5mcode"
 
-# 2. s_regions (comarcas) (carga: 24")
+# 2. s_regions (comarcas) (carga: 36")
 des_a["s_regions"]="Eskualdeak / Comarcas / Regions"
 sql_a["s_regions"]="select
 a.url_2d b5mcode,
@@ -216,7 +216,7 @@ group by (a.idnombre,a.idnombre,a.codmuni,a.municipio_e,a.municipio_c,a.codcalle
 idx_a["d_postaladdresses"]="b5mcode"
 or2_a["d_postaladdresses"]="drop table gpkg_$$_d_tmp;"
 
-# 4. e_buildings (Edficios) (carga: 30")
+# 4. e_buildings (Edficios) (carga: 1'35")
 des_a["e_buildings"]="Eraikinak / Edficios / Buildings"
 or1_a["e_buildings"]="drop table gpkg_$$_e_tmp;
 create table gpkg_$$_e_tmp as
@@ -358,7 +358,7 @@ group by (a.idut,a.idut,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle
 idx_a["e_buildings"]="b5mcode"
 or2_a["e_buildings"]="drop table gpkg_$$_e_tmp;"
 
-# 5. c_basins (cuencas) (carga: 4")
+# 5. c_basins (cuencas) (carga: 17")
 des_a["c_basins"]="Arroak / Cuencas / Basins"
 sql_a["c_basins"]="select
 a.url_2d b5mcode,
@@ -376,7 +376,7 @@ from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.cuencap b
 where a.url_2d='C_A'||b.idnombre"
 idx_a["c_basins"]="b5mcode"
 
-# 6. i_hydrography (hidrografía) (carga: 45")
+# 6. i_hydrography (hidrografía) (carga: 48")
 des_a["i_hydrography"]="Hidrografia / Hidrografía / Hydrography"
 sql_a["i_hydrography"]="select
 a.id_topo idtopo,
@@ -399,7 +399,7 @@ where a.id_nombre1=to_char(b.idnombre)
 group by(a.id_topo,a.id_nombre1,a.url_2d,a.nombre_e,a.nombre_c,b.idnomcuenca,b.cuenca_e,b.cuenca_c,a.tipo_e,a.tipo_c,a.tipo_i,a.codmunis,a.muni_e,a.muni_c)"
 idx_a["i_hydrography"]="b5mcode"
 
-# 7. sg_geodeticbenchmarks (señales geodésicas) (carga: 5")
+# 7. sg_geodeticbenchmarks (señales geodésicas) (carga: 27")
 sg_aju_eu="Doikuntza geodesikoa"
 sg_sen_eu="Seinale geodesikoa"
 sg_aju_es="Ajuste geodésico"
@@ -428,7 +428,7 @@ and a.visible_web=1
 order by a.pgeod_id"
 idx_a["sg_geodeticbenchmarks"]="b5mcode"
 
-# 8. dm_distancemunicipalities (distancia entre municipios) (carga: 14h)
+# 8. dm_distancemunicipalities (distancia entre municipios) (carga: 2h5')
 des_a["dm_distancemunicipalities"]="Udalerrien arteko distantzia / Distancia entre municipios / Distance Between Municipalities"
 sql_a["dm_distancemunicipalities"]="select
 c.idut iddm,
@@ -459,8 +459,58 @@ from mapas_otros.dist_ayunta2_muni a,mapas_otros.dist_ayunta2_muni b,mapas_otros
 where a.codmuni=c.codmuni1
 and b.codmuni=c.codmuni2"
 idx_a["dm_distancemunicipalities"]="b5mcode"
+tabdm='gi_dm_distancem'
+tabDM="$(echo "$tabdm" | gawk '{print toupper($1)}')"
+tabdm2="dist_ayunta2"
+tabDM2="$(echo "$tabdm2" | gawk '{print toupper($1)}')"
+sql_b["dm_distancemunicipalities"]="drop table ${tabdm};
+delete from
+user_sdo_geom_metadata
+where lower(table_name)='${tabdm}'
+and column_name='GEOM';
+create table ${tabdm}(
+idut number,
+b5mcode varchar2(12),
+codmuni1 varchar2(4),
+muni1_eu varchar2(100),
+muni1_es varchar2(100),
+muni1_fr varchar2(100),
+codterm1 varchar2(3),
+term1_eu varchar2(100),
+term1_es varchar2(100),
+term1_fr varchar2(100),
+id_area1 number,
+codmuni2 varchar2(4),
+muni2_eu varchar2(100),
+muni2_es varchar2(100),
+muni2_fr varchar2(100),
+codterm2 varchar2(3),
+term2_eu varchar2(100),
+term2_es varchar2(100),
+term2_fr varchar2(100),
+id_area2 number,
+dist_r number,
+dist_c number,
+fecha date,
+geom sdo_geometry,
+constraint ${tabdm}_pk primary key(idut)
+);
+insert into user_sdo_geom_metadata
+select '${tabDM}',column_name,diminfo,srid
+from all_sdo_geom_metadata
+where table_name='${tabDM2}'
+and column_name='GEOM';
+insert into ${tabdm}(idut,b5mcode,codmuni1,muni1_eu,muni1_es,muni1_fr,codterm1,term1_eu,term1_es,term1_fr,id_area1,codmuni2,muni2_eu,muni2_es,muni2_fr,codterm2,term2_eu,term2_es,term2_fr,id_area2,dist_r,dist_c,fecha,geom)
+"
+sql_c["dm_distancemunicipalities"]="
+create unique index ${tabdm}_idx on ${tabdm}(b5mcode,codmuni1,muni1_eu,muni1_es,codmuni2,muni2_eu,muni2_es);
+create index ${tabdm}2_idx on ${tabdm}(codterm1,term1_eu,term1_es,codterm2,term2_eu,term2_es);
+create index ${tabdm}_gidx
+on ${tabdm}(geom)
+indextype is mdsys.spatial_index
+parameters('layer_gtype=MULTILINE');"
 
-# 9. q_municipalcartography (cartografía municipal) (carga: 20")
+# 9. q_municipalcartography (cartografía municipal) (carga: 24")
 des_a["q_municipalcartography"]="Udal kartografiaren inbentarioa / Inventario de cartografía municipal / Municipal Cartography Inventory"
 sql_a["q_municipalcartography"]="select
 a.id_levan,
