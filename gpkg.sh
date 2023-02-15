@@ -133,18 +133,16 @@ function hacer_gpkg {
 	# es mejor
 	if [ "$nom" = "dm_distancemunicipalities" ]
 	then
-		tabo="gi_${nom}"
-		geom="geom"
+		sql_ora_a="${sql_a["$nom"]}"
+		sql_ora_b="${sql_b["$nom"]}"
+		sql_ora_c="${sql_c["$nom"]}"
+		sql_ora="${sql_ora_b}${sql_ora_a};${sql_ora_c}"
 		sqlplus -s ${usu}/${pas}@${bd} <<-EOF2 > /dev/null
-		drop table $tabo;
-		delete from user_sdo_geom_metadata
-		where lower(table_name)='${tabo}'
-		and lower(column_name)='${geom}';
+		$sql_ora
 		commit;
 
 		exit;
 		EOF2
-		ogr2ogr -update -f "OCI" OCI:${usu}/${pas}@${bd}:${t} -lco OVERWRITE=yes -nln "$tabo" -lco DIM=2 -lco GEOMETRY_NAME=${geom} -lco SRID=25830 -s_srs "EPSG:25830" -t_srs "EPSG:25830" OCI:${usu}/${pas}@${bd}:${t} -sql "${sql_a["$nom"]}" > /dev/null
 	fi
 	# Oracle carga fin
 
