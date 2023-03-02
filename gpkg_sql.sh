@@ -469,7 +469,7 @@ user_sdo_geom_metadata
 where lower(table_name)='${tabdm}'
 and column_name='GEOM';
 create table ${tabdm}(
-idut number,
+iddm number,
 b5mcode varchar2(12),
 codmuni1 varchar2(4),
 muni1_eu varchar2(100),
@@ -491,16 +491,16 @@ term2_fr varchar2(100),
 id_area2 number,
 dist_r number,
 dist_c number,
-fecha date,
+dm_date date,
 geom sdo_geometry,
-constraint ${tabdm}_pk primary key(idut)
+constraint ${tabdm}_pk primary key(iddm)
 );
 insert into user_sdo_geom_metadata
 select '${tabDM}',column_name,diminfo,srid
 from all_sdo_geom_metadata
 where table_name='${tabDM2}'
 and column_name='GEOM';
-insert into ${tabdm}(idut,b5mcode,codmuni1,muni1_eu,muni1_es,muni1_fr,codterm1,term1_eu,term1_es,term1_fr,id_area1,codmuni2,muni2_eu,muni2_es,muni2_fr,codterm2,term2_eu,term2_es,term2_fr,id_area2,dist_r,dist_c,fecha,geom)
+insert into ${tabdm}(iddm,b5mcode,codmuni1,muni1_eu,muni1_es,muni1_fr,codterm1,term1_eu,term1_es,term1_fr,id_area1,codmuni2,muni2_eu,muni2_es,muni2_fr,codterm2,term2_eu,term2_es,term2_fr,id_area2,dist_r,dist_c,dm_date,geom)
 "
 sql_c["dm_distancemunicipalities"]="
 create unique index ${tabdm}_idx on ${tabdm}(b5mcode,codmuni1,muni1_eu,muni1_es,codmuni2,muni2_eu,muni2_es);
