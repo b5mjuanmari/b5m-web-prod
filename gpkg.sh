@@ -106,8 +106,8 @@ function hacer_gpkg {
 	for c in $clist
 	do
 		c2="$(echo "$c" | gawk '{print tolower($0)}')"
-		ogrinfo -dialect ogrsql -sql "alter table $nom rename column $c to ${c}2" "$fgpkg1" > /dev/null
-		ogrinfo -dialect ogrsql -sql "alter table $nom rename column ${c}2 to $c2" "$fgpkg1" > /dev/null
+		ogrinfo -dialect ogrsql -sql "alter table $nom rename column $c to ${c}999" "$fgpkg1" > /dev/null
+		ogrinfo -dialect ogrsql -sql "alter table $nom rename column ${c}999 to $c2" "$fgpkg1" > /dev/null
 	done
 
 	# Crear índice
