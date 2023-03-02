@@ -284,6 +284,7 @@ add constraint gpkg_$$_e_tmp_pk primary key(idut);"
 sql_a["e_buildings"]="select
 a.idut idname,
 'E_A'||a.idut b5mcode,
+decode(a.idpostal, 0, null, 'D_A'||a.idpostal) b5mcode2,
 a.codmuni codmuni,
 a.muni_e muni_eu,
 a.muni_c muni_es,
@@ -304,11 +305,12 @@ sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.n_edifgen a,b5mweb_25830.a_edifind b,b5mweb_25830.gpkg_$$_e_tmp c
 where a.idut=b.idut
 and a.idut=c.idut(+)
-group by (a.idut,a.idut,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,c.b5mcodes_district,c.districts_eu,c.districts_es)
+group by (a.idut,a.idut,a.idpostal,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,c.b5mcodes_district,c.districts_eu,c.districts_es)
 union all
 select
 a.idut idname,
 'E_A'||a.idut b5mcode,
+decode(a.idpostal, 0, null, 'D_A'||a.idpostal) b5mcode2,
 a.codmuni codmuni,
 a.muni_e muni_eu,
 a.muni_c muni_es,
@@ -329,11 +331,12 @@ sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.n_edifgen a,b5mweb_25830.o_edifind b,b5mweb_25830.gpkg_$$_e_tmp c
 where a.idut=b.idut
 and a.idut=c.idut(+)
-group by (a.idut,a.idut,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,c.b5mcodes_district,c.districts_eu,c.districts_es)
+group by (a.idut,a.idut,a.idpostal,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,c.b5mcodes_district,c.districts_eu,c.districts_es)
 union all
 select
 a.idut idname,
 'E_A'||a.idut b5mcode,
+decode(a.idpostal, 0, null, 'D_A'||a.idpostal) b5mcode2,
 a.codmuni codmuni,
 a.muni_e muni_eu,
 a.muni_c muni_es,
@@ -354,7 +357,7 @@ sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.n_edifgen a,b5mweb_25830.s_edifind b,b5mweb_25830.gpkg_$$_e_tmp c
 where a.idut=b.idut
 and a.idut=c.idut(+)
-group by (a.idut,a.idut,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,c.b5mcodes_district,c.districts_eu,c.districts_es)"
+group by (a.idut,a.idut,a.idpostal,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,c.b5mcodes_district,c.districts_eu,c.districts_es)"
 idx_a["e_buildings"]="b5mcode"
 or2_a["e_buildings"]="drop table gpkg_$$_e_tmp;"
 
