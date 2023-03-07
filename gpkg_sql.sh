@@ -412,8 +412,8 @@ sg_sen_en="Geodetic Benchmark"
 sg_url="https://b5m.gipuzkoa.eus/geodesia/pdf"
 des_a["sg_geodeticbenchmarks"]="Seinale geodesikoak / Señales geodésicas / Geodetic Benchmarks"
 sql_a["sg_geodeticbenchmarks"]="select
-a.pgeod_id idgeodb,
 'SG_'||a.pgeod_id b5mcode,
+a.pgeod_id idgeodb,
 a.nombre display_name,
 decode(a.ajuste,1,'${sg_aju_eu}','${sg_sen_eu}') type_eu,
 decode(a.ajuste,1,'${sg_aju_es}','${sg_sen_es}') type_es,
