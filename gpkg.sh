@@ -42,6 +42,10 @@ then
 fi
 rm "$log" 2> /dev/null
 
+# Variables descripción campos
+des_c1="field_name,description_eu,description_es,description_en"
+des_c2="field descriptions"
+
 # Dependencias
 source "${dir}/gpkg_sql.sh"
 
@@ -112,6 +116,29 @@ function hacer_gpkg {
 
 	# Crear índice
 	ogrinfo -sql "create index ${nom}_idx1 on $nom (${idx_a["$nom"]})" "$fgpkg1" > /dev/null
+
+	# Crear tabla con las descripciones de los campos
+	ca0="$(ogrinfo -al -so $fgpkg1 $nom | gawk 'BEGIN{a=0;FS=":"}{if(match($0,"Geometry Column")!=0){a=1;getline};if(a==1){print $1}}')"
+	IFS='#' read -a ca1 <<< "${der_a["$nom"]}"
+	rm "/tmp/${csv}" 2> /dev/null
+	echo "$des_c1" > "/tmp/${csv}"
+	for ca2 in $ca0
+	do
+		for ca3 in "${ca1[@]}"
+		do
+			IFS='|' read -a ca4 <<< "$ca3"
+			if [ "$ca2" = "${ca4[0]}" ]
+			then
+				echo $ca3 | sed 's/|/,/g' >> "/tmp/${csv}"
+			fi
+		done
+	done
+	ca5="$(wc -l "/tmp/${csv}" | gawk '{print $1}')"
+	if [ $ca5 -gt 1 ]
+	then
+		ogr2ogr -f "GPKG" -update "$fgpkg1" "/tmp/${csv}" -nln "${nom}_desc" -lco DESCRIPTION="$nom $des_c2"
+	fi
+	rm "/tmp/${csv}" 2> /dev/null
 
 	# Copiar a destino
 	ta01="rm \"/tmp/${tmp}\""
@@ -239,6 +266,7 @@ do
 	fgpkg1="/tmp/${nom}.gpkg"
 	gpkg="${nom}.gpkg"
 	tmp="${nom}_tmp.gpkg"
+	csv="${nom}_tmp.csv"
 	if [ $j -eq 0 ]
 	then
 		msg "0/${j}: $(date '+%Y-%m-%d %H:%M:%S') - No se hace nada"
