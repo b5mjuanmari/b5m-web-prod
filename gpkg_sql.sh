@@ -10,12 +10,12 @@ declare -A sql_a
 declare -A idx_a
 declare -A or1_a
 declare -A or2_a
+declare -A der_a
 
 # 1. m_municipalities (municipios) (carga: 19")
 des_a["m_municipalities"]="Udalerriak / Municipios / Municipalities"
 sql_a["m_municipalities"]="select
 a.url_2d b5mcode,
-b.codmuni codmuni,
 a.nombre_e name_eu,
 a.nombre_c name_es,
 decode(b.idnomcomarca,null,null,'S_'||b.idnomcomarca) b5mcode_region,
@@ -31,6 +31,15 @@ and b.codmuni=c.codmuni
 and to_char(b.idnomcomarca)=d.id_nombre1(+)
 group by (a.url_2d,b.codmuni,a.nombre_e,a.nombre_c,b.idnomcomarca,d.nombre_e,d.nombre_c,a.tipo_e,a.tipo_c,a.tipo_i)"
 idx_a["m_municipalities"]="b5mcode"
+der_a["m_municipalities"]="b5mcode|B5m kodea|Código b5m|B5m code#\
+name_eu|Udalerriaren izen ofiziala euskaraz|Nombre oficial del municipio en euskera|Official name of the municipality in Basque#\
+name_es|Udalerriaren izen ofiziala gaztelaniaz|Nombre oficial del municipio en castellano|Official name of the municipality in Spanish#\
+b5mcode_region|Eskualdearen b5m kodea|Código b5m de la comarca|Code b5m of the region#\
+region_eu|Eskualdearen izena euskaraz|Nombre de la comarca en euskera|Name of the region in Basque#\
+region_es|Eskualdearen izena gaztelaniaz|Nombre de la comarca en castellano|Name of the region in Spanish#\
+type_eu|Elementu geografikoaren mota euskaraz|Tipo del elemento geográfico en euskera|Type of the geographic feature in Basque#\
+type_es|Elementu geografikoaren mota gaztelaniaz|Tipo del elemento geográfico en castellano|Type of the geographic feature in Spanish#\
+type_en|Elementu geografikoaren mota ingelesez|Tipo del elemento geográfico en inglés|Type of the geographic feature in English"
 
 # 2. s_regions (comarcas) (carga: 36")
 des_a["s_regions"]="Eskualdeak / Comarcas / Regions"
