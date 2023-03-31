@@ -411,7 +411,27 @@ where a.id_nombre1=to_char(b.idnombre)
 group by(a.id_topo,a.id_nombre1,a.url_2d,a.nombre_e,a.nombre_c,b.idnomcuenca,b.cuenca_e,b.cuenca_c,a.tipo_e,a.tipo_c,a.tipo_i,a.codmunis,a.muni_e,a.muni_c)"
 idx_a["i_hydrography"]="b5mcode"
 
-# 7. sg_geodeticbenchmarks (señales geodésicas) (carga: 27")
+# 7. z_districts (barrios y/o nombres urbanos) (carga: 16")
+des_a["z_districts"]="Barrios y/o nombres urbanos / Auzo eta/edo hiri izenak / Districts and/or urban names"
+sql_a["z_districts"]="select
+a.url_2d b5mcode,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+a.tipo_e type_eu,
+a.tipo_c type_es,
+a.tipo_i type_en,
+a.codmunis codmuni,
+a.muni_e muni_eu,
+a.muni_c muni_es,
+sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.barrioind b,b5mweb_nombres.b_barrios c
+where a.id_nombre1=c.idnombre
+and b.idut=c.idut
+and a.url_2d like 'Z_%'
+group by (a.url_2d,a.nombre_e,a.nombre_c,a.tipo_e,a.tipo_c,a.tipo_i,a.codmunis,a.muni_e,a.muni_c)"
+idx_a["z_districts"]="b5mcode"
+
+# 8. sg_geodeticbenchmarks (señales geodésicas) (carga: 27")
 sg_aju_eu="Doikuntza geodesikoa"
 sg_sen_eu="Seinale geodesikoa"
 sg_aju_es="Ajuste geodésico"
@@ -440,7 +460,7 @@ and a.visible_web=1
 order by a.pgeod_id"
 idx_a["sg_geodeticbenchmarks"]="b5mcode"
 
-# 8. dm_distancemunicipalities (distancia entre municipios) (carga: 2h5')
+# 9. dm_distancemunicipalities (distancia entre municipios) (carga: 2h5')
 des_a["dm_distancemunicipalities"]="Udalerrien arteko distantzia / Distancia entre municipios / Distance Between Municipalities"
 sql_a["dm_distancemunicipalities"]="select
 c.idut iddm,
@@ -522,7 +542,7 @@ on ${tabdm}(geom)
 indextype is mdsys.spatial_index
 parameters('layer_gtype=MULTILINE');"
 
-# 9. q_municipalcartography (cartografía municipal) (carga: 24")
+# 10. q_municipalcartography (cartografía municipal) (carga: 24")
 des_a["q_municipalcartography"]="Udal kartografiaren inbentarioa / Inventario de cartografía municipal / Municipal Cartography Inventory"
 sql_a["q_municipalcartography"]="select
 a.id_levan,
