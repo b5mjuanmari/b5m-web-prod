@@ -431,7 +431,27 @@ and a.url_2d like 'Z_%'
 group by (a.url_2d,a.nombre_e,a.nombre_c,a.tipo_e,a.tipo_c,a.tipo_i,a.codmunis,a.muni_e,a.muni_c)"
 idx_a["z_districts"]="b5mcode"
 
-# 8. sg_geodeticbenchmarks (señales geodésicas) (carga: 27")
+# 8. g_orography (toponimia de la orografía) (carga: 14")
+des_a["g_orography"]="Toponimia de la orografía / Orografiaren toponimia / Toponymy of the orography"
+sql_a["g_orography"]="select
+a.url_2d b5mcode,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+a.tipo_e type_eu,
+a.tipo_c type_es,
+a.tipo_i type_en,
+a.codmunis codmuni,
+a.muni_e muni_eu,
+a.muni_c muni_es,
+sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.montesind b,b5mweb_nombres.o_orograf c
+where a.id_nombre1=c.idnombre
+and b.idut=c.idut
+and a.url_2d like 'G_%'
+group by (a.url_2d,a.nombre_e,a.nombre_c,a.tipo_e,a.tipo_c,a.tipo_i,a.codmunis,a.muni_e,a.muni_c)"
+idx_a["g_orography"]="b5mcode"
+
+# 9. sg_geodeticbenchmarks (señales geodésicas) (carga: 27")
 sg_aju_eu="Doikuntza geodesikoa"
 sg_sen_eu="Seinale geodesikoa"
 sg_aju_es="Ajuste geodésico"
@@ -460,7 +480,7 @@ and a.visible_web=1
 order by a.pgeod_id"
 idx_a["sg_geodeticbenchmarks"]="b5mcode"
 
-# 9. dm_distancemunicipalities (distancia entre municipios) (carga: 2h5')
+# 10. dm_distancemunicipalities (distancia entre municipios) (carga: 2h5')
 des_a["dm_distancemunicipalities"]="Udalerrien arteko distantzia / Distancia entre municipios / Distance Between Municipalities"
 sql_a["dm_distancemunicipalities"]="select
 c.idut iddm,
@@ -542,7 +562,7 @@ on ${tabdm}(geom)
 indextype is mdsys.spatial_index
 parameters('layer_gtype=MULTILINE');"
 
-# 10. q_municipalcartography (cartografía municipal) (carga: 24")
+# 11. q_municipalcartography (cartografía municipal) (carga: 24")
 des_a["q_municipalcartography"]="Udal kartografiaren inbentarioa / Inventario de cartografía municipal / Municipal Cartography Inventory"
 sql_a["q_municipalcartography"]="select
 a.id_levan,
