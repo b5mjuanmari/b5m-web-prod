@@ -558,7 +558,24 @@ and a.tipo_e='1:50000'
 and a.url_2d like 'R_%'"
 idx_a["r_grid"]="b5mcode"
 
-# 10. sg_geodeticbenchmarks (señales geodésicas) (carga: 27")
+# 10. dw_download (descargas) (carga: )
+des_a["dw_download"]="Descargas / Deskargak / Downloads"
+sql_a["dw_download"]="select
+replace(a.url_2d,'R_','DW_') b5mcode,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+a.tipo_e type_eu,
+a.tipo_c type_es,
+a.tipo_i type_en,
+b.geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec5 b
+where a.nombre_e=b.tag
+and a.tipo_e='5x5 km'
+and a.url_2d like 'R_%'"
+idx_a["dw_download"]="b5mcode"
+dwn_a["dw_download"]="1"
+
+# 11. sg_geodeticbenchmarks (señales geodésicas) (carga: 27")
 sg_aju_eu="Doikuntza geodesikoa"
 sg_sen_eu="Seinale geodesikoa"
 sg_aju_es="Ajuste geodésico"
@@ -587,7 +604,7 @@ and a.visible_web=1
 order by a.pgeod_id"
 idx_a["sg_geodeticbenchmarks"]="b5mcode"
 
-# 11. dm_distancemunicipalities (distancia entre municipios) (carga: 2h5')
+# 12. dm_distancemunicipalities (distancia entre municipios) (carga: 2h5')
 des_a["dm_distancemunicipalities"]="Udalerrien arteko distantzia / Distancia entre municipios / Distance Between Municipalities"
 sql_a["dm_distancemunicipalities"]="select
 c.idut iddm,
@@ -669,7 +686,7 @@ on ${tabdm}(geom)
 indextype is mdsys.spatial_index
 parameters('layer_gtype=MULTILINE');"
 
-# 12. q_municipalcartography (cartografía municipal) (carga: 24")
+# 13. q_municipalcartography (cartografía municipal) (carga: 24")
 des_a["q_municipalcartography"]="Udal kartografiaren inbentarioa / Inventario de cartografía municipal / Municipal Cartography Inventory"
 sql_a["q_municipalcartography"]="select
 a.id_levan,
