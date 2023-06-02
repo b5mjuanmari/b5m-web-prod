@@ -46,6 +46,13 @@ rm "$log" 2> /dev/null
 des_c1="field_name,description_eu,description_es,description_en"
 des_c2="field descriptions"
 
+# Varibales tablas descargas
+dwm_c1="\"id_dw\",\"b5mcode\",\"b5mcode2\",\"name_es\",\"name_eu\",\"name_en\",\"year\",\"path_dw\",\"type_dw\",\"type_file\",\"url_metadata\""
+dw_url1="https://b5m.gipuzkoa.eus"
+dwn_srs1="EPSG:25830"
+dwn_srs2="ETRS89 / UTM zone 30N"
+dwn_srs3="https://epsg.io/25830"
+
 # Dependencias
 source "${dir}/gpkg_sql.sh"
 
@@ -120,8 +127,8 @@ function hacer_gpkg {
 	# Crear tabla con las descripciones de los campos
 	ca0="$(ogrinfo -al -so $fgpkg1 $nom | gawk 'BEGIN{a=0;FS=":"}{if(match($0,"Geometry Column")!=0){a=1;getline};if(a==1){print $1}}')"
 	IFS='#' read -a ca1 <<< "${der_a["$nom"]}"
-	rm "/tmp/${csv}" 2> /dev/null
-	echo "$des_c1" > "/tmp/${csv}"
+	rm "$csv" 2> /dev/null
+	echo "$des_c1" > "$csv"
 	for ca2 in $ca0
 	do
 		for ca3 in "${ca1[@]}"
@@ -129,16 +136,83 @@ function hacer_gpkg {
 			IFS='|' read -a ca4 <<< "$ca3"
 			if [ "$ca2" = "${ca4[0]}" ]
 			then
-				echo $ca3 | sed 's/|/,/g' >> "/tmp/${csv}"
+				echo $ca3 | sed 's/|/,/g' >> "$csv"
 			fi
 		done
 	done
-	ca5="$(wc -l "/tmp/${csv}" | gawk '{print $1}')"
+	ca5="$(wc -l "$csv" | gawk '{print $1}')"
 	if [ $ca5 -gt 1 ]
 	then
-		ogr2ogr -f "GPKG" -update "$fgpkg1" "/tmp/${csv}" -nln "${nom}_desc" -lco DESCRIPTION="$nom $des_c2"
+		ogr2ogr -f "GPKG" -update "$fgpkg1" "$csv" -nln "${nom}_desc" -lco DESCRIPTION="$nom $des_c2"
 	fi
-	rm "/tmp/${csv}" 2> /dev/null
+	rm "$csv" 2> /dev/null
+
+	# Crear tablas de descargas
+	if [ "${dwn_a["$nom"]}" = "1" ]
+	then
+		dwn_c2=`sqlplus -s ${usu}/${pas}@${bd} <<-EOF2 2> /dev/null
+		set mark csv on
+
+		select *
+		from b5mweb_nombres.dw_list;
+
+		exit;
+		EOF2`
+		rm "$csv" 2> /dev/null
+		i=0
+		for dwn_d in `echo "$dwn_c2"`
+		do
+			if [ $i -eq 0 ]
+			then
+				echo "$dwn_d" | gawk '
+				{
+					gsub("\"ID_DW\"", "\"ID_DW\",\"B5MCODE2\",\"B5MCODE_DW\"")
+					gsub("PATH_DW", "URL_DW")
+					gsub("\"TYPE_FILE\"", "\"TYPE_FILE\",\"SIZE_MB_FILE\"")
+					gsub("\"URL_METADATA\"", "\"URL_METADATA\",\"SRS_NAME\",\"SRS_DES\",\"SRS_URL\"")
+					gsub(",\"CODE_DW\"", "")
+					print tolower($0)
+				}
+				' > "$csv"
+				dw_fields2=`gawk '
+				{
+					gsub("\"", "")
+					gsub(",", ",b.")
+					gsub("id_dw,", "")
+					print $0
+				}
+				' "$csv"`
+				let i=$i+1
+			else
+				IFS=',' read -a dwn_e <<< "$dwn_d"
+				dw_dir1=`echo "${dwn_e[5]}" | gawk '{ gsub("\"", ""); print $0 }'`
+				dw_dir2=`echo "$dw_dir1" | gawk 'BEGIN { FS="/" } { print $NF }'`
+				for dwn_f1 in `ls ${dw_dir1}/*.zip`
+				do
+					dwn_f2=`echo "$dwn_f1" | gawk 'BEGIN { FS="/" } { print $NF }'`
+					code_dw=`echo "$dwn_f2" | gawk 'BEGIN { FS="_" } { print $2 }'`
+					dw_url2="${dw_url1}/${dw_dir2}/${dwn_f2}"
+					code_dw2=`echo "$dwn_f2" | gawk -v b="${dwn_e[9]}" 'BEGIN { FS="." } { gsub ("\"", "", b); split($1, a, "_"); print b "_" a[1] "_" a[3] }'`
+					size_mb=`ls -l ${dwn_f1} | gawk '{ printf "%.2f\n", $5 * 0.000001 }'`
+					echo "${i},\"DW_${code_dw}\",\"DW_${code_dw}_${code_dw2}\",${dwn_e[1]},${dwn_e[2]},${dwn_e[3]},${dwn_e[4]},\"${dw_url2}\",${dwn_e[6]},${dwn_e[7]},${size_mb},${dwn_e[8]},\"${dwn_srs1}\",\"${dwn_srs2}\",\"${dwn_srs3}\"" >> "$csv"
+					let i=$i+1
+				done
+			fi
+		done
+		dwn_g="$(wc -l "$csv" | gawk '{print $1}')"
+		if [ $dwn_g -gt 1 ]
+		then
+			dwn_des="downloads"
+			ogr2ogr -f "GPKG" -update "$fgpkg1" "$csv" -nln "${nom}_asoc" -lco DESCRIPTION="$nom $dwn_des"
+		fi
+		rm "$csv" 2> /dev/null
+
+		# Spatial Views
+		# https://gdal.org/drivers/vector/gpkg.html
+		ogr2ogr -f "GPKG" -update "$fgpkg1" -sql "create view ${nom}_view as select a.*,${dw_fields2} from $nom a join ${nom}_asoc b on a.b5mcode = b.b5mcode2" "$fgpkg1"
+		ogr2ogr -f "GPKG" -update "$fgpkg1" -sql "insert into gpkg_contents (table_name, identifier, data_type, srs_id) values ('${nom}_view', '${nom}_view', 'features', 25830)" "$fgpkg1"
+		ogr2ogr -f "GPKG" -update "$fgpkg1" -sql "insert into gpkg_geometry_columns (table_name, column_name, geometry_type_name, srs_id, z, m) values ('${nom}_view', 'geom', 'GEOMETRY', 25830, 0, 0)" "$fgpkg1"
+	fi
 
 	# Copiar a destino
 	ta01="rm \"/tmp/${tmp}\""
@@ -266,7 +340,7 @@ do
 	fgpkg1="/tmp/${nom}.gpkg"
 	gpkg="${nom}.gpkg"
 	tmp="${nom}_tmp.gpkg"
-	csv="${nom}_tmp.csv"
+	csv="/tmp/${nom}_tmp.csv"
 	if [ $j -eq 0 ]
 	then
 		msg "0/${j}: $(date '+%Y-%m-%d %H:%M:%S') - No se hace nada"
