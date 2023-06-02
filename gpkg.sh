@@ -153,8 +153,12 @@ function hacer_gpkg {
 		dwn_c2=`sqlplus -s ${usu}/${pas}@${bd} <<-EOF2 2> /dev/null
 		set mark csv on
 
-		select *
-		from b5mweb_nombres.dw_list;
+		select a.id_dw,b.code_dw,b.name_eu,b.name_es,b.name_en,a.year,a.path_dw,c.format_dw,d.file_type_dw,a.url_metadata
+		from b5mweb_nombres.dw_list a,b5mweb_nombres.dw_types b,b5mweb_nombres.dw_formats c,b5mweb_nombres.dw_file_types d
+		where a.id_type=b.id_type
+		and a.id_format=c.id_format
+		and a.id_file_type=d.id_file_type
+		order by a.year desc,b.code_dw desc,c.format_dw;
 
 		exit;
 		EOF2`
@@ -168,7 +172,7 @@ function hacer_gpkg {
 				{
 					gsub("\"ID_DW\"", "\"ID_DW\",\"B5MCODE2\",\"B5MCODE_DW\"")
 					gsub("PATH_DW", "URL_DW")
-					gsub("\"TYPE_FILE\"", "\"TYPE_FILE\",\"SIZE_MB_FILE\"")
+					gsub("\"FILE_TYPE_DW\"", "\"FILE_TYPE_DW\",\"FILE_SIZE_MB\"")
 					gsub("\"URL_METADATA\"", "\"URL_METADATA\",\"SRS_NAME\",\"SRS_DES\",\"SRS_URL\"")
 					gsub(",\"CODE_DW\"", "")
 					print tolower($0)
@@ -185,16 +189,16 @@ function hacer_gpkg {
 				let i=$i+1
 			else
 				IFS=',' read -a dwn_e <<< "$dwn_d"
-				dw_dir1=`echo "${dwn_e[5]}" | gawk '{ gsub("\"", ""); print $0 }'`
+				dw_dir1=`echo "${dwn_e[6]}" | gawk '{ gsub("\"", ""); print $0 }'`
 				dw_dir2=`echo "$dw_dir1" | gawk 'BEGIN { FS="/" } { print $NF }'`
 				for dwn_f1 in `ls ${dw_dir1}/*.zip`
 				do
 					dwn_f2=`echo "$dwn_f1" | gawk 'BEGIN { FS="/" } { print $NF }'`
 					code_dw=`echo "$dwn_f2" | gawk 'BEGIN { FS="_" } { print $2 }'`
 					dw_url2="${dw_url1}/${dw_dir2}/${dwn_f2}"
-					code_dw2=`echo "$dwn_f2" | gawk -v b="${dwn_e[9]}" 'BEGIN { FS="." } { gsub ("\"", "", b); split($1, a, "_"); print b "_" a[1] "_" a[3] }'`
+					code_dw2=`echo "$dwn_f2" | gawk -v b="${dwn_e[1]}" 'BEGIN { FS="." } { gsub ("\"", "", b); split($1, a, "_"); print b "_" a[1] "_" a[3] }'`
 					size_mb=`ls -l ${dwn_f1} | gawk '{ printf "%.2f\n", $5 * 0.000001 }'`
-					echo "${i},\"DW_${code_dw}\",\"DW_${code_dw}_${code_dw2}\",${dwn_e[1]},${dwn_e[2]},${dwn_e[3]},${dwn_e[4]},\"${dw_url2}\",${dwn_e[6]},${dwn_e[7]},${size_mb},${dwn_e[8]},\"${dwn_srs1}\",\"${dwn_srs2}\",\"${dwn_srs3}\"" >> "$csv"
+					echo "${i},\"DW_${code_dw}\",\"DW_${code_dw}_${code_dw2}\",${dwn_e[2]},${dwn_e[3]},${dwn_e[4]},${dwn_e[5]},\"${dw_url2}\",${dwn_e[7]},${dwn_e[8]},${size_mb},${dwn_e[9]},\"${dwn_srs1}\",\"${dwn_srs2}\",\"${dwn_srs3}\"" >> "$csv"
 					let i=$i+1
 				done
 			fi
