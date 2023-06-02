@@ -562,11 +562,11 @@ idx_a["r_grid"]="b5mcode"
 des_a["dw_download"]="Descargas / Deskargak / Downloads"
 sql_a["dw_download"]="select
 replace(a.url_2d,'R_','DW_') b5mcode,
-a.nombre_e name_eu,
-a.nombre_c name_es,
-a.tipo_e type_eu,
-a.tipo_c type_es,
-a.tipo_i type_en,
+a.nombre_e name_grid_eu,
+a.nombre_c name_grid_es,
+a.tipo_e type_grid_eu,
+a.tipo_c type_grid_es,
+a.tipo_i type_grid_en,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec5 b
 where a.nombre_e=b.tag
