@@ -36,11 +36,13 @@ logd="${dir}/log"
 crn="$(echo "$0" | gawk 'BEGIN{FS="/"}{print NF}')"
 scr="$(echo "$0" | gawk 'BEGIN{FS="/"}{print $NF}')"
 log="$(echo "$0" | gawk -v logd="$logd" -v dat="$(date '+%Y%m%d')" 'BEGIN{FS="/"}{split($NF,a,".");print logd"/"a[1]"_"dat".log"}')"
+err="$(echo "$0" | gawk -v logd="$logd" -v dat="$(date '+%Y%m%d')" 'BEGIN{FS="/"}{split($NF,a,".");print logd"/"a[1]"_"dat".err"}')"
 if [ ! -d "$logd" ]
 then
 	mkdir "$logd" 2> /dev/null
 fi
 rm "$log" 2> /dev/null
+rm "$err" 2> /dev/null
 
 # Variables descripción campos
 des_c1="field_name,description_eu,description_es,description_en"
@@ -48,7 +50,7 @@ des_c2="field descriptions"
 
 # Varibales tablas descargas
 dwm_c1="\"id_dw\",\"b5mcode\",\"b5mcode2\",\"name_es\",\"name_eu\",\"name_en\",\"year\",\"path_dw\",\"type_dw\",\"type_file\",\"url_metadata\""
-dw_url1="https://b5m.gipuzkoa.eus"
+dwn_url1="https://b5m.gipuzkoa.eus"
 dwn_srs1="EPSG:25830"
 dwn_srs2="ETRS89 / UTM zone 30N"
 dwn_srs3="https://epsg.io/25830"
@@ -153,12 +155,14 @@ function hacer_gpkg {
 		dwn_c2=`sqlplus -s ${usu}/${pas}@${bd} <<-EOF2 2> /dev/null
 		set mark csv on
 
-		select a.id_dw,b.code_dw,b.name_eu,b.name_es,b.name_en,a.year,a.path_dw,c.format_dw,d.file_type_dw,a.url_metadata
-		from b5mweb_nombres.dw_list a,b5mweb_nombres.dw_types b,b5mweb_nombres.dw_formats c,b5mweb_nombres.dw_file_types d
+		select a.id_dw,b.code_dw,b.name_eu,b.name_es,b.name_en,a.year,replace(listagg(c.format_dir,';') within group (order by c.format_dir),'year',a.path_dw||'/'||a.year) path_dw,listagg(c.format_dw,';') within group (order by c.format_dw) format_dw,d.file_type_dw,a.url_metadata
+		from b5mweb_nombres.dw_list a,b5mweb_nombres.dw_types b,b5mweb_nombres.dw_formats c,b5mweb_nombres.dw_file_types d,b5mweb_nombres.dw_rel_formats e
 		where a.id_type=b.id_type
-		and a.id_format=c.id_format
 		and a.id_file_type=d.id_file_type
-		order by a.year desc,b.code_dw desc,c.format_dw;
+		and a.id_dw=e.id_dw
+		and c.id_format=e.id_format
+		group by a.id_dw,b.code_dw,b.name_eu,b.name_es,b.name_en,a.year,a.path_dw,d.file_type_dw,a.url_metadata
+		order by a.year desc,b.code_dw desc;
 
 		exit;
 		EOF2`
@@ -178,7 +182,7 @@ function hacer_gpkg {
 					print tolower($0)
 				}
 				' > "$csv"
-				dw_fields2=`gawk '
+				dwn_fields2=`gawk '
 				{
 					gsub("\"", "")
 					gsub(",", ",b.")
@@ -189,16 +193,41 @@ function hacer_gpkg {
 				let i=$i+1
 			else
 				IFS=',' read -a dwn_e <<< "$dwn_d"
-				dw_dir1=`echo "${dwn_e[6]}" | gawk '{ gsub("\"", ""); print $0 }'`
-				dw_dir2=`echo "$dw_dir1" | gawk 'BEGIN { FS="/" } { print $NF }'`
-				for dwn_f1 in `ls ${dw_dir1}/*.zip`
+				dwn_dir1=`echo "${dwn_e[6]}" | gawk '{ gsub("\"", ""); print $0 }'`
+				dwn_typ1=`echo "${dwn_e[7]}" | gawk '{ gsub("\"", ""); print $0 }'`
+				IFS=';' read -a dwn_dir1_a <<< "$dwn_dir1"
+				IFS=';' read -a dwn_typ1_a <<< "$dwn_typ1"
+				dwn_typ2=`echo ${dwn_dir1_a[0]} | gawk 'BEGIN { FS = "/" } { split($NF, a, "_"); print a[2]}'`
+				for dwn_f1 in `ls ${dwn_dir1_a[0]}/*.zip`
 				do
-					dwn_f2=`echo "$dwn_f1" | gawk 'BEGIN { FS="/" } { print $NF }'`
-					code_dw=`echo "$dwn_f2" | gawk 'BEGIN { FS="_" } { print $2 }'`
-					dw_url2="${dw_url1}/${dw_dir2}/${dwn_f2}"
-					code_dw2=`echo "$dwn_f2" | gawk -v b="${dwn_e[1]}" 'BEGIN { FS="." } { gsub ("\"", "", b); split($1, a, "_"); print b "_" a[1] "_" a[3] }'`
-					size_mb=`ls -l ${dwn_f1} | gawk '{ printf "%.2f\n", $5 * 0.000001 }'`
-					echo "${i},\"DW_${code_dw}\",\"DW_${code_dw}_${code_dw2}\",${dwn_e[2]},${dwn_e[3]},${dwn_e[4]},${dwn_e[5]},\"${dw_url2}\",${dwn_e[7]},${dwn_e[8]},${size_mb},${dwn_e[9]},\"${dwn_srs1}\",\"${dwn_srs2}\",\"${dwn_srs3}\"" >> "$csv"
+					dwn_url3=""
+					dwn_typ1_i=""
+					dwn_size_mb2=""
+					j=0
+					for dwn_dir1_i in "${dwn_dir1_a[@]}"
+					do
+						dwn_typ3=`echo "$dwn_dir1_i" | gawk 'BEGIN { FS = "/" } { split($NF, a, "_"); print a[2]}'`
+						dwn_dir2_i=`echo "$dwn_dir1_i" | gawk 'BEGIN { FS="/" } { print $NF }'`
+						dwn_f2=`echo "$dwn_f1" | gawk -v a="$dwn_typ2" -v b="$dwn_typ3" '{ gsub (a, b); print $0 }'`
+						dwn_f3=`echo "$dwn_f2" | gawk 'BEGIN { FS="/" } { print $NF }'`
+						code_dw=`echo "$dwn_f3" | gawk 'BEGIN { FS="_" } { print $2 }'`
+						dwn_url2="${dwn_url1}/${dwn_dir2_i}/${dwn_f3}"
+						code_dw2=`echo "$dwn_f3" | gawk -v b="${dwn_e[1]}" 'BEGIN { FS="." } { gsub ("\"", "", b); split($1, a, "_"); print b "_" a[1] }'`
+						dwn_size_mb1=`ls -l ${dwn_f2} 2> /dev/null | gawk '{ printf "%.2f\n", $5 * 0.000001 }'`
+						if [ "$dwn_size_mb1" = "" ]
+						then
+							echo "No existe el fichero $dwn_f2" >> "$err"
+						else
+							dwn_url3="${dwn_url3}${dwn_url2},"
+							dwn_typ1_i="${dwn_typ1_i}${dwn_typ1_a[$j]},"
+							dwn_size_mb2="${dwn_size_mb2}${dwn_size_mb1},"
+						fi
+						let j=$j+1
+					done
+					dwn_url3=`echo "$dwn_url3" | gawk '{ print substr($0, 1, length($0)-1)}'`
+					dwn_typ1_i=`echo "$dwn_typ1_i" | gawk '{ print substr($0, 1, length($0)-1)}'`
+					dwn_size_mb2=`echo "$dwn_size_mb2" | gawk '{ print substr($0, 1, length($0)-1)}'`
+					echo "${i},\"DW_${code_dw}\",\"DW_${code_dw}_${code_dw2}\",${dwn_e[2]},${dwn_e[3]},${dwn_e[4]},${dwn_e[5]},\"${dwn_url3}\",\"${dwn_typ1_i}\",${dwn_e[8]},\"${dwn_size_mb2}\",${dwn_e[9]},\"${dwn_srs1}\",\"${dwn_srs2}\",\"${dwn_srs3}\"" >> "$csv"
 					let i=$i+1
 				done
 			fi
@@ -213,7 +242,7 @@ function hacer_gpkg {
 
 		# Spatial Views
 		# https://gdal.org/drivers/vector/gpkg.html
-		ogr2ogr -f "GPKG" -update "$fgpkg1" -sql "create view ${nom}_view as select a.*,${dw_fields2} from $nom a join ${nom}_asoc b on a.b5mcode = b.b5mcode2" "$fgpkg1"
+		ogr2ogr -f "GPKG" -update "$fgpkg1" -sql "create view ${nom}_view as select a.*,${dwn_fields2} from $nom a join ${nom}_asoc b on a.b5mcode = b.b5mcode2" "$fgpkg1"
 		ogr2ogr -f "GPKG" -update "$fgpkg1" -sql "insert into gpkg_contents (table_name, identifier, data_type, srs_id) values ('${nom}_view', '${nom}_view', 'features', 25830)" "$fgpkg1"
 		ogr2ogr -f "GPKG" -update "$fgpkg1" -sql "insert into gpkg_geometry_columns (table_name, column_name, geometry_type_name, srs_id, z, m) values ('${nom}_view', 'geom', 'GEOMETRY', 25830, 0, 0)" "$fgpkg1"
 	fi
