@@ -36,7 +36,7 @@ logd="${dir}/log"
 crn="$(echo "$0" | gawk 'BEGIN{FS="/"}{print NF}')"
 scr="$(echo "$0" | gawk 'BEGIN{FS="/"}{print $NF}')"
 log="$(echo "$0" | gawk -v logd="$logd" -v dat="$(date '+%Y%m%d')" 'BEGIN{FS="/"}{split($NF,a,".");print logd"/"a[1]"_"dat".log"}')"
-err="$(echo "$0" | gawk -v logd="$logd" -v dat="$(date '+%Y%m%d')" 'BEGIN{FS="/"}{split($NF,a,".");print logd"/"a[1]"_"dat".err"}')"
+err="$(echo "$0" | gawk -v logd="$logd" -v dat="$(date '+%Y%m%d')" 'BEGIN{FS="/"}{split($NF,a,".");print logd"/"a[1]"_"dat"_err.csv"}')"
 if [ ! -d "$logd" ]
 then
 	mkdir "$logd" 2> /dev/null
@@ -216,17 +216,17 @@ function hacer_gpkg {
 						dwn_size_mb1=`ls -l ${dwn_f2} 2> /dev/null | gawk '{ printf "%.2f\n", $5 * 0.000001 }'`
 						if [ "$dwn_size_mb1" = "" ]
 						then
-							echo "No existe el fichero $dwn_f2" >> "$err"
+							echo "\"${nom}\",\"$dwn_f2\",\"no existe fichero\"" >> "$err"
 						else
-							dwn_url3="${dwn_url3}${dwn_url2},"
-							dwn_typ1_i="${dwn_typ1_i}${dwn_typ1_a[$j]},"
+							dwn_url3="${dwn_url3}'${dwn_url2}',"
+							dwn_typ1_i="${dwn_typ1_i}'${dwn_typ1_a[$j]}',"
 							dwn_size_mb2="${dwn_size_mb2}${dwn_size_mb1},"
 						fi
 						let j=$j+1
 					done
-					dwn_url3=`echo "$dwn_url3" | gawk '{ print substr($0, 1, length($0)-1)}'`
-					dwn_typ1_i=`echo "$dwn_typ1_i" | gawk '{ print substr($0, 1, length($0)-1)}'`
-					dwn_size_mb2=`echo "$dwn_size_mb2" | gawk '{ print substr($0, 1, length($0)-1)}'`
+					dwn_url3=`echo "$dwn_url3" | gawk '{ print "[" substr($0, 1, length($0)-1) "]" }'`
+					dwn_typ1_i=`echo "$dwn_typ1_i" | gawk '{ print "[" substr($0, 1, length($0)-1) "]" }'`
+					dwn_size_mb2=`echo "$dwn_size_mb2" | gawk '{ print "[" substr($0, 1, length($0)-1) "]" }'`
 					echo "${i},\"DW_${code_dw}\",\"DW_${code_dw}_${code_dw2}\",${dwn_e[2]},${dwn_e[3]},${dwn_e[4]},${dwn_e[5]},\"${dwn_url3}\",\"${dwn_typ1_i}\",${dwn_e[8]},\"${dwn_size_mb2}\",${dwn_e[9]},\"${dwn_srs1}\",\"${dwn_srs2}\",\"${dwn_srs3}\"" >> "$csv"
 					let i=$i+1
 				done
