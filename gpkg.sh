@@ -197,7 +197,37 @@ function hacer_gpkg {
 				IFS=';' read -a dwn_dir1_a <<< "$dwn_dir1"
 				IFS=';' read -a dwn_typ1_a <<< "$dwn_typ1"
 				dwn_typ2=`echo ${dwn_dir1_a[0]} | gawk 'BEGIN { FS = "/" } { split($NF, a, "_"); print a[2]}'`
-				for dwn_f1 in `ls ${dwn_dir1_a[0]}/*.zip`
+				dwn_file_type=`echo "${dwn_e[8]}" | sed s/\"//g`
+				dwn_file_type2=`echo "$dwn_file_type" | gawk '{ print tolower($0)}'`
+
+				# Comprobando que haya el mismo numero de descargas disponibles en los distintos formatos
+				num_a=0
+				war_a=0
+				if [ "${#dwn_dir1_a[@]}" -gt 1 ]
+				then
+					j=0
+					for dwn_dir1_b in "${dwn_dir1_a[@]}"
+					do
+						num_b=`ls ${dwn_dir1_b}/*.${dwn_file_type2} | wc -l`
+						if [ $j -eq 0 ]
+						then
+							num_a=$num_b
+						else
+							if [ $num_a -ne $num_b ]
+							then
+								war_a=1
+							fi
+							num_a=$num_b
+						fi
+						let j=$j+1
+					done
+				fi
+				if [ $war_a -eq 1 ]
+				then
+					echo "\"${nom}\",${dwn_e[5]},\"$dwn_dir1\",\"número de ficheros diferente entre formatos\"" >> "$err"
+				fi
+
+				for dwn_f1 in `ls ${dwn_dir1_a[0]}/*.${dwn_file_type2}`
 				do
 					dwn_format="["
 					j=0
@@ -213,9 +243,8 @@ function hacer_gpkg {
 						dwn_size_mb1=`ls -l ${dwn_f2} 2> /dev/null | gawk '{ printf "%.2f\n", $5 * 0.000001 }'`
 						if [ "$dwn_size_mb1" = "" ]
 						then
-							echo "\"${nom}\",\"$dwn_f2\",\"no existe fichero\"" >> "$err"
+							echo "\"${nom}\",${dwn_e[5]},\"$dwn_f2\",\"no existe fichero\"" >> "$err"
 						else
-							dwn_file_type=`echo "${dwn_e[8]}" | sed s/\"//g`
 							dwn_format="${dwn_format} { 'format_dw': '${dwn_typ1_a[$j]}', 'url_dw': '${dwn_url2}', 'file_type_dw': '${dwn_file_type}', 'file_size_mb': $dwn_size_mb1 },"
 						fi
 						let j=$j+1
