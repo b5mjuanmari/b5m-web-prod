@@ -175,8 +175,7 @@ function hacer_gpkg {
 				echo "$dwn_d" | gawk '
 				{
 					gsub("\"ID_DW\"", "\"ID_DW\",\"B5MCODE2\",\"B5MCODE_DW\"")
-					gsub("PATH_DW", "URL_DW")
-					gsub("\"FILE_TYPE_DW\"", "\"FILE_TYPE_DW\",\"FILE_SIZE_MB\"")
+					gsub("\"PATH_DW\",\"FORMAT_DW\",\"FILE_TYPE_DW\"", "\"FORMAT\"")
 					gsub("\"URL_METADATA\"", "\"URL_METADATA\",\"SRS_NAME\",\"SRS_DES\",\"SRS_URL\"")
 					gsub(",\"CODE_DW\"", "")
 					print tolower($0)
@@ -200,9 +199,7 @@ function hacer_gpkg {
 				dwn_typ2=`echo ${dwn_dir1_a[0]} | gawk 'BEGIN { FS = "/" } { split($NF, a, "_"); print a[2]}'`
 				for dwn_f1 in `ls ${dwn_dir1_a[0]}/*.zip`
 				do
-					dwn_url3=""
-					dwn_typ1_i=""
-					dwn_size_mb2=""
+					dwn_format="["
 					j=0
 					for dwn_dir1_i in "${dwn_dir1_a[@]}"
 					do
@@ -218,16 +215,13 @@ function hacer_gpkg {
 						then
 							echo "\"${nom}\",\"$dwn_f2\",\"no existe fichero\"" >> "$err"
 						else
-							dwn_url3="${dwn_url3}'${dwn_url2}',"
-							dwn_typ1_i="${dwn_typ1_i}'${dwn_typ1_a[$j]}',"
-							dwn_size_mb2="${dwn_size_mb2}${dwn_size_mb1},"
+							dwn_file_type=`echo "${dwn_e[8]}" | sed s/\"//g`
+							dwn_format="${dwn_format} { 'format_dw': '${dwn_typ1_a[$j]}', 'url_dw': '${dwn_url2}', 'file_type_dw': '${dwn_file_type}', 'file_size_mb': $dwn_size_mb1 },"
 						fi
 						let j=$j+1
 					done
-					dwn_url3=`echo "$dwn_url3" | gawk '{ print "[" substr($0, 1, length($0)-1) "]" }'`
-					dwn_typ1_i=`echo "$dwn_typ1_i" | gawk '{ print "[" substr($0, 1, length($0)-1) "]" }'`
-					dwn_size_mb2=`echo "$dwn_size_mb2" | gawk '{ print "[" substr($0, 1, length($0)-1) "]" }'`
-					echo "${i},\"DW_${code_dw}\",\"DW_${code_dw}_${code_dw2}\",${dwn_e[2]},${dwn_e[3]},${dwn_e[4]},${dwn_e[5]},\"${dwn_url3}\",\"${dwn_typ1_i}\",${dwn_e[8]},\"${dwn_size_mb2}\",${dwn_e[9]},\"${dwn_srs1}\",\"${dwn_srs2}\",\"${dwn_srs3}\"" >> "$csv"
+					dwn_format=`echo "$dwn_format" | gawk '{ print substr($0, 1, length($0)-1) " ]" }'`
+					echo "${i},\"DW_${code_dw}\",\"DW_${code_dw}_${code_dw2}\",${dwn_e[2]},${dwn_e[3]},${dwn_e[4]},${dwn_e[5]},\"${dwn_format}\",${dwn_e[9]},\"${dwn_srs1}\",\"${dwn_srs2}\",\"${dwn_srs3}\"" >> "$csv"
 					let i=$i+1
 				done
 			fi
