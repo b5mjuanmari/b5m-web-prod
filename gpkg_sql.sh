@@ -475,7 +475,7 @@ a.tipo_c type_es,
 a.tipo_i type_en,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec2 b
-where substr(a.nombre_e,1,2)||lower(substr(a.nombre_e,3,1))=b.tag
+where a.nombre_e=b.tag
 and a.tipo_e='2x2 km'
 and a.url_2d like 'R_%'
 union all
