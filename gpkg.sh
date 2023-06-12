@@ -175,7 +175,8 @@ function hacer_gpkg {
 				echo "$dwn_d" | gawk '
 				{
 					gsub("\"ID_DW\"", "\"ID_DW\",\"B5MCODE2\",\"B5MCODE_DW\"")
-					gsub("\"PATH_DW\",\"FORMAT_DW\",\"FILE_TYPE_DW\"", "\"FORMAT\"")
+					#gsub("\"PATH_DW\",\"FORMAT_DW\",\"FILE_TYPE_DW\"", "\"FORMAT\"")
+					gsub("\"PATH_DW\",\"FORMAT_DW\",\"FILE_TYPE_DW\"", "\"SERIES_DW\"")
 					gsub("\"URL_METADATA\"", "\"URL_METADATA\",\"SRS_NAME\",\"SRS_DES\",\"SRS_URL\"")
 					gsub(",\"CODE_DW\"", "")
 					print tolower($0)
@@ -229,7 +230,8 @@ function hacer_gpkg {
 
 				for dwn_f1 in `ls ${dwn_dir1_a[0]}/*.${dwn_file_type2}`
 				do
-					dwn_format="["
+					#dwn_format="["
+					dwn_format="[ { 'b5mcode_dw': 'DW_${code_dw}_${code_dw2}', 'year': '${dwn_e[5]}', 'format': ["
 					j=0
 					for dwn_dir1_i in "${dwn_dir1_a[@]}"
 					do
@@ -250,6 +252,7 @@ function hacer_gpkg {
 						let j=$j+1
 					done
 					dwn_format=`echo "$dwn_format" | gawk '{ print substr($0, 1, length($0)-1) " ]" }'`
+					dwn_format="${dwn_format} } ]"
 					echo "${i},\"DW_${code_dw}\",\"DW_${code_dw}_${code_dw2}\",${dwn_e[2]},${dwn_e[3]},${dwn_e[4]},${dwn_e[5]},\"${dwn_format}\",${dwn_e[9]},\"${dwn_srs1}\",\"${dwn_srs2}\",\"${dwn_srs3}\"" >> "$csv"
 					let i=$i+1
 				done
@@ -261,7 +264,7 @@ function hacer_gpkg {
 			dwn_des="downloads"
 			ogr2ogr -f "GPKG" -update "$fgpkg1" "$csv" -nln "${nom}_asoc" -lco DESCRIPTION="$nom $dwn_des"
 		fi
-		rm "$csv" 2> /dev/null
+		#rm "$csv" 2> /dev/null
 
 		# Spatial Views
 		# https://gdal.org/drivers/vector/gpkg.html
