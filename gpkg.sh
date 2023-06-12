@@ -51,9 +51,6 @@ des_c2="field descriptions"
 # Varibales tablas descargas
 dwm_c1="\"id_dw\",\"b5mcode\",\"b5mcode2\",\"name_es\",\"name_eu\",\"name_en\",\"year\",\"path_dw\",\"type_dw\",\"type_file\",\"url_metadata\""
 dwn_url1="https://b5m.gipuzkoa.eus"
-dwn_srs1="EPSG:25830"
-dwn_srs2="ETRS89 / UTM zone 30N"
-dwn_srs3="https://epsg.io/25830"
 
 # Dependencias
 source "${dir}/gpkg_sql.sh"
@@ -174,10 +171,8 @@ function hacer_gpkg {
 			then
 				echo "$dwn_d" | gawk '
 				{
-					gsub("\"ID_DW\"", "\"ID_DW\",\"B5MCODE2\",\"B5MCODE_DW\"")
-					#gsub("\"PATH_DW\",\"FORMAT_DW\",\"FILE_TYPE_DW\"", "\"FORMAT\"")
-					gsub("\"PATH_DW\",\"FORMAT_DW\",\"FILE_TYPE_DW\"", "\"SERIES_DW\"")
-					gsub("\"URL_METADATA\"", "\"URL_METADATA\",\"SRS_NAME\",\"SRS_DES\",\"SRS_URL\"")
+					gsub("\"ID_DW\"", "\"ID_DW\",\"B5MCODE2\"")
+					gsub("\"YEAR\",\"PATH_DW\",\"FORMAT_DW\",\"FILE_TYPE_DW\"", "\"SERIES_DW\"")
 					gsub(",\"CODE_DW\"", "")
 					print tolower($0)
 				}
@@ -230,8 +225,10 @@ function hacer_gpkg {
 
 				for dwn_f1 in `ls ${dwn_dir1_a[0]}/*.${dwn_file_type2}`
 				do
-					#dwn_format="["
-					dwn_format="[ { 'b5mcode_dw': 'DW_${code_dw}_${code_dw2}', 'year': '${dwn_e[5]}', 'format': ["
+					code_dw=`echo "$dwn_f1" | gawk 'BEGIN { FS = "/" } { split($NF, a, "_"); print a[2]}'`
+					code_dw2=`echo "$dwn_f1" | gawk -v b="${dwn_e[1]}" 'BEGIN { FS = "/" } { gsub ("\"", "", b); split($NF, a, "_"); print b "_" a[1]}'`
+					year=`echo "${dwn_e[5]}" | sed s/\"//g`
+					dwn_format="[ { 'b5mcode_dw': 'DW_${code_dw}_${code_dw2}', 'year': '${year}', 'format': ["
 					j=0
 					for dwn_dir1_i in "${dwn_dir1_a[@]}"
 					do
@@ -239,9 +236,7 @@ function hacer_gpkg {
 						dwn_dir2_i=`echo "$dwn_dir1_i" | gawk 'BEGIN { FS="/" } { print $NF }'`
 						dwn_f2=`echo "$dwn_f1" | gawk -v a="$dwn_typ2" -v b="$dwn_typ3" '{ gsub (a, b); print $0 }'`
 						dwn_f3=`echo "$dwn_f2" | gawk 'BEGIN { FS="/" } { print $NF }'`
-						code_dw=`echo "$dwn_f3" | gawk 'BEGIN { FS="_" } { print $2 }'`
 						dwn_url2="${dwn_url1}/${dwn_dir2_i}/${dwn_f3}"
-						code_dw2=`echo "$dwn_f3" | gawk -v b="${dwn_e[1]}" 'BEGIN { FS="." } { gsub ("\"", "", b); split($1, a, "_"); print b "_" a[1] }'`
 						dwn_size_mb1=`ls -l ${dwn_f2} 2> /dev/null | gawk '{ printf "%.2f\n", $5 * 0.000001 }'`
 						if [ "$dwn_size_mb1" = "" ]
 						then
@@ -253,7 +248,7 @@ function hacer_gpkg {
 					done
 					dwn_format=`echo "$dwn_format" | gawk '{ print substr($0, 1, length($0)-1) " ]" }'`
 					dwn_format="${dwn_format} } ]"
-					echo "${i},\"DW_${code_dw}\",\"DW_${code_dw}_${code_dw2}\",${dwn_e[2]},${dwn_e[3]},${dwn_e[4]},${dwn_e[5]},\"${dwn_format}\",${dwn_e[9]},\"${dwn_srs1}\",\"${dwn_srs2}\",\"${dwn_srs3}\"" >> "$csv"
+					echo "${i},\"DW_${code_dw}\",${dwn_e[2]},${dwn_e[3]},${dwn_e[4]},\"${dwn_format}\",${dwn_e[9]}" >> "$csv"
 					let i=$i+1
 				done
 			fi
