@@ -184,6 +184,7 @@ function hacer_gpkg {
 					gsub("\"", "")
 					gsub(",", ",b.")
 					gsub("id_dw,", "")
+					gsub("b.dw_cat,b.year,", "")
 					print $0
 				}
 				' "$csv1"`
@@ -229,10 +230,9 @@ function hacer_gpkg {
 				do
 					code_dw=`echo "$dwn_f1" | gawk 'BEGIN { FS = "/" } { split($NF, a, "_"); print a[2]}'`
 					code_dw2=`echo "$dwn_f1" | gawk -v b="${dwn_e[1]}" 'BEGIN { FS = "/" } { gsub ("\"", "", b); split($NF, a, "_"); print b "_" a[1]}'`
-					dw_year=`echo "${dwn_e[5]}" | sed s/\"//g`
-					dw_metad=`echo "${dwn_e[9]}" | sed s/\"//g`
-					#dwn_format="[ { 'b5mcode_dw': 'DW_${code_dw}_${code_dw2}', 'year': '${dw_year}', 'format': ["
-					dwn_format="{ 'year': '${dw_year}', 'b5mcode_dw': 'DW_${code_dw}_${code_dw2}', 'format': ["
+					dwn_year=`echo "${dwn_e[5]}" | sed s/\"//g`
+					dwn_metad=`echo "${dwn_e[9]}" | sed s/\"//g`
+					dwn_format="{ 'year': '${dwn_year}', 'b5mcode_dw': 'DW_${code_dw}_${code_dw2}', 'format': ["
 					j=0
 					for dwn_dir1_i in "${dwn_dir1_a[@]}"
 					do
@@ -251,7 +251,7 @@ function hacer_gpkg {
 						let j=$j+1
 					done
 					dwn_format=`echo "$dwn_format" | gawk '{ print substr($0, 1, length($0)-1) " ]" }'`
-					dwn_format="${dwn_format}, 'url_metadata': '${dw_metad}'"
+					dwn_format="${dwn_format}, 'url_metadata': '${dwn_metad}'"
 					dwn_format="${dwn_format} }"
 					echo "${i},\"DW_${code_dw}\",${dwn_e[1]},${dwn_e[5]},${dwn_e[2]},${dwn_e[3]},${dwn_e[4]},\"${dwn_format}\"" >> "$csv1"
 					let i=$i+1
@@ -263,15 +263,53 @@ function hacer_gpkg {
 		then
 			# Formateo del CSV
 			rm "$csv2" 2> /dev/null
-			#sort -t ":" -k "2,3" "$csv1" | gawk '
-			sort -t, -k2,2 "$csv1" | gawk '
-			{
-				print $0
+			rm "$csv3" 2> /dev/null
+			head -1 "$csv1" | gawk '
+			BEGIN {
+			  FPAT = "([^,]*)|(\"[^\"]+\")"
+			  OFS = ","
 			}
-			' > "$csv2"
-			ogr2ogr -f "GPKG" -update "$fgpkg1" "$csv1" -nln "${nom}_asoc" -lco DESCRIPTION="$nom $dwn_des"
+			{
+			  print $1,$2,$5,$6,$7,$8
+			}
+			' > "$csv3"
+			sed -e "1d" "$csv1" > "$csv2"
+			sort -t, -k3,3 -k2,2 -k4,4r "$csv2" | gawk '
+			BEGIN {
+			  FPAT = "([^,]*)|(\"[^\"]+\")"
+			  OFS = ","
+			  i = 1
+			  j = 1
+			}
+			{
+			  gsub ("\"", "", $8)
+			  if (NR == 1) {
+			    a8a = $8
+			  } else {
+			    if ($2 == a2) {
+			      a8a = a8a ", " $8
+			    } else {
+			      print j, a2, a5, a6, a7, "\"[ " a8a " ]\""
+			      a8a = $8
+			      i = 1
+			      j++
+			    }
+			  }
+			  a2 = $2
+			  a5 = $5
+			  a6 = $6
+			  a7 = $7
+			  i++
+			}
+			END {
+			  print j, $2, $5, $6, $7, "\"[ " a8a " ]\""
+			}
+			' >> "$csv3"
+			ogr2ogr -f "GPKG" -update "$fgpkg1" "$csv3" -nln "${nom}_asoc" -lco DESCRIPTION="$nom $dwn_des"
 		fi
-		#rm "$csv1" 2> /dev/null
+		rm "$csv1" 2> /dev/null
+		rm "$csv2" 2> /dev/null
+		rm "$csv3" 2> /dev/null
 
 		# Spatial Views
 		# https://gdal.org/drivers/vector/gpkg.html
@@ -408,6 +446,7 @@ do
 	tmp="${nom}_tmp.gpkg"
 	csv1="/tmp/${nom}_tmp1.csv"
 	csv2="/tmp/${nom}_tmp2.csv"
+	csv3="/tmp/${nom}_tmp3.csv"
 	if [ $j -eq 0 ]
 	then
 		msg "0/${j}: $(date '+%Y-%m-%d %H:%M:%S') - No se hace nada"
