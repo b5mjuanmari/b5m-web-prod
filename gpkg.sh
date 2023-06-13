@@ -172,9 +172,10 @@ function hacer_gpkg {
 			then
 				echo "$dwn_d" | gawk '
 				{
-					gsub("\"ID_DW\"", "\"ID_DW\",\"B5MCODE2\"")
+					gsub("\"ID_DW\"", "\"ID_DW\",\"B5MCODE2\",\"DW_CAT\",\"YEAR\"")
 					gsub("\"YEAR\",\"PATH_DW\",\"FORMAT_DW\",\"FILE_TYPE_DW\"", "\"SERIES_DW\"")
 					gsub(",\"CODE_DW\"", "")
+					gsub(",\"URL_METADATA\"", "")
 					print tolower($0)
 				}
 				' > "$csv1"
@@ -189,8 +190,8 @@ function hacer_gpkg {
 				let i=$i+1
 			else
 				IFS=',' read -a dwn_e <<< "$dwn_d"
-				dwn_dir1=`echo "${dwn_e[6]}" | gawk '{ gsub("\"", ""); print $0 }'`
-				dwn_typ1=`echo "${dwn_e[7]}" | gawk '{ gsub("\"", ""); print $0 }'`
+				dwn_dir1=`echo "${dwn_e[6]}" | sed s/\"//g`
+				dwn_typ1=`echo "${dwn_e[7]}" | sed s/\"//g`
 				IFS=';' read -a dwn_dir1_a <<< "$dwn_dir1"
 				IFS=';' read -a dwn_typ1_a <<< "$dwn_typ1"
 				dwn_typ2=`echo ${dwn_dir1_a[0]} | gawk 'BEGIN { FS = "/" } { split($NF, a, "_"); print a[2]}'`
@@ -228,8 +229,10 @@ function hacer_gpkg {
 				do
 					code_dw=`echo "$dwn_f1" | gawk 'BEGIN { FS = "/" } { split($NF, a, "_"); print a[2]}'`
 					code_dw2=`echo "$dwn_f1" | gawk -v b="${dwn_e[1]}" 'BEGIN { FS = "/" } { gsub ("\"", "", b); split($NF, a, "_"); print b "_" a[1]}'`
-					year=`echo "${dwn_e[5]}" | sed s/\"//g`
-					dwn_format="[ { 'b5mcode_dw': 'DW_${code_dw}_${code_dw2}', 'year': '${year}', 'format': ["
+					dw_year=`echo "${dwn_e[5]}" | sed s/\"//g`
+					dw_metad=`echo "${dwn_e[9]}" | sed s/\"//g`
+					#dwn_format="[ { 'b5mcode_dw': 'DW_${code_dw}_${code_dw2}', 'year': '${dw_year}', 'format': ["
+					dwn_format="{ 'year': '${dw_year}', 'b5mcode_dw': 'DW_${code_dw}_${code_dw2}', 'format': ["
 					j=0
 					for dwn_dir1_i in "${dwn_dir1_a[@]}"
 					do
@@ -248,8 +251,9 @@ function hacer_gpkg {
 						let j=$j+1
 					done
 					dwn_format=`echo "$dwn_format" | gawk '{ print substr($0, 1, length($0)-1) " ]" }'`
-					dwn_format="${dwn_format} } ]"
-					echo "${i},\"DW_${code_dw}\",${dwn_e[2]},${dwn_e[3]},${dwn_e[4]},\"${dwn_format}\",${dwn_e[9]}" >> "$csv1"
+					dwn_format="${dwn_format}, 'url_metadata': '${dw_metad}'"
+					dwn_format="${dwn_format} }"
+					echo "${i},\"DW_${code_dw}\",${dwn_e[1]},${dwn_e[5]},${dwn_e[2]},${dwn_e[3]},${dwn_e[4]},\"${dwn_format}\"" >> "$csv1"
 					let i=$i+1
 				done
 			fi
@@ -259,7 +263,8 @@ function hacer_gpkg {
 		then
 			# Formateo del CSV
 			rm "$csv2" 2> /dev/null
-			sort -t ":" -k "2,3" "$csv1" | gawk '
+			#sort -t ":" -k "2,3" "$csv1" | gawk '
+			sort -t, -k2,2 "$csv1" | gawk '
 			{
 				print $0
 			}
