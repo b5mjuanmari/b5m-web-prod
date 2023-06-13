@@ -126,8 +126,8 @@ function hacer_gpkg {
 	# Crear tabla con las descripciones de los campos
 	ca0="$(ogrinfo -al -so $fgpkg1 $nom | gawk 'BEGIN{a=0;FS=":"}{if(match($0,"Geometry Column")!=0){a=1;getline};if(a==1){print $1}}')"
 	IFS='#' read -a ca1 <<< "${der_a["$nom"]}"
-	rm "$csv" 2> /dev/null
-	echo "$des_c1" > "$csv"
+	rm "$csv1" 2> /dev/null
+	echo "$des_c1" > "$csv1"
 	for ca2 in $ca0
 	do
 		for ca3 in "${ca1[@]}"
@@ -135,20 +135,21 @@ function hacer_gpkg {
 			IFS='|' read -a ca4 <<< "$ca3"
 			if [ "$ca2" = "${ca4[0]}" ]
 			then
-				echo $ca3 | sed 's/|/,/g' >> "$csv"
+				echo $ca3 | sed 's/|/,/g' >> "$csv1"
 			fi
 		done
 	done
-	ca5="$(wc -l "$csv" | gawk '{print $1}')"
+	ca5="$(wc -l "$csv1" | gawk '{print $1}')"
 	if [ $ca5 -gt 1 ]
 	then
-		ogr2ogr -f "GPKG" -update "$fgpkg1" "$csv" -nln "${nom}_desc" -lco DESCRIPTION="$nom $des_c2"
+		ogr2ogr -f "GPKG" -update "$fgpkg1" "$csv1" -nln "${nom}_desc" -lco DESCRIPTION="$nom $des_c2"
 	fi
-	rm "$csv" 2> /dev/null
+	rm "$csv1" 2> /dev/null
 
 	# Crear tablas de descargas
 	if [ "${dwn_a["$nom"]}" = "1" ]
 	then
+		dwn_des="downloads"
 		dwn_c2=`sqlplus -s ${usu}/${pas}@${bd} <<-EOF2 2> /dev/null
 		set mark csv on
 
@@ -163,7 +164,7 @@ function hacer_gpkg {
 
 		exit;
 		EOF2`
-		rm "$csv" 2> /dev/null
+		rm "$csv1" 2> /dev/null
 		i=0
 		for dwn_d in `echo "$dwn_c2"`
 		do
@@ -176,7 +177,7 @@ function hacer_gpkg {
 					gsub(",\"CODE_DW\"", "")
 					print tolower($0)
 				}
-				' > "$csv"
+				' > "$csv1"
 				dwn_fields2=`gawk '
 				{
 					gsub("\"", "")
@@ -184,7 +185,7 @@ function hacer_gpkg {
 					gsub("id_dw,", "")
 					print $0
 				}
-				' "$csv"`
+				' "$csv1"`
 				let i=$i+1
 			else
 				IFS=',' read -a dwn_e <<< "$dwn_d"
@@ -248,18 +249,24 @@ function hacer_gpkg {
 					done
 					dwn_format=`echo "$dwn_format" | gawk '{ print substr($0, 1, length($0)-1) " ]" }'`
 					dwn_format="${dwn_format} } ]"
-					echo "${i},\"DW_${code_dw}\",${dwn_e[2]},${dwn_e[3]},${dwn_e[4]},\"${dwn_format}\",${dwn_e[9]}" >> "$csv"
+					echo "${i},\"DW_${code_dw}\",${dwn_e[2]},${dwn_e[3]},${dwn_e[4]},\"${dwn_format}\",${dwn_e[9]}" >> "$csv1"
 					let i=$i+1
 				done
 			fi
 		done
-		dwn_g="$(wc -l "$csv" | gawk '{print $1}')"
+		dwn_g="$(wc -l "$csv1" | gawk '{print $1}')"
 		if [ $dwn_g -gt 1 ]
 		then
-			dwn_des="downloads"
-			ogr2ogr -f "GPKG" -update "$fgpkg1" "$csv" -nln "${nom}_asoc" -lco DESCRIPTION="$nom $dwn_des"
+			# Formateo del CSV
+			rm "$csv2" 2> /dev/null
+			sort -t ":" -k "2,3" "$csv1" | gawk '
+			{
+				print $0
+			}
+			' > "$csv2"
+			ogr2ogr -f "GPKG" -update "$fgpkg1" "$csv1" -nln "${nom}_asoc" -lco DESCRIPTION="$nom $dwn_des"
 		fi
-		#rm "$csv" 2> /dev/null
+		#rm "$csv1" 2> /dev/null
 
 		# Spatial Views
 		# https://gdal.org/drivers/vector/gpkg.html
@@ -394,7 +401,8 @@ do
 	fgpkg1="/tmp/${nom}.gpkg"
 	gpkg="${nom}.gpkg"
 	tmp="${nom}_tmp.gpkg"
-	csv="/tmp/${nom}_tmp.csv"
+	csv1="/tmp/${nom}_tmp1.csv"
+	csv2="/tmp/${nom}_tmp2.csv"
 	if [ $j -eq 0 ]
 	then
 		msg "0/${j}: $(date '+%Y-%m-%d %H:%M:%S') - No se hace nada"
