@@ -232,7 +232,21 @@ function hacer_gpkg {
 					code_dw2=`echo "$dwn_f1" | gawk -v b="${dwn_e[1]}" 'BEGIN { FS = "/" } { gsub ("\"", "", b); split($NF, a, "_"); print b "_" a[1]}'`
 					dwn_year=`echo "${dwn_e[5]}" | sed s/\"//g`
 					dwn_metad=`echo "${dwn_e[9]}" | sed s/\"//g`
-					dwn_format="{ 'year': '${dwn_year}', 'b5mcode_dw': 'DW_${code_dw}_${code_dw2}', 'format': ["
+					dwn_yearf=`echo "$dwn_year" | gawk '
+					{
+						if(match($0, "-") != 0) {
+							split($0, a, "-")
+							b = substr($0, 1, 2)
+							y = b "" a[2] ", " a[1]
+						} else {
+							y = $0
+						}
+					}
+					END {
+						print y
+					}
+					'`
+					dwn_format="{ 'years': [ ${dwn_yearf} ], 'b5mcode_dw': 'DW_${code_dw}_${code_dw2}', 'format': ["
 					j=0
 					for dwn_dir1_i in "${dwn_dir1_a[@]}"
 					do
