@@ -153,7 +153,16 @@ function hacer_gpkg {
 		dwn_c2=`sqlplus -s ${usu}/${pas}@${bd} <<-EOF2 2> /dev/null
 		set mark csv on
 
-		select a.id_dw,b.code_dw,b.name_eu,b.name_es,b.name_en,a.year,replace(listagg(c.format_dir,';') within group (order by c.format_dir),'year',a.path_dw||'/'||a.year) path_dw,listagg(c.format_dw,';') within group (order by c.format_dw) format_dw,d.file_type_dw,a.url_metadata
+		select a.id_dw,
+		b.code_dw,
+		b.name_eu,
+		b.name_es,
+		b.name_en,
+		a.year,
+		replace(replace(listagg(c.format_dir,';') within group (order by c.format_dir),'year',a.path_dw||'/'||a.year),'dxfs',a.path_dw) path_dw,
+		listagg(c.format_dw,';') within group (order by c.format_dw) format_dw,
+		d.file_type_dw,
+		a.url_metadata
 		from b5mweb_nombres.dw_list a,b5mweb_nombres.dw_types b,b5mweb_nombres.dw_formats c,b5mweb_nombres.dw_file_types d,b5mweb_nombres.dw_rel_formats e
 		where a.id_type=b.id_type
 		and a.id_file_type=d.id_file_type
@@ -166,8 +175,12 @@ function hacer_gpkg {
 		EOF2`
 		rm "$csv1" 2> /dev/null
 		i=0
-		for dwn_d in `echo "$dwn_c2"`
+		while read dwn_d
 		do
+			if [ "$dwn_d" = "" ]
+		  then
+		    continue
+		  fi
 			if [ $i -eq 0 ]
 			then
 				echo "$dwn_d" | gawk '
@@ -271,7 +284,9 @@ function hacer_gpkg {
 					let i=$i+1
 				done
 			fi
-		done
+		done <<-EOF2
+		$dwn_c2
+		EOF2
 		dwn_g="$(wc -l "$csv1" | gawk '{print $1}')"
 		if [ $dwn_g -gt 1 ]
 		then
