@@ -160,7 +160,10 @@ function hacer_gpkg {
 		b.name_en,
 		a.year,
 		replace(replace(listagg(c.format_dir,';') within group (order by c.format_dir),'year',a.path_dw||'/'||a.year),'dxfs',a.path_dw) path_dw,
+		a.template_dw,
+		replace(listagg(c.format_dir,';') within group (order by c.format_dir),'year',a.year) url_dw,
 		listagg(c.format_dw,';') within group (order by c.format_dw) format_dw,
+		listagg(c.format_code,';') within group (order by c.format_dw) format_code,
 		d.file_type_dw,
 		a.url_metadata
 		from b5mweb_nombres.dw_list a,b5mweb_nombres.dw_types b,b5mweb_nombres.dw_formats c,b5mweb_nombres.dw_file_types d,b5mweb_nombres.dw_rel_formats e
@@ -168,7 +171,7 @@ function hacer_gpkg {
 		and a.id_file_type=d.id_file_type
 		and a.id_dw=e.id_dw
 		and c.id_format=e.id_format
-		group by a.id_dw,b.code_dw,b.name_eu,b.name_es,b.name_en,a.year,a.path_dw,d.file_type_dw,a.url_metadata
+		group by a.id_dw,b.code_dw,b.name_eu,b.name_es,b.name_en,a.year,a.path_dw,a.template_dw,d.file_type_dw,a.url_metadata
 		order by a.year desc,b.code_dw desc;
 
 		exit;
@@ -186,7 +189,7 @@ function hacer_gpkg {
 				echo "$dwn_d" | gawk '
 				{
 					gsub("\"ID_DW\"", "\"ID_DW\",\"B5MCODE2\",\"DW_CAT\",\"YEAR\"")
-					gsub("\"YEAR\",\"PATH_DW\",\"FORMAT_DW\",\"FILE_TYPE_DW\"", "\"SERIES_DW\"")
+					gsub("\"YEAR\",\"PATH_DW\",\"TEMPLATE_DW\",\"URL_DW\",\"FORMAT_DW\",\"FORMAT_CODE\",\"FILE_TYPE_DW\"", "\"SERIES_DW\"")
 					gsub(",\"CODE_DW\"", "")
 					gsub(",\"URL_METADATA\"", "")
 					print tolower($0)
@@ -204,13 +207,18 @@ function hacer_gpkg {
 				let i=$i+1
 			else
 				IFS=',' read -a dwn_e <<< "$dwn_d"
+				dwn_typ0=`echo "${dwn_e[1]}" | sed s/\"//g`
+				dwn_year=`echo "${dwn_e[5]}" | sed s/\"//g`
 				dwn_dir1=`echo "${dwn_e[6]}" | sed s/\"//g`
-				dwn_typ1=`echo "${dwn_e[7]}" | sed s/\"//g`
+				dwn_templ=`echo "${dwn_e[7]}" | sed s/\"//g`
+				dwn_urld=`echo "${dwn_e[8]}" | sed s/\"//g`
+				dwn_typ1=`echo "${dwn_e[9]}" | sed s/\"//g`
+				dwn_frt_code=`echo "${dwn_e[10]}" | sed s/\"//g`
+				dwn_file_type=`echo "${dwn_e[11]}" | sed s/\"//g`
+				dwn_metad=`echo "${dwn_e[12]}" | sed s/\"//g`
 				IFS=';' read -a dwn_dir1_a <<< "$dwn_dir1"
 				IFS=';' read -a dwn_typ1_a <<< "$dwn_typ1"
 				dwn_typ2=`echo ${dwn_dir1_a[0]} | gawk 'BEGIN { FS = "/" } { split($NF, a, "_"); print a[2]}'`
-				dwn_file_type=`echo "${dwn_e[8]}" | sed s/\"//g`
-				dwn_file_type2=`echo "$dwn_file_type" | gawk '{ print tolower($0)}'`
 
 				# Comprobando que haya el mismo numero de descargas disponibles en los distintos formatos
 				num_a=0
@@ -220,7 +228,7 @@ function hacer_gpkg {
 					j=0
 					for dwn_dir1_b in "${dwn_dir1_a[@]}"
 					do
-						num_b=`ls ${dwn_dir1_b}/*.${dwn_file_type2} | wc -l`
+						num_b=`ls ${dwn_dir1_b}/${dwn_templ} | wc -l`
 						if [ $j -eq 0 ]
 						then
 							num_a=$num_b
@@ -239,12 +247,10 @@ function hacer_gpkg {
 					echo "\"${nom}\",${dwn_e[5]},\"$dwn_dir1\",\"número de ficheros diferente entre formatos\"" >> "$err"
 				fi
 
-				for dwn_f1 in `ls ${dwn_dir1_a[0]}/*.${dwn_file_type2}`
+				for dwn_f1 in `ls ${dwn_dir1_a[0]}/${dwn_templ}`
 				do
-					code_dw=`echo "$dwn_f1" | gawk 'BEGIN { FS = "/" } { split($NF, a, "_"); print a[2]}'`
-					code_dw2=`echo "$dwn_f1" | gawk -v b="${dwn_e[1]}" 'BEGIN { FS = "/" } { gsub ("\"", "", b); split($NF, a, "_"); print b "_" a[1]}'`
-					dwn_year=`echo "${dwn_e[5]}" | sed s/\"//g`
-					dwn_metad=`echo "${dwn_e[9]}" | sed s/\"//g`
+					code_dw=`echo "$dwn_f1" | gawk -v f="$dwn_frt_code" 'BEGIN { FS = "/"; b = substr(f, 1, 1); c = substr(f, 2, 1) } { split($NF, a, c); print a[b] }'`
+					code_dw2="${dwn_typ0}_${dwn_year}"
 					dwn_yearf=`echo "$dwn_year" | gawk '
 					{
 						if(match($0, "-") != 0) {
@@ -264,10 +270,9 @@ function hacer_gpkg {
 					for dwn_dir1_i in "${dwn_dir1_a[@]}"
 					do
 						dwn_typ3=`echo "$dwn_dir1_i" | gawk 'BEGIN { FS = "/" } { split($NF, a, "_"); print a[2]}'`
-						dwn_dir2_i=`echo "$dwn_dir1_i" | gawk 'BEGIN { FS="/" } { print $NF }'`
 						dwn_f2=`echo "$dwn_f1" | gawk -v a="$dwn_typ2" -v b="$dwn_typ3" '{ gsub (a, b); print $0 }'`
 						dwn_f3=`echo "$dwn_f2" | gawk 'BEGIN { FS="/" } { print $NF }'`
-						dwn_url2="${dwn_url1}/${dwn_dir2_i}/${dwn_f3}"
+						dwn_url2="${dwn_url1}/${dwn_urld}/${dwn_f3}"
 						dwn_size_mb1=`ls -l ${dwn_f2} 2> /dev/null | gawk '{ printf "%.2f\n", $5 * 0.000001 }'`
 						if [ "$dwn_size_mb1" = "" ]
 						then
