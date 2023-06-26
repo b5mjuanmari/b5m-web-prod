@@ -189,19 +189,23 @@ function hacer_gpkg {
 				echo "$dwn_d" | gawk '
 				{
 					gsub("\"ID_DW\"", "\"ID_DW\",\"B5MCODE2\",\"DW_CAT\",\"YEAR\"")
-					gsub("\"YEAR\",\"PATH_DW\",\"TEMPLATE_DW\",\"URL_DW\",\"FORMAT_DW\",\"FORMAT_CODE\",\"FILE_TYPE_DW\"", "\"SERIES_DW\"")
+					gsub("\"YEAR\",\"PATH_DW\",\"TEMPLATE_DW\",\"URL_DW\",\"FORMAT_DW\",\"FORMAT_CODE\",\"FILE_TYPE_DW\"", "\"TYPES_DW\"")
 					gsub(",\"CODE_DW\"", "")
 					gsub(",\"URL_METADATA\"", "")
 					print tolower($0)
 				}
 				' > "$csv1"
 				dwn_fields2=`gawk '
+				BEGIN {
+			  	FPAT = "([^,]*)|(\"[^\"]+\")"
+			  	OFS = ","
+				}
 				{
 					gsub("\"", "")
 					gsub(",", ",b.")
 					gsub("id_dw,", "")
 					gsub("b.dw_cat,b.year,", "")
-					print $0
+					print $1, $5
 				}
 				' "$csv1"`
 				let i=$i+1
@@ -300,15 +304,15 @@ function hacer_gpkg {
 			rm "$csv3" 2> /dev/null
 			head -1 "$csv1" | gawk '
 			BEGIN {
-			  FPAT = "([^,]*)|(\"[^\"]+\")"
+				FPAT = "([^,]*)|(\"[^\"]+\")"
 			  OFS = ","
 			}
 			{
-			  print $1,$2,$5,$6,$7,$8
+			  print $1,$2,$8
 			}
 			' > "$csv3"
-			sed -e "1d" "$csv1" > "$csv2"
-			sort -t, -k3,3 -k2,2 -k4,4r "$csv2" | gawk '
+			sed -e "1d" "$csv1" | sort -t, -k2,2 -k3,3 -k4,4r > "$csv2"
+			gawk '
 			BEGIN {
 			  FPAT = "([^,]*)|(\"[^\"]+\")"
 			  OFS = ","
@@ -316,27 +320,59 @@ function hacer_gpkg {
 			  j = 1
 			}
 			{
+			  gsub ("\"", "", $5)
+			  gsub ("\"", "", $6)
+			  gsub ("\"", "", $7)
 			  gsub ("\"", "", $8)
 			  if (NR == 1) {
-			    a8a = $8
+			    a8 = $8
 			  } else {
-			    if ($2 == a2) {
-			      a8a = a8a ", " $8
+			    if ($2 == a2 && $3 == a3) {
+			      a8 = a8 ", " $8
 			    } else {
-			      print j, a2, a5, a6, a7, "\"[ " a8a " ]\""
-			      a8a = $8
+						print j, a2, "\"\x27name_eu\x27: \x27" a5 "\x27, \x27name_es\x27: \x27" a6 "\x27, \x27name_en\x27: \x27" a7 "\x27, \x27series_dw\x27: [ " a8 " ]\""
+			      a8 = $8
 			      i = 1
 			      j++
 			    }
 			  }
 			  a2 = $2
+			  a3 = $3
 			  a5 = $5
 			  a6 = $6
 			  a7 = $7
 			  i++
 			}
 			END {
-			  print j, $2, $5, $6, $7, "\"[ " a8a " ]\""
+				print j, $2, "\"\x27name_eu\x27: \x27" $5 "\x27, \x27name_es\x27: \x27" $6 "\x27, \x27name_en\x27: \x27" $7 "\x27, \x27series_dw\x27: [ " a8 " ]\""
+			}
+			' "$csv2" | gawk '
+			BEGIN {
+			  FPAT = "([^,]*)|(\"[^\"]+\")"
+			  OFS = ","
+			  i = 1
+			  j = 1
+			}
+			{
+			  gsub ("\"", "", $3)
+			  $3 = "{ " $3 " }"
+			  if (NR == 1) {
+			    a3 = $3
+			  } else {
+			    if ($2 == a2) {
+			      a3 = a3 ", " $3
+			    } else {
+			      print j, a2, "\"[ " a3 " ]\""
+			      a3 = $3
+			      i = 1
+			      j++
+			    }
+			  }
+			  a2 = $2
+			  i++
+			}
+			END {
+			  print j, $2, "\"[ " a3 " ]\""
 			}
 			' >> "$csv3"
 			ogr2ogr -f "GPKG" -update "$fgpkg1" "$csv3" -nln "${nom}_asoc" -lco DESCRIPTION="$nom $dwn_des"
