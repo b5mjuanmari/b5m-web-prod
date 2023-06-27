@@ -154,12 +154,13 @@ function hacer_gpkg {
 		set mark csv on
 
 		select a.id_dw,
+		b.order_dw,
 		b.code_dw,
 		b.name_eu,
 		b.name_es,
 		b.name_en,
 		a.year,
-		replace(replace(listagg(c.format_dir,';') within group (order by c.format_dir),'year',a.path_dw||'/'||a.year),'dxfs',a.path_dw) path_dw,
+		decode(instr(listagg(c.format_dir,';') within group (order by c.format_dir),'year'),0,a.path_dw,replace(listagg(c.format_dir,';') within group (order by c.format_dir),'year',a.path_dw||'/'||a.year)) path_dw,
 		a.template_dw,
 		replace(listagg(c.format_dir,';') within group (order by c.format_dir),'year',a.year) url_dw,
 		listagg(c.format_dw,';') within group (order by c.format_dw) format_dw,
@@ -171,8 +172,8 @@ function hacer_gpkg {
 		and a.id_file_type=d.id_file_type
 		and a.id_dw=e.id_dw
 		and c.id_format=e.id_format
-		group by a.id_dw,b.code_dw,b.name_eu,b.name_es,b.name_en,a.year,a.path_dw,a.template_dw,d.file_type_dw,a.url_metadata
-		order by a.year desc,b.code_dw desc;
+		group by a.id_dw,b.order_dw,b.code_dw,b.name_eu,b.name_es,b.name_en,a.year,a.path_dw,a.template_dw,d.file_type_dw,a.url_metadata
+		order by b.order_dw,a.year desc,b.code_dw desc;
 
 		exit;
 		EOF2`
@@ -188,9 +189,9 @@ function hacer_gpkg {
 			then
 				echo "$dwn_d" | gawk '
 				{
-					gsub("\"ID_DW\"", "\"ID_DW\",\"B5MCODE2\",\"DW_CAT\",\"YEAR\"")
+					gsub("\"ID_DW\"", "\"ID_DW\",\"B5MCODE2\",\"DW_ORDER\",\"DW_CAT\",\"YEAR\"")
 					gsub("\"YEAR\",\"PATH_DW\",\"TEMPLATE_DW\",\"URL_DW\",\"FORMAT_DW\",\"FORMAT_CODE\",\"FILE_TYPE_DW\"", "\"TYPES_DW\"")
-					gsub(",\"CODE_DW\"", "")
+					gsub(",\"ORDER_DW\",\"CODE_DW\"", "")
 					gsub(",\"URL_METADATA\"", "")
 					print tolower($0)
 				}
@@ -204,22 +205,21 @@ function hacer_gpkg {
 					gsub("\"", "")
 					gsub(",", ",b.")
 					gsub("id_dw,", "")
-					gsub("b.dw_cat,b.year,", "")
-					print $1, $5
+					print $1, $8
 				}
 				' "$csv1"`
 				let i=$i+1
 			else
 				IFS=',' read -a dwn_e <<< "$dwn_d"
-				dwn_typ0=`echo "${dwn_e[1]}" | sed s/\"//g`
-				dwn_year=`echo "${dwn_e[5]}" | sed s/\"//g`
-				dwn_dir1=`echo "${dwn_e[6]}" | sed s/\"//g`
-				dwn_templ=`echo "${dwn_e[7]}" | sed s/\"//g`
-				dwn_urld=`echo "${dwn_e[8]}" | sed s/\"//g`
-				dwn_typ1=`echo "${dwn_e[9]}" | sed s/\"//g`
-				dwn_frt_code=`echo "${dwn_e[10]}" | sed s/\"//g`
-				dwn_file_type=`echo "${dwn_e[11]}" | sed s/\"//g`
-				dwn_metad=`echo "${dwn_e[12]}" | sed s/\"//g`
+				dwn_typ0=`echo "${dwn_e[2]}" | sed s/\"//g`
+				dwn_year=`echo "${dwn_e[6]}" | sed s/\"//g`
+				dwn_dir1=`echo "${dwn_e[7]}" | sed s/\"//g`
+				dwn_templ=`echo "${dwn_e[8]}" | sed s/\"//g`
+				dwn_urld=`echo "${dwn_e[9]}" | sed s/\"//g`
+				dwn_typ1=`echo "${dwn_e[10]}" | sed s/\"//g`
+				dwn_frt_code=`echo "${dwn_e[11]}" | sed s/\"//g`
+				dwn_file_type=`echo "${dwn_e[12]}" | sed s/\"//g`
+				dwn_metad=`echo "${dwn_e[13]}" | sed s/\"//g`
 				IFS=';' read -a dwn_dir1_a <<< "$dwn_dir1"
 				IFS=';' read -a dwn_typ1_a <<< "$dwn_typ1"
 				dwn_typ2=`echo ${dwn_dir1_a[0]} | gawk 'BEGIN { FS = "/" } { split($NF, a, "_"); print a[2]}'`
@@ -248,7 +248,7 @@ function hacer_gpkg {
 				fi
 				if [ $war_a -eq 1 ]
 				then
-					echo "\"${nom}\",${dwn_e[5]},\"$dwn_dir1\",\"número de ficheros diferente entre formatos\"" >> "$err"
+					echo "\"${nom}\",${dwn_e[6]},\"$dwn_dir1\",\"número de ficheros diferente entre formatos\"" >> "$err"
 				fi
 
 				for dwn_f1 in `ls ${dwn_dir1_a[0]}/${dwn_templ}`
@@ -280,7 +280,7 @@ function hacer_gpkg {
 						dwn_size_mb1=`ls -l ${dwn_f2} 2> /dev/null | gawk '{ printf "%.2f\n", $5 * 0.000001 }'`
 						if [ "$dwn_size_mb1" = "" ]
 						then
-							echo "\"${nom}\",${dwn_e[5]},\"$dwn_f2\",\"no existe fichero\"" >> "$err"
+							echo "\"${nom}\",${dwn_e[6]},\"$dwn_f2\",\"no existe fichero\"" >> "$err"
 						else
 							dwn_format="${dwn_format} { 'format_dw': '${dwn_typ1_a[$j]}', 'url_dw': '${dwn_url2}', 'file_type_dw': '${dwn_file_type}', 'file_size_mb': $dwn_size_mb1 },"
 						fi
@@ -289,7 +289,7 @@ function hacer_gpkg {
 					dwn_format=`echo "$dwn_format" | gawk '{ print substr($0, 1, length($0)-1) " ]" }'`
 					dwn_format="${dwn_format}, 'url_metadata': '${dwn_metad}'"
 					dwn_format="${dwn_format} }"
-					echo "${i},\"DW_${code_dw}\",${dwn_e[1]},${dwn_e[5]},${dwn_e[2]},${dwn_e[3]},${dwn_e[4]},\"${dwn_format}\"" >> "$csv1"
+					echo "${i},\"DW_${code_dw}\",${dwn_e[1]},${dwn_e[2]},${dwn_e[6]},${dwn_e[3]},${dwn_e[4]},${dwn_e[5]},\"${dwn_format}\"" >> "$csv1"
 					let i=$i+1
 				done
 			fi
@@ -308,10 +308,10 @@ function hacer_gpkg {
 			  OFS = ","
 			}
 			{
-			  print $1,$2,$8
+			  print $1,$2,$9
 			}
 			' > "$csv3"
-			sed -e "1d" "$csv1" | sort -t, -k2,2 -k3,3 -k4,4r > "$csv2"
+			sed -e "1d" "$csv1" | sort -t, -k2,2 -k3,3 -k5,5r > "$csv2"
 			gawk '
 			BEGIN {
 			  FPAT = "([^,]*)|(\"[^\"]+\")"
@@ -320,31 +320,31 @@ function hacer_gpkg {
 			  j = 1
 			}
 			{
-			  gsub ("\"", "", $5)
 			  gsub ("\"", "", $6)
 			  gsub ("\"", "", $7)
 			  gsub ("\"", "", $8)
+			  gsub ("\"", "", $9)
 			  if (NR == 1) {
-			    a8 = $8
+			    a9 = $9
 			  } else {
-			    if ($2 == a2 && $3 == a3) {
-			      a8 = a8 ", " $8
+			    if ($2 == a2 && $4 == a4) {
+			      a9 = a9 ", " $9
 			    } else {
-						print j, a2, "\"\x27name_eu\x27: \x27" a5 "\x27, \x27name_es\x27: \x27" a6 "\x27, \x27name_en\x27: \x27" a7 "\x27, \x27series_dw\x27: [ " a8 " ]\""
-			      a8 = $8
+						print j, a2, "\"\x27name_eu\x27: \x27" a6 "\x27, \x27name_es\x27: \x27" a7 "\x27, \x27name_en\x27: \x27" a8 "\x27, \x27series_dw\x27: [ " a9 " ]\""
+			      a9 = $9
 			      i = 1
 			      j++
 			    }
 			  }
 			  a2 = $2
-			  a3 = $3
-			  a5 = $5
+			  a4 = $4
 			  a6 = $6
 			  a7 = $7
+			  a8 = $8
 			  i++
 			}
 			END {
-				print j, $2, "\"\x27name_eu\x27: \x27" $5 "\x27, \x27name_es\x27: \x27" $6 "\x27, \x27name_en\x27: \x27" $7 "\x27, \x27series_dw\x27: [ " a8 " ]\""
+				print j, $2, "\"\x27name_eu\x27: \x27" $6 "\x27, \x27name_es\x27: \x27" $7 "\x27, \x27name_en\x27: \x27" $8 "\x27, \x27series_dw\x27: [ " a9 " ]\""
 			}
 			' "$csv2" | gawk '
 			BEGIN {
