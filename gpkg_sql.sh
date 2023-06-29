@@ -560,7 +560,8 @@ idx_a["r_grid"]="b5mcode"
 
 # 10. dw_download (descargas) (carga: )
 des_a["dw_download"]="Descargas / Deskargak / Downloads"
-sql_a["dw_download"]="select
+sql_a["dw_download"]="--_5--
+select
 replace(a.url_2d,'R_','DW_') b5mcode,
 a.nombre_e name_grid_eu,
 a.nombre_c name_grid_es,
@@ -571,9 +572,22 @@ b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec5 b
 where a.nombre_e=b.tag
 and a.tipo_e='5x5 km'
+and a.url_2d like 'R_%'
+#
+--_1--
+select
+replace(a.url_2d,'R_','DW_') b5mcode,
+a.nombre_e name_grid_eu,
+a.nombre_c name_grid_es,
+a.tipo_e type_grid_eu,
+a.tipo_c type_grid_es,
+a.tipo_i type_grid_en,
+b.geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec1 b
+where a.nombre_e=b.tag
+and a.tipo_e='1x1 km'
 and a.url_2d like 'R_%'"
 idx_a["dw_download"]="b5mcode"
-dwn_a["dw_download"]="1"
 
 # 11. sg_geodeticbenchmarks (señales geodésicas) (carga: 27")
 sg_aju_eu="Doikuntza geodesikoa"

@@ -101,61 +101,92 @@ function hacer_gpkg {
 	# Geopackage inicio
 	t="GIPUTZ"
 	rm "$fgpkg1" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -lco DESCRIPTION="${des_a["$nom"]}" "$fgpkg1" OCI:${usu}/${pas}@${bd}:${t} -nln "$nom" -sql "${sql_a["$nom"]}" > /dev/null
-
-	# Renombrar campos
-	clist="$(ogrinfo -al -so "$fgpkg1" | gawk '
-	BEGIN {
-		a=0
-	}
+	IFS='#' read -a sql_arr <<< `echo "${sql_a["$nom"]}" | gawk '
 	{
-		if (a == 1) print substr($1, 1, length($1)-1)
-		if ($1 == "Geometry") a=1
+		a=a "" sprintf("%s ", $0)
 	}
-	')"
-	for c in $clist
+	END {
+		gsub (" # ", "#", a)
+		gsub ("-- ", "--", a)
+		print a
+	}
+	'`
+	i=0
+	updt=""
+	for sql_str in "${sql_arr[@]}"
 	do
-		c2="$(echo "$c" | gawk '{print tolower($0)}')"
-		ogrinfo -dialect ogrsql -sql "alter table $nom rename column $c to ${c}999" "$fgpkg1" > /dev/null
-		ogrinfo -dialect ogrsql -sql "alter table $nom rename column ${c}999 to $c2" "$fgpkg1" > /dev/null
-	done
+		IFS='-' read -a sql_str_a <<< "$sql_str"
+		if [ "${sql_str_a[4]}" = "" ]
+		then
+			sql_sen="$sql_str"
+			nom2="$nom"
+		else
+			sql_sen="${sql_str_a[4]}"
+			nom2="${nom}${sql_str_a[2]}"
+		fi
+		if [ $i -gt 0 ]
+		then
+			updt="-update"
+		fi
+		ogr2ogr -f "GPKG" $updt -s_srs "EPSG:25830" -t_srs "EPSG:25830" -lco DESCRIPTION="${des_a["$nom"]}" "$fgpkg1" OCI:${usu}/${pas}@${bd}:${t} -nln "$nom2" -sql "$sql_sen" > /dev/null
 
-	# Crear índice
-	ogrinfo -sql "create index ${nom}_idx1 on $nom (${idx_a["$nom"]})" "$fgpkg1" > /dev/null
-
-	# Crear tabla con las descripciones de los campos
-	ca0="$(ogrinfo -al -so $fgpkg1 $nom | gawk 'BEGIN{a=0;FS=":"}{if(match($0,"Geometry Column")!=0){a=1;getline};if(a==1){print $1}}')"
-	IFS='#' read -a ca1 <<< "${der_a["$nom"]}"
-	rm "$csv1" 2> /dev/null
-	echo "$des_c1" > "$csv1"
-	for ca2 in $ca0
-	do
-		for ca3 in "${ca1[@]}"
+		# Renombrar campos
+		clist="$(ogrinfo -al -so "$fgpkg1" "$nom2" | gawk '
+		BEGIN {
+			a=0
+		}
+		{
+			if (a == 1) print substr($1, 1, length($1)-1)
+			if ($1 == "Geometry") a=1
+		}
+		')"
+		for c in $clist
 		do
-			IFS='|' read -a ca4 <<< "$ca3"
-			if [ "$ca2" = "${ca4[0]}" ]
-			then
-				echo $ca3 | sed 's/|/,/g' >> "$csv1"
-			fi
+			c2="$(echo "$c" | gawk '{print tolower($0)}')"
+			ogrinfo -dialect ogrsql -sql "alter table $nom2 rename column $c to ${c}999" "$fgpkg1" > /dev/null
+			ogrinfo -dialect ogrsql -sql "alter table $nom2 rename column ${c}999 to $c2" "$fgpkg1" > /dev/null
 		done
+
+		# Crear índice
+		ogrinfo -sql "create index ${nom2}_idx1 on $nom2 (${idx_a["$nom"]})" "$fgpkg1" > /dev/null
+
+		# Crear tabla con las descripciones de los campos
+		ca0="$(ogrinfo -al -so $fgpkg1 $nom2 | gawk 'BEGIN{a=0;FS=":"}{if(match($0,"Geometry Column")!=0){a=1;getline};if(a==1){print $1}}')"
+		IFS='#' read -a ca1 <<< "${der_a["$nom"]}"
+		rm "$csv1" 2> /dev/null
+		echo "$des_c1" > "$csv1"
+		for ca2 in $ca0
+		do
+			for ca3 in "${ca1[@]}"
+			do
+				IFS='|' read -a ca4 <<< "$ca3"
+				if [ "$ca2" = "${ca4[0]}" ]
+				then
+					echo $ca3 | sed 's/|/,/g' >> "$csv1"
+				fi
+			done
+		done
+		ca5="$(wc -l "$csv1" | gawk '{print $1}')"
+		if [ $ca5 -gt 1 ]
+		then
+			ogr2ogr -f "GPKG" -update "$fgpkg1" "$csv1" -nln "${nom2}_desc" -lco DESCRIPTION="$nom2 $des_c2" > /dev/null
+		fi
+		rm "$csv1" 2> /dev/null
+		let i=$i+1
 	done
-	ca5="$(wc -l "$csv1" | gawk '{print $1}')"
-	if [ $ca5 -gt 1 ]
-	then
-		ogr2ogr -f "GPKG" -update "$fgpkg1" "$csv1" -nln "${nom}_desc" -lco DESCRIPTION="$nom $des_c2"
-	fi
-	rm "$csv1" 2> /dev/null
 
 	# Crear tablas de descargas
-	if [ "${dwn_a["$nom"]}" = "1" ]
+	if [ "$nom" = "dw_download" ]
 	then
 		dwn_des="downloads"
 		dwn_c2=`sqlplus -s ${usu}/${pas}@${bd} <<-EOF2 2> /dev/null
+		set feedback off
 		set mark csv on
 
 		select a.id_dw,
 		b.order_dw,
 		b.code_dw,
+		b.grid_dw,
 		b.name_eu,
 		b.name_es,
 		b.name_en,
@@ -172,8 +203,8 @@ function hacer_gpkg {
 		and a.id_file_type=d.id_file_type
 		and a.id_dw=e.id_dw
 		and c.id_format=e.id_format
-		group by a.id_dw,b.order_dw,b.code_dw,b.name_eu,b.name_es,b.name_en,a.year,a.path_dw,a.template_dw,d.file_type_dw,a.url_metadata
-		order by b.order_dw,a.year desc,b.code_dw desc;
+		group by a.id_dw,b.order_dw,b.code_dw,b.grid_dw,b.name_eu,b.name_es,b.name_en,a.year,a.path_dw,a.template_dw,d.file_type_dw,a.url_metadata
+		order by b.grid_dw desc,b.order_dw,a.year desc,b.code_dw desc;
 
 		exit;
 		EOF2`
@@ -189,9 +220,9 @@ function hacer_gpkg {
 			then
 				echo "$dwn_d" | gawk '
 				{
-					gsub("\"ID_DW\"", "\"ID_DW\",\"B5MCODE2\",\"DW_ORDER\",\"DW_CAT\",\"YEAR\"")
+					gsub("\"ID_DW\"", "\"ID_DW\",\"B5MCODE2\",\"DW_ORDER\",\"DW_CAT\",\"DW_GRID\",\"YEAR\"")
 					gsub("\"YEAR\",\"PATH_DW\",\"TEMPLATE_DW\",\"URL_DW\",\"FORMAT_DW\",\"FORMAT_CODE\",\"FILE_TYPE_DW\"", "\"TYPES_DW\"")
-					gsub(",\"ORDER_DW\",\"CODE_DW\"", "")
+					gsub(",\"ORDER_DW\",\"CODE_DW\",\"GRID_DW\"", "")
 					gsub(",\"URL_METADATA\"", "")
 					print tolower($0)
 				}
@@ -205,21 +236,21 @@ function hacer_gpkg {
 					gsub("\"", "")
 					gsub(",", ",b.")
 					gsub("id_dw,", "")
-					print $1, $8
+					print $1, $9
 				}
 				' "$csv1"`
 				let i=$i+1
 			else
 				IFS=',' read -a dwn_e <<< "$dwn_d"
 				dwn_typ0=`echo "${dwn_e[2]}" | sed s/\"//g`
-				dwn_year=`echo "${dwn_e[6]}" | sed s/\"//g`
-				dwn_dir1=`echo "${dwn_e[7]}" | sed s/\"//g`
-				dwn_templ=`echo "${dwn_e[8]}" | sed s/\"//g`
-				dwn_urld=`echo "${dwn_e[9]}" | sed s/\"//g`
-				dwn_typ1=`echo "${dwn_e[10]}" | sed s/\"//g`
-				dwn_frt_code=`echo "${dwn_e[11]}" | sed s/\"//g`
-				dwn_file_type=`echo "${dwn_e[12]}" | sed s/\"//g`
-				dwn_metad=`echo "${dwn_e[13]}" | sed s/\"//g`
+				dwn_year=`echo "${dwn_e[7]}" | sed s/\"//g`
+				dwn_dir1=`echo "${dwn_e[8]}" | sed s/\"//g`
+				dwn_templ=`echo "${dwn_e[9]}" | sed s/\"//g`
+				dwn_urld=`echo "${dwn_e[10]}" | sed s/\"//g`
+				dwn_typ1=`echo "${dwn_e[11]}" | sed s/\"//g`
+				dwn_frt_code=`echo "${dwn_e[12]}" | sed s/\"//g`
+				dwn_file_type=`echo "${dwn_e[13]}" | sed s/\"//g`
+				dwn_metad=`echo "${dwn_e[14]}" | sed s/\"//g`
 				IFS=';' read -a dwn_dir1_a <<< "$dwn_dir1"
 				IFS=';' read -a dwn_typ1_a <<< "$dwn_typ1"
 				dwn_typ2=`echo ${dwn_dir1_a[0]} | gawk 'BEGIN { FS = "/" } { split($NF, a, "_"); print a[2]}'`
@@ -248,7 +279,7 @@ function hacer_gpkg {
 				fi
 				if [ $war_a -eq 1 ]
 				then
-					echo "\"${nom}\",${dwn_e[6]},\"$dwn_dir1\",\"número de ficheros diferente entre formatos\"" >> "$err"
+					echo "\"${nom}\",${dwn_e[7]},\"$dwn_dir1\",\"número de ficheros diferente entre formatos\"" >> "$err"
 				fi
 
 				for dwn_f1 in `ls ${dwn_dir1_a[0]}/${dwn_templ}`
@@ -280,7 +311,7 @@ function hacer_gpkg {
 						dwn_size_mb1=`ls -l ${dwn_f2} 2> /dev/null | gawk '{ printf "%.2f\n", $5 * 0.000001 }'`
 						if [ "$dwn_size_mb1" = "" ]
 						then
-							echo "\"${nom}\",${dwn_e[6]},\"$dwn_f2\",\"no existe fichero\"" >> "$err"
+							echo "\"${nom}\",${dwn_e[7]},\"$dwn_f2\",\"no existe fichero\"" >> "$err"
 						else
 							dwn_format="${dwn_format} { 'format_dw': '${dwn_typ1_a[$j]}', 'url_dw': '${dwn_url2}', 'file_type_dw': '${dwn_file_type}', 'file_size_mb': $dwn_size_mb1 },"
 						fi
@@ -289,103 +320,123 @@ function hacer_gpkg {
 					dwn_format=`echo "$dwn_format" | gawk '{ print substr($0, 1, length($0)-1) " ]" }'`
 					dwn_format="${dwn_format}, 'url_metadata': '${dwn_metad}'"
 					dwn_format="${dwn_format} }"
-					echo "${i},\"DW_${code_dw}\",${dwn_e[1]},${dwn_e[2]},${dwn_e[6]},${dwn_e[3]},${dwn_e[4]},${dwn_e[5]},\"${dwn_format}\"" >> "$csv1"
+					echo "${i},\"DW_${code_dw}\",${dwn_e[1]},${dwn_e[2]},${dwn_e[3]},${dwn_e[7]},${dwn_e[4]},${dwn_e[5]},${dwn_e[6]},\"${dwn_format}\"" >> "$csv1"
 					let i=$i+1
 				done
 			fi
 		done <<-EOF2
 		$dwn_c2
 		EOF2
-		dwn_g="$(wc -l "$csv1" | gawk '{print $1}')"
-		if [ $dwn_g -gt 1 ]
-		then
-			# Formateo del CSV
+
+		# Obtención del tipo de grid
+		IFS='|' read -a grd_a <<< `gawk 'BEGIN { FPAT = "([^,]*)|(\"[^\"]+\")"; OFS = "," } { if(NR != 1) { print $5 } }' "$csv1" | sort -nu | gawk '{ a = a "" sprintf("%s|", $0) } END { print substr(a, 1, length(a)-1) }'`
+		for grd in "${grd_a[@]}"
+		do
 			rm "$csv2" 2> /dev/null
-			rm "$csv3" 2> /dev/null
-			head -1 "$csv1" | gawk '
-			BEGIN {
-				FPAT = "([^,]*)|(\"[^\"]+\")"
-			  OFS = ","
-			}
-			{
-			  print $1,$2,$9
-			}
-			' > "$csv3"
-			sed -e "1d" "$csv1" | sort -t, -k2,2 -k3,3 -k5,5r > "$csv2"
-			gawk '
+			gawk -v a="$grd" '
 			BEGIN {
 			  FPAT = "([^,]*)|(\"[^\"]+\")"
 			  OFS = ","
-			  i = 1
-			  j = 1
 			}
 			{
-			  gsub ("\"", "", $6)
-			  gsub ("\"", "", $7)
-			  gsub ("\"", "", $8)
-			  gsub ("\"", "", $9)
-			  if (NR == 1) {
-			    a9 = $9
-			  } else {
-			    if ($2 == a2 && $4 == a4) {
-			      a9 = a9 ", " $9
-			    } else {
-						print j, a2, "\"\x27name_eu\x27: \x27" a6 "\x27, \x27name_es\x27: \x27" a7 "\x27, \x27name_en\x27: \x27" a8 "\x27, \x27series_dw\x27: [ " a9 " ]\""
-			      a9 = $9
-			      i = 1
-			      j++
-			    }
-			  }
-			  a2 = $2
-			  a4 = $4
-			  a6 = $6
-			  a7 = $7
-			  a8 = $8
-			  i++
+				if ($5 == a || NR ==1)
+					print $1, $2, $3, $4, $6, $7, $8, $9, $10
 			}
-			END {
-				print j, $2, "\"\x27name_eu\x27: \x27" $6 "\x27, \x27name_es\x27: \x27" $7 "\x27, \x27name_en\x27: \x27" $8 "\x27, \x27series_dw\x27: [ " a9 " ]\""
-			}
-			' "$csv2" | gawk '
-			BEGIN {
-			  FPAT = "([^,]*)|(\"[^\"]+\")"
-			  OFS = ","
-			  i = 1
-			  j = 1
-			}
-			{
-			  gsub ("\"", "", $3)
-			  $3 = "{ " $3 " }"
-			  if (NR == 1) {
-			    a3 = $3
-			  } else {
-			    if ($2 == a2) {
-			      a3 = a3 ", " $3
-			    } else {
-			      print j, a2, "\"[ " a3 " ]\""
-			      a3 = $3
-			      i = 1
-			      j++
-			    }
-			  }
-			  a2 = $2
-			  i++
-			}
-			END {
-			  print j, $2, "\"[ " a3 " ]\""
-			}
-			' >> "$csv3"
-			ogr2ogr -f "GPKG" -update "$fgpkg1" "$csv3" -nln "${nom}_asoc" -lco DESCRIPTION="$nom $dwn_des"
-		fi
+			' "$csv1" > "$csv2"
+
+			dwn_g="$(wc -l "$csv2" | gawk '{print $1}')"
+			if [ $dwn_g -gt 1 ]
+			then
+				# Formateo del CSV
+				rm "$csv3" 2> /dev/null
+				rm "$csv4" 2> /dev/null
+				head -1 "$csv2" | gawk '
+				BEGIN {
+					FPAT = "([^,]*)|(\"[^\"]+\")"
+				  OFS = ","
+				}
+				{
+				  print $1,$2,$9
+				}
+				' > "$csv4"
+				sed -e "1d" "$csv2" | sort -t, -k2,2 -k3,3 -k5,5r > "$csv3"
+				gawk '
+				BEGIN {
+				  FPAT = "([^,]*)|(\"[^\"]+\")"
+				  OFS = ","
+				  i = 1
+				  j = 1
+				}
+				{
+				  gsub ("\"", "", $6)
+				  gsub ("\"", "", $7)
+				  gsub ("\"", "", $8)
+				  gsub ("\"", "", $9)
+				  if (NR == 1) {
+				    a9 = $9
+				  } else {
+				    if ($2 == a2 && $4 == a4) {
+				      a9 = a9 ", " $9
+				    } else {
+							print j, a2, "\"\x27name_eu\x27: \x27" a6 "\x27, \x27name_es\x27: \x27" a7 "\x27, \x27name_en\x27: \x27" a8 "\x27, \x27series_dw\x27: [ " a9 " ]\""
+				      a9 = $9
+				      i = 1
+				      j++
+				    }
+				  }
+				  a2 = $2
+				  a4 = $4
+				  a6 = $6
+				  a7 = $7
+				  a8 = $8
+				  i++
+				}
+				END {
+					print j, $2, "\"\x27name_eu\x27: \x27" $6 "\x27, \x27name_es\x27: \x27" $7 "\x27, \x27name_en\x27: \x27" $8 "\x27, \x27series_dw\x27: [ " a9 " ]\""
+				}
+				' "$csv3" | gawk '
+				BEGIN {
+				  FPAT = "([^,]*)|(\"[^\"]+\")"
+				  OFS = ","
+				  i = 1
+				  j = 1
+				}
+				{
+				  gsub ("\"", "", $3)
+				  $3 = "{ " $3 " }"
+				  if (NR == 1) {
+				    a3 = $3
+				  } else {
+				    if ($2 == a2) {
+				      a3 = a3 ", " $3
+				    } else {
+				      print j, a2, "\"[ " a3 " ]\""
+				      a3 = $3
+				      i = 1
+				      j++
+				    }
+				  }
+				  a2 = $2
+				  i++
+				}
+				END {
+				  print j, $2, "\"[ " a3 " ]\""
+				}
+				' >> "$csv4"
+				ogr2ogr -f "GPKG" -update "$fgpkg1" "$csv4" -nln "${nom}_dat_${grd}" -lco DESCRIPTION="$nom $dwn_des"
+				gpkg_view="${gpkg_view} select a.*,${dwn_fields2} from ${nom}_${grd} a join ${nom}_dat_${grd} b on a.b5mcode = b.b5mcode2"
+
+				# Spatial Views
+				# https://gdal.org/drivers/vector/gpkg.html
+				ogr2ogr -f "GPKG" -update "$fgpkg1" -sql "create view ${nom}_view_${grd} as select a.*,${dwn_fields2} from ${nom}_${grd} a join ${nom}_dat_${grd} b on a.b5mcode = b.b5mcode2" "$fgpkg1"
+				ogr2ogr -f "GPKG" -update "$fgpkg1" -sql "insert into gpkg_contents (table_name, identifier, data_type, srs_id) values ('${nom}_view_${grd}', '${nom}_view_${grd}', 'features', 25830)" "$fgpkg1"
+				ogr2ogr -f "GPKG" -update "$fgpkg1" -sql "insert into gpkg_geometry_columns (table_name, column_name, geometry_type_name, srs_id, z, m) values ('${nom}_view_${grd}', 'geom', 'GEOMETRY', 25830, 0, 0)" "$fgpkg1"
+			fi
+		done
 		rm "$csv1" 2> /dev/null
 		rm "$csv2" 2> /dev/null
 		rm "$csv3" 2> /dev/null
-
-		# Spatial Views
-		# https://gdal.org/drivers/vector/gpkg.html
-		ogr2ogr -f "GPKG" -update "$fgpkg1" -sql "create view ${nom}_view as select a.*,${dwn_fields2} from $nom a join ${nom}_asoc b on a.b5mcode = b.b5mcode2" "$fgpkg1"
-		ogr2ogr -f "GPKG" -update "$fgpkg1" -sql "insert into gpkg_contents (table_name, identifier, data_type, srs_id) values ('${nom}_view', '${nom}_view', 'features', 25830)" "$fgpkg1"
-		ogr2ogr -f "GPKG" -update "$fgpkg1" -sql "insert into gpkg_geometry_columns (table_name, column_name, geometry_type_name, srs_id, z, m) values ('${nom}_view', 'geom', 'GEOMETRY', 25830, 0, 0)" "$fgpkg1"
+		rm "$csv4" 2> /dev/null
 	fi
 
 	# Copiar a destino
@@ -517,6 +568,7 @@ do
 	csv1="/tmp/${nom}_tmp1.csv"
 	csv2="/tmp/${nom}_tmp2.csv"
 	csv3="/tmp/${nom}_tmp3.csv"
+	csv4="/tmp/${nom}_tmp4.csv"
 	if [ $j -eq 0 ]
 	then
 		msg "0/${j}: $(date '+%Y-%m-%d %H:%M:%S') - No se hace nada"
