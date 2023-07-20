@@ -306,7 +306,7 @@ function hacer_gpkg {
 					do
 						dwn_typ3=`echo "$dwn_dir1_i" | gawk 'BEGIN { FS = "/" } { split($NF, a, "_"); print a[2]}'`
 						dwn_f2=`echo "$dwn_f1" | gawk -v a="$dwn_typ2" -v b="$dwn_typ3" '{ gsub (a, b); print $0 }'`
-						dwn_f3=`echo "$dwn_f2" | gawk 'BEGIN { FS="/" } { print $NF }'`
+						dwn_f3=`echo "$dwn_f2" | gawk -v a="$dwn_typ0" 'BEGIN { FS="/"; OFS="/" } { if (a == "lidar") { a1 = NF-1; a2 = NF-2; print $a2, $a1, $NF } else { print $NF } }'`
 						dwn_url2="${dwn_url1}/${dwn_urld}/${dwn_f3}"
 						dwn_size_mb1=`ls -l ${dwn_f2} 2> /dev/null | gawk '{ printf "%.2f\n", $5 * 0.000001 }'`
 						if [ "$dwn_size_mb1" = "" ]
