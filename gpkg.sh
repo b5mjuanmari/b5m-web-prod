@@ -288,19 +288,22 @@ function hacer_gpkg {
 					code_dw2="${dwn_typ0}_${dwn_year}"
 					dwn_yearf=`echo "$dwn_year" | gawk '
 					{
-						if(match($0, "-") != 0) {
-							split($0, a, "-")
-							b = substr($0, 1, 2)
-							y = b "" a[2] ", " a[1]
-						} else {
-							y = $0
-						}
+					  if(match($0, "-") != 0) {
+					    split($0, a, "-")
+					    c = ""
+					    b = length(a[2])
+					    if (b == 2)
+					      c = substr($0, 1, 2)
+					    y = a[1] "," c "" a[2]
+					  } else {
+					    y = $0
+					  }
 					}
 					END {
-						print y
+					  print y
 					}
 					'`
-					dwn_format="{ 'years': [ ${dwn_yearf} ], 'b5mcode_dw': 'DW_${code_dw}_${code_dw2}', 'format': ["
+					dwn_format="{ 'years': '${dwn_yearf}', 'b5mcode_dw': 'DW_${code_dw}_${code_dw2}', 'format': ["
 					j=0
 					for dwn_dir1_i in "${dwn_dir1_a[@]}"
 					do
