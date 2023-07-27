@@ -88,16 +88,6 @@ function conx {
 }
 
 function hacer_gpkg {
-	# Tareas Oracle 1
-	if [ "${or1_a["$nom"]}" != "" ]
-	then
-		sqlplus -s ${usu}/${pas}@${bd} <<-EOF2 > /dev/null
-		${or1_a["$nom"]}
-
-		exit;
-		EOF2
-	fi
-
 	# Geopackage inicio
 	t="GIPUTZ"
 	rm "$fgpkg1" 2> /dev/null
@@ -115,7 +105,7 @@ function hacer_gpkg {
 	updt=""
 	for sql_str in "${sql_arr[@]}"
 	do
-		IFS='-' read -a sql_str_a <<< "$sql_str"
+		IFS='@' read -a sql_str_a <<< "$sql_str"
 		if [ "${sql_str_a[4]}" = "" ]
 		then
 			sql_sen="$sql_str"
@@ -474,16 +464,6 @@ function hacer_gpkg {
 		EOF2
 	fi
 	# Oracle carga fin
-
-	# Tareas Oracle 2
-	if [ "${or2_a["$nom"]}" != "" ]
-	then
-		sqlplus -s ${usu}/${pas}@${bd} <<-EOF2 > /dev/null
-		${or2_a["$nom"]}
-
-		exit;
-		EOF2
-	fi
 }
 
 function copiar_gpkg {
