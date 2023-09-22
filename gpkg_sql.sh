@@ -11,7 +11,7 @@ declare -A idx_a
 declare -A der_a
 
 # 1. m_municipalities (municipios) (carga: 19")
-des_a["m_municipalities"]="Udalerriak / Municipios / Municipalities"
+des_a["m_municipalities"]="Udalerria / Municipio / Municipality"
 sql_a["m_municipalities"]="select
 a.url_2d b5mcode,
 a.nombre_e name_eu,
@@ -40,7 +40,7 @@ type_es|Elementu geografikoaren mota gaztelaniaz|Tipo del elemento geográfico e
 type_en|Elementu geografikoaren mota ingelesez|Tipo del elemento geográfico en inglés|Type of the geographic feature in English"
 
 # 2. s_regions (comarcas) (carga: 36")
-des_a["s_regions"]="Eskualdeak / Comarcas / Regions"
+des_a["s_regions"]="Eskualdea / Comarca / Region"
 sql_a["s_regions"]="select
 a.url_2d b5mcode,
 b.idnomcomarca b5mcode_region,
@@ -56,7 +56,7 @@ group by (a.url_2d,b.idnomcomarca,a.nombre_e,a.nombre_c,a.tipo_e,a.tipo_c)"
 idx_a["s_regions"]="b5mcode"
 
 # 3. d_postaladdresses (direcciones postales) (carga: 1'07")
-des_a["d_postaladdresses"]="Posta helbideak / Direcciones postales / Postal Addresses"
+des_a["d_postaladdresses"]="Posta helbidea / Dirección postal / Postal Address"
 sql_a["d_postaladdresses"]="select
 a.idnombre idname,
 'D_A'||a.idnombre b5mcode,
@@ -141,7 +141,7 @@ group by (a.idnombre,a.idnombre,a.nomedif_e,a.nomedif_e,a.codmuni,a.municipio_e,
 idx_a["d_postaladdresses"]="b5mcode"
 
 # 4. e_buildings (Edficios) (carga: 1'08")
-des_a["e_buildings"]="Eraikinak / Edficios / Buildings"
+des_a["e_buildings"]="Eraikina / Edficio / Building"
 sql_a["e_buildings"]="select
 a.idut idname,
 'E_A'||a.idut b5mcode,
@@ -216,7 +216,7 @@ group by (a.idut,a.idut,a.idpostal,a.nomedif_e,a.nomedif_e,a.codmuni,a.muni_e,a.
 idx_a["e_buildings"]="b5mcode"
 
 # 5. c_basins (cuencas) (carga: 17")
-des_a["c_basins"]="Arroak / Cuencas / Basins"
+des_a["c_basins"]="Arroa / Cuenca / Basin"
 sql_a["c_basins"]="select
 a.url_2d b5mcode,
 b.idnombre b5mcode_basin,
@@ -257,7 +257,7 @@ group by(a.id_topo,a.id_nombre1,a.url_2d,a.nombre_e,a.nombre_c,b.idnomcuenca,b.c
 idx_a["i_hydrography"]="b5mcode"
 
 # 7. z_districts (barrios y/o nombres urbanos) (carga: 16")
-des_a["z_districts"]="Barrios y/o nombres urbanos / Auzo eta/edo hiri izenak / Districts and/or urban names"
+des_a["z_districts"]="Barrio y/o nombre urbano / Auzo eta/edo hiri izena / District and/or urban name"
 sql_a["z_districts"]="select
 a.url_2d b5mcode,
 a.nombre_e name_eu,
@@ -442,7 +442,7 @@ sg_sen_es="Señal geodésica"
 sg_aju_en="Geodetic Adjustment"
 sg_sen_en="Geodetic Benchmark"
 sg_url="https://b5m.gipuzkoa.eus/geodesia/pdf"
-des_a["sg_geodeticbenchmarks"]="Seinale geodesikoak / Señales geodésicas / Geodetic Benchmarks"
+des_a["sg_geodeticbenchmarks"]="Seinale geodesikoa / Señales geodésica / Geodetic Benchmark"
 sql_a["sg_geodeticbenchmarks"]="select
 'SG_'||a.pgeod_id b5mcode,
 a.pgeod_id idgeodb,
