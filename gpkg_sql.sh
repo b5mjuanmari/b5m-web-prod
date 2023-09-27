@@ -22,6 +22,7 @@ d.nombre_c region_es,
 a.tipo_e type_eu,
 a.tipo_c type_es,
 a.tipo_i type_en,
+'1' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.giputz b,b5mweb_nombres.n_municipios c,b5mweb_nombres.solr_gen_toponimia_2d d
 where a.url_2d='M_'||b.codmuni
@@ -49,6 +50,7 @@ a.nombre_c name_es,
 a.tipo_e type_eu,
 a.tipo_c type_es,
 'region' type_en,
+'1' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.giputz b
 where a.url_2d='S_'||b.idnomcomarca
@@ -75,6 +77,7 @@ a.distrito coddistr,
 a.seccion codsec,
 a.nomedif_e name_builidng_eu,
 a.nomedif_e name_builidng_es,
+'1' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_edifdirpos_2d a,b5mweb_25830.a_edifind b,b5mweb_nombres.n_rel_area_dirpos c
 where a.idnombre=c.idpostal
@@ -99,6 +102,7 @@ a.distrito coddistr,
 a.seccion codsec,
 a.nomedif_e name_builidng_eu,
 a.nomedif_e name_builidng_es,
+'1' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_edifdirpos_2d a,b5mweb_25830.o_edifind b,b5mweb_nombres.n_rel_area_dirpos c
 where a.idnombre=c.idpostal
@@ -128,6 +132,7 @@ a.distrito coddistr,
 a.seccion codsec,
 a.nomedif_e name_builidng_eu,
 a.nomedif_e name_builidng_es,
+'1' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_edifdirpos_2d a,b5mweb_25830.s_edifind b,b5mweb_nombres.n_rel_area_dirpos c
 where a.idnombre=c.idpostal
@@ -161,6 +166,7 @@ a.distrito coddistr,
 a.seccion codsec,
 a.nomedif_e name_building_eu,
 a.nomedif_e name_building_es,
+'1' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.n_edifgen a,b5mweb_25830.a_edifind b
 where a.idut=b.idut
@@ -185,6 +191,7 @@ a.distrito coddistr,
 a.seccion codsec,
 a.nomedif_e name_building_eu,
 a.nomedif_e name_building_es,
+'1' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.n_edifgen a,b5mweb_25830.o_edifind b
 where a.idut=b.idut
@@ -209,6 +216,7 @@ a.distrito coddistr,
 a.seccion codsec,
 a.nomedif_e name_building_eu,
 a.nomedif_e name_building_es,
+'1' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.n_edifgen a,b5mweb_25830.s_edifind b
 where a.idut=b.idut
@@ -228,6 +236,7 @@ a.tipo_i type_en,
 a.codmunis idmunis,
 a.muni_e munis_eu,
 a.muni_c munis_es,
+'1' official,
 b.polygon geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.cuencap b
 where a.url_2d='C_A'||b.idnombre"
@@ -250,6 +259,7 @@ b.cuenca_c basinname_es,
 a.codmunis idmunis,
 a.muni_e munis_eu,
 a.muni_c munis_es,
+'1' official,
 sdo_aggr_concat_lines(b.polyline) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a, b5mweb_25830.ibaiak b
 where a.id_nombre1=to_char(b.idnombre)
@@ -268,6 +278,7 @@ a.tipo_i type_en,
 a.codmunis codmuni,
 a.muni_e muni_eu,
 a.muni_c muni_es,
+'0' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.barrioind b,b5mweb_nombres.b_barrios c
 where a.id_nombre1=c.idnombre
@@ -288,6 +299,7 @@ a.tipo_i type_en,
 a.codmunis codmuni,
 a.muni_e muni_eu,
 a.muni_c muni_es,
+'0' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.montesind b,b5mweb_nombres.o_orograf c
 where a.id_nombre1=c.idnombre
@@ -305,6 +317,7 @@ a.nombre_c name_es,
 a.tipo_e type_eu,
 a.tipo_c type_es,
 a.tipo_i type_en,
+'1' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec1 b
 where a.nombre_e=b.tag
@@ -318,6 +331,7 @@ substr(a.nombre_c,1,2)||lower(substr(a.nombre_c,3,1)) name_es,
 a.tipo_e type_eu,
 a.tipo_c type_es,
 a.tipo_i type_en,
+'1' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec2 b
 where a.nombre_e=b.tag
@@ -331,6 +345,7 @@ a.nombre_c name_es,
 a.tipo_e type_eu,
 a.tipo_c type_es,
 a.tipo_i type_en,
+'1' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec5 b
 where a.nombre_e=b.tag
@@ -344,6 +359,7 @@ a.nombre_c name_es,
 a.tipo_e type_eu,
 a.tipo_c type_es,
 a.tipo_i type_en,
+'1' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec b
 where a.nombre_e=b.tag
@@ -357,6 +373,7 @@ a.nombre_c name_es,
 a.tipo_e type_eu,
 a.tipo_c type_es,
 a.tipo_i type_en,
+'1' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.pauta5 b
 where a.nombre_e=b.tag
@@ -370,6 +387,7 @@ a.nombre_c name_es,
 a.tipo_e type_eu,
 a.tipo_c type_es,
 a.tipo_i type_en,
+'1' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.pauta10 b
 where a.nombre_e=b.tag
@@ -383,6 +401,7 @@ a.nombre_c name_es,
 a.tipo_e type_eu,
 a.tipo_c type_es,
 a.tipo_i type_en,
+'1' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.pauta25 b
 where a.nombre_e=b.tag
@@ -396,6 +415,7 @@ a.nombre_c name_es,
 a.tipo_e type_eu,
 a.tipo_c type_es,
 a.tipo_i type_en,
+'1' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.pauta50 b
 where a.nombre_e=b.tag
@@ -405,28 +425,28 @@ idx_a["r_grid"]="b5mcode"
 
 # 10. dw_download (descargas) (carga: )
 des_a["dw_download"]="Descargas / Deskargak / Downloads"
-sql_a["dw_download"]="@@_5@@
-select
+sql_a["dw_download"]="@@_5@@select
 replace(a.url_2d,'R_','DW_') b5mcode,
 a.nombre_e name_grid_eu,
 a.nombre_c name_grid_es,
 a.tipo_e type_grid_eu,
 a.tipo_c type_grid_es,
 a.tipo_i type_grid_en,
+'1' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec5 b
 where a.nombre_e=b.tag
 and a.tipo_e='5x5 km'
 and a.url_2d like 'R_%'
 #
-@@_1@@
-select
+@@_1@@select
 replace(a.url_2d,'R_','DW_') b5mcode,
 a.nombre_e name_grid_eu,
 a.nombre_c name_grid_es,
 a.tipo_e type_grid_eu,
 a.tipo_c type_grid_es,
 a.tipo_i type_grid_en,
+'1' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec1 b
 where a.nombre_e=b.tag
@@ -457,6 +477,7 @@ decode(trim(regexp_substr(b.municipio,'[^/]+',1,2)),null,b.municipio,trim(regexp
 '${sg_url}/'||a.archivo link,
 a.file_type,
 a.size_kb,
+'1' official,
 a.geom
 from o_mw_bta.puntogeodesicobta a,b5mweb_nombres.n_municipios b
 where a.codmuni=b.codmuni
@@ -490,6 +511,7 @@ b.id_area id_area2,
 c.dist_r,
 c.dist_c,
 c.fecha dm_date,
+'1' official,
 c.geom
 from mapas_otros.dist_ayunta2_muni a,mapas_otros.dist_ayunta2_muni b,mapas_otros.dist_ayunta2 c
 where a.codmuni=c.codmuni1
@@ -565,6 +587,7 @@ to_char(a.f_ultactua,'YYYY-MM-DD') f_ultactua,
 a.empresa empresa,
 'https://b5m.gipuzkoa.eus/map-2022/eu/Q_' || a.id_levan map_link_eu,
 'https://b5m.gipuzkoa.eus/map-2022/es/Q_' || a.id_levan map_link_es,
+'1' official,
 d.polygon geom
 from b5mweb_nombres.g_levancarto a,b5mweb_nombres.g_rel_muni_levan b,b5mweb_nombres.n_municipios c,b5mweb_25830.cardigind d
 where a.tag=b.tag
