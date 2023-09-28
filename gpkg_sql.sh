@@ -485,7 +485,7 @@ and a.visible_web=1
 order by a.pgeod_id"
 idx_a["sg_geodeticbenchmarks"]="b5mcode"
 
-# 12. dm_distancemunicipalities (distancia entre municipios) (carga: 2h5')
+# 12. dm_distancemunicipalities (distancia entre municipios) (carga: 1h12')
 des_a["dm_distancemunicipalities"]="Udalerrien arteko distantzia / Distancia entre municipios / Distance Between Municipalities"
 sql_a["dm_distancemunicipalities"]="select
 c.idut iddm,
@@ -550,6 +550,7 @@ id_area2 number,
 dist_r number,
 dist_c number,
 dm_date date,
+official number,
 geom sdo_geometry,
 constraint ${tabdm}_pk primary key(iddm)
 );
@@ -558,7 +559,7 @@ select '${tabDM}',column_name,diminfo,srid
 from all_sdo_geom_metadata
 where table_name='${tabDM2}'
 and column_name='GEOM';
-insert into ${tabdm}(iddm,b5mcode,codmuni1,muni1_eu,muni1_es,muni1_fr,codterm1,term1_eu,term1_es,term1_fr,id_area1,codmuni2,muni2_eu,muni2_es,muni2_fr,codterm2,term2_eu,term2_es,term2_fr,id_area2,dist_r,dist_c,dm_date,geom)
+insert into ${tabdm}(iddm,b5mcode,codmuni1,muni1_eu,muni1_es,muni1_fr,codterm1,term1_eu,term1_es,term1_fr,id_area1,codmuni2,muni2_eu,muni2_es,muni2_fr,codterm2,term2_eu,term2_es,term2_fr,id_area2,dist_r,dist_c,dm_date,official,geom)
 "
 sql_c["dm_distancemunicipalities"]="
 create unique index ${tabdm}_idx on ${tabdm}(b5mcode,codmuni1,muni1_eu,muni1_es,codmuni2,muni2_eu,muni2_es);
