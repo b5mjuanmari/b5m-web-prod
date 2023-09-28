@@ -450,19 +450,19 @@ function hacer_gpkg {
 	# En el caso de las distancias entre municipios, provisonalmente
 	# se hace la carga a Oracle ya que el rendimiento de la consulta
 	# es mejor
-	if [ "$nom" = "dm_distancemunicipalities" ]
-	then
-		sql_ora_a="${sql_a["$nom"]}"
-		sql_ora_b="${sql_b["$nom"]}"
-		sql_ora_c="${sql_c["$nom"]}"
-		sql_ora="${sql_ora_b}${sql_ora_a};${sql_ora_c}"
-		sqlplus -s ${usu}/${pas}@${bd} <<-EOF2 > /dev/null
-		$sql_ora
-		commit;
+	#if [ "$nom" = "dm_distancemunicipalities" ]
+	#then
+	#	sql_ora_a="${sql_a["$nom"]}"
+	#	sql_ora_b="${sql_b["$nom"]}"
+	#	sql_ora_c="${sql_c["$nom"]}"
+	#	sql_ora="${sql_ora_b}${sql_ora_a};${sql_ora_c}"
+	#	sqlplus -s ${usu}/${pas}@${bd} <<-EOF2 > /dev/null
+	#	$sql_ora
+	#	commit;
 
-		exit;
-		EOF2
-	fi
+	#	exit;
+	#	EOF2
+	#fi
 	# Oracle carga fin
 }
 
