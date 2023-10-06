@@ -16,19 +16,20 @@ sql_a["m_municipalities"]="select
 a.url_2d b5mcode,
 a.nombre_e name_eu,
 a.nombre_c name_es,
-decode(b.idnomcomarca,null,null,'S_'||b.idnomcomarca) b5mcode_region,
-d.nombre_e region_eu,
-d.nombre_c region_es,
 a.tipo_e type_eu,
 a.tipo_c type_es,
 a.tipo_i type_en,
 '1' official,
+decode(b.idnomcomarca,null,null,'S_'||b.idnomcomarca) b5mcode_others,
+e.nombre_e b5mcode_others_name_eu,
+e.nombre_c b5mcode_others_name_es,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
-from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.giputz b,b5mweb_nombres.n_municipios c,b5mweb_nombres.solr_gen_toponimia_2d d
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.giputz b,b5mweb_nombres.n_municipios c,b5mweb_nombres.solr_gen_toponimia_2d d,b5mweb_nombres.solr_gen_toponimia_2d e
 where a.url_2d='M_'||b.codmuni
 and b.codmuni=c.codmuni
+and e.url_2d='S_'||b.idnomcomarca
 and to_char(b.idnomcomarca)=d.id_nombre1(+)
-group by (a.url_2d,b.codmuni,a.nombre_e,a.nombre_c,b.idnomcomarca,d.nombre_e,d.nombre_c,a.tipo_e,a.tipo_c,a.tipo_i)"
+group by (a.url_2d,b.codmuni,a.nombre_e,a.nombre_c,d.nombre_e,d.nombre_c,a.tipo_e,a.tipo_c,a.tipo_i,b.idnomcomarca,e.nombre_e,e.nombre_c)"
 idx_a["m_municipalities"]="b5mcode"
 der_a["m_municipalities"]="b5mcode|B5m kodea|Código b5m|B5m code#\
 name_eu|Udalerriaren izen ofiziala euskaraz|Nombre oficial del municipio en euskera|Official name of the municipality in Basque#\
