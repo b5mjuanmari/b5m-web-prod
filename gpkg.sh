@@ -534,11 +534,11 @@ cd "$dir"
 vconf="$(gawk '{t=substr($0,1,1);if((t=="1")||(t=="2")||(t=="3")){print $0}}' "$fconf")"
 if [ "$vconf" != "" ]
 then
-	j="$(echo "$vconf" | wc -l)"
+	j2="$(echo "$vconf" | wc -l)"
 else
-	j=0
+	j2=0
 fi
-i=1
+j1=1
 while read vconf2
 do
 	IFS='|' read -a aconf <<< "$vconf2"
@@ -552,11 +552,12 @@ do
 	csv2="/tmp/${nom}_tmp2.csv"
 	csv3="/tmp/${nom}_tmp3.csv"
 	csv4="/tmp/${nom}_tmp4.csv"
-	if [ $j -eq 0 ]
+	if [ $j2 -eq 0 ]
 	then
-		msg "0/${j}: $(date '+%Y-%m-%d %H:%M:%S') - No se hace nada"
+		msg "0/${j2}: $(date '+%Y-%m-%d %H:%M:%S') - No se hace nada"
 	else
-		msg "${i}/${j}: $(date '+%Y-%m-%d %H:%M:%S') - $nom - $des\c"
+		msg "${j1}/${j2}: $(date '+%Y-%m-%d %H:%M:%S') - $nom - $des\c"
+		let j1=$j1+1
 	fi
 	if [ "$tip" = "1" ] || [ "$tip" = "2" ]
 	then
@@ -572,7 +573,6 @@ do
 	fi
 	borrar_gpkg
 	msg ""
-	let i=$i+1
 done <<-EOF
 $vconf
 EOF
