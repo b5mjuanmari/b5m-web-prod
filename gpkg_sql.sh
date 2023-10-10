@@ -20,9 +20,9 @@ a.tipo_e type_eu,
 a.tipo_c type_es,
 a.tipo_i type_en,
 '1' official,
-decode(b.idnomcomarca,null,null,'S_'||b.idnomcomarca) b5mcode_others,
-e.nombre_e b5mcode_others_name_eu,
-e.nombre_c b5mcode_others_name_es,
+decode(b.idnomcomarca,null,null,'S_'||b.idnomcomarca) b5mcode_others_s,
+e.nombre_e b5mcode_others_s_name_eu,
+e.nombre_c b5mcode_others_s_name_es,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.giputz b,b5mweb_nombres.n_municipios c,b5mweb_nombres.solr_gen_toponimia_2d d,b5mweb_nombres.solr_gen_toponimia_2d e
 where a.url_2d='M_'||b.codmuni
@@ -234,10 +234,10 @@ a.nombre_c name_es,
 a.tipo_e type_eu,
 a.tipo_c type_es,
 a.tipo_i type_en,
-a.codmunis idmunis,
-a.muni_e munis_eu,
-a.muni_c munis_es,
 '1' official,
+'M_'||replace(a.codmunis,',','|M_') b5mcode_others_m,
+replace(a.muni_e,',','|') b5mcode_others_m_name_eu,
+replace(a.muni_c,',','|') b5mcode_others_m_name_es,
 b.polygon geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.cuencap b
 where a.url_2d='C_A'||b.idnombre"
@@ -254,13 +254,13 @@ a.nombre_c name_es,
 a.tipo_e type_eu,
 a.tipo_c type_es,
 a.tipo_i type_en,
-'C_A'||b.idnomcuenca b5mcode_basin,
-b.cuenca_e basinname_eu,
-b.cuenca_c basinname_es,
-a.codmunis idmunis,
-a.muni_e munis_eu,
-a.muni_c munis_es,
 '1' official,
+'C_A'||b.idnomcuenca b5mcode_others_c,
+b.cuenca_e b5mcode_others_c_name_eu,
+b.cuenca_c b5mcode_others_c_name_es,
+'M_'||replace(a.codmunis,',','|M_') b5mcode_others_m,
+replace(a.muni_e,',','|') b5mcode_others_m_name_eu,
+replace(a.muni_c,',','|') b5mcode_others_m_name_es,
 sdo_aggr_concat_lines(b.polyline) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a, b5mweb_25830.ibaiak b
 where a.id_nombre1=to_char(b.idnombre)
@@ -268,7 +268,7 @@ group by(a.id_topo,a.id_nombre1,a.url_2d,a.nombre_e,a.nombre_c,b.idnomcuenca,b.c
 idx_a["i_hydrography"]="b5mcode"
 
 # 7. z_districts (barrios y/o nombres urbanos) (carga: 16")
-des_a["z_districts"]="Barrio y/o nombre urbano / Auzo eta/edo hiri izena / District and/or urban name"
+des_a["z_districts"]="Auzo eta/edo hiri izena / Barrio y/o nombre urbano / District and/or urban name"
 sql_a["z_districts"]="select
 a.url_2d b5mcode,
 a.nombre_e name_eu,
@@ -276,10 +276,10 @@ a.nombre_c name_es,
 a.tipo_e type_eu,
 a.tipo_c type_es,
 a.tipo_i type_en,
-a.codmunis codmuni,
-a.muni_e muni_eu,
-a.muni_c muni_es,
 '0' official,
+'M_'||replace(a.codmunis,',','|M_') b5mcode_others_m,
+replace(a.muni_e,',','|') b5mcode_others_m_name_eu,
+replace(a.muni_c,',','|') b5mcode_others_m_name_es,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.barrioind b,b5mweb_nombres.b_barrios c
 where a.id_nombre1=c.idnombre
@@ -289,7 +289,7 @@ group by (a.url_2d,a.nombre_e,a.nombre_c,a.tipo_e,a.tipo_c,a.tipo_i,a.codmunis,a
 idx_a["z_districts"]="b5mcode"
 
 # 8. g_orography (toponimia de la orografía) (carga: 14")
-des_a["g_orography"]="Toponimia de la orografía / Orografiaren toponimia / Toponymy of the orography"
+des_a["g_orography"]="Orografiaren toponimia / Toponimia de la orografía / Toponymy of the orography"
 sql_a["g_orography"]="select
 a.url_2d b5mcode,
 a.nombre_e name_eu,
@@ -297,10 +297,10 @@ a.nombre_c name_es,
 a.tipo_e type_eu,
 a.tipo_c type_es,
 a.tipo_i type_en,
-a.codmunis codmuni,
-a.muni_e muni_eu,
-a.muni_c muni_es,
 '0' official,
+'M_'||replace(a.codmunis,',','|M_') b5mcode_others_m,
+replace(a.muni_e,',','|') b5mcode_others_m_name_eu,
+replace(a.muni_c,',','|') b5mcode_others_m_name_es,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.montesind b,b5mweb_nombres.o_orograf c
 where a.id_nombre1=c.idnombre
@@ -310,7 +310,7 @@ group by (a.url_2d,a.nombre_e,a.nombre_c,a.tipo_e,a.tipo_c,a.tipo_i,a.codmunis,a
 idx_a["g_orography"]="b5mcode"
 
 # 9. r_grid (cuadrículas, pauta) (carga: 10")
-des_a["r_grid"]="Cuadrícula / Lauki-sarea / Grid"
+des_a["r_grid"]="Lauki-sarea / Cuadrícula / Grid"
 sql_a["r_grid"]="select
 a.url_2d b5mcode,
 a.nombre_e name_eu,
@@ -424,8 +424,8 @@ and a.tipo_e='1:50000'
 and a.url_2d like 'R_%'"
 idx_a["r_grid"]="b5mcode"
 
-# 10. dw_download (descargas) (carga: )
-des_a["dw_download"]="Descargas / Deskargak / Downloads"
+# 10. dw_download (descargas) (carga: 2'30")
+des_a["dw_download"]="Deskargak / Descargas / Downloads"
 sql_a["dw_download"]="@@_5@@select
 replace(a.url_2d,'R_','DW_') b5mcode,
 a.nombre_e name_grid_eu,
@@ -463,7 +463,7 @@ sg_sen_es="Señal geodésica"
 sg_aju_en="Geodetic Adjustment"
 sg_sen_en="Geodetic Benchmark"
 sg_url="https://b5m.gipuzkoa.eus/geodesia/pdf"
-des_a["sg_geodeticbenchmarks"]="Seinale geodesikoa / Señales geodésica / Geodetic Benchmark"
+des_a["sg_geodeticbenchmarks"]="Seinale geodesikoa / Señal geodésica / Geodetic Benchmark"
 sql_a["sg_geodeticbenchmarks"]="select
 'SG_'||a.pgeod_id b5mcode,
 a.pgeod_id idgeodb,
@@ -472,13 +472,13 @@ a.nombre name_es,
 decode(a.ajuste,1,'${sg_aju_eu}','${sg_sen_eu}') type_eu,
 decode(a.ajuste,1,'${sg_aju_es}','${sg_sen_es}') type_es,
 decode(a.ajuste,1,'${sg_aju_en}','${sg_sen_en}') type_en,
-a.codmuni codmuni,
-trim(regexp_substr(b.municipio,'[^/]+',1,1)) muni_eu,
-decode(trim(regexp_substr(b.municipio,'[^/]+',1,2)),null,b.municipio,trim(regexp_substr(b.municipio,'[^/]+',1,2))) muni_es,
 '${sg_url}/'||a.archivo link,
 a.file_type,
 a.size_kb,
 '1' official,
+'M_'||a.codmuni b5mcode_others_m,
+trim(regexp_substr(b.municipio,'[^/]+',1,1)) b5mcode_others_m_name_eu,
+decode(trim(regexp_substr(b.municipio,'[^/]+',1,2)),null,b.municipio,trim(regexp_substr(b.municipio,'[^/]+',1,2))) b5mcode_others_m_name_es,
 a.geom
 from o_mw_bta.puntogeodesicobta a,b5mweb_nombres.n_municipios b
 where a.codmuni=b.codmuni
@@ -575,9 +575,6 @@ des_a["q_municipalcartography"]="Udal kartografiaren inbentarioa / Inventario de
 sql_a["q_municipalcartography"]="select
 a.id_levan,
 'Q_' || a.id_levan b5mcode,
-b.codmuni,
-trim(regexp_substr(c.municipio,'[^/]+',1,1)) muni_eu,
-decode(trim(regexp_substr(c.municipio,'[^/]+',1,2)),null,c.municipio,trim(regexp_substr(c.municipio,'[^/]+',1,2))) muni_es,
 replace(a.nombre,'\"','') name_eu,
 replace(a.nombre,'\"','') name_es,
 a.propietario propietario_eu,
@@ -590,6 +587,9 @@ a.empresa empresa,
 'https://b5m.gipuzkoa.eus/map-2022/eu/Q_' || a.id_levan map_link_eu,
 'https://b5m.gipuzkoa.eus/map-2022/es/Q_' || a.id_levan map_link_es,
 '1' official,
+'M_'||b.codmuni b5mcode_others_m,
+trim(regexp_substr(c.municipio,'[^/]+',1,1)) b5mcode_others_m_name_eu,
+decode(trim(regexp_substr(c.municipio,'[^/]+',1,2)),null,c.municipio,trim(regexp_substr(c.municipio,'[^/]+',1,2))) b5mcode_others_m_name_es,
 d.polygon geom
 from b5mweb_nombres.g_levancarto a,b5mweb_nombres.g_rel_muni_levan b,b5mweb_nombres.n_municipios c,b5mweb_25830.cardigind d
 where a.tag=b.tag
