@@ -290,7 +290,33 @@ and d.url_2d='S_'||c.idnomcomarca
 group by (a.idut,a.idut,a.idpostal,a.nomedif_e,a.nomedif_e,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,c.idnomcomarca,d.nombre_e,d.nombre_c)"
 idx_a["e_buildings"]="b5mcode"
 
-# 5. c_basins (cuencas) (carga: 17")
+# 5. k_streets (calles) (carga: 4'44")
+des_a["k_streets"]="Kalea / Calle / Street"
+sql_a["k_streets"]="select
+a.idnombre idname,
+a.url_2d b5mcode,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+'1' official,
+e.url_2d b5mcode_others_m,
+e.nombre_e b5mcode_others_m_name_eu,
+e.nombre_c b5mcode_others_m_name_es,
+g.url_2d b5mcode_others_s,
+g.nombre_e b5mcode_others_s_name_eu,
+g.nombre_c b5mcode_others_s_name_es,
+sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.a_edifind b,b5mweb_nombres.n_edifgen c,b5mweb_nombres.solr_gen_toponimia_2d e,b5mweb_25830.giputz f,b5mweb_nombres.solr_gen_toponimia_2d g
+where a.id_nombre1=c.codmuni
+and '0'||a.id_nombre2=c.codcalle
+and a.id_nombre1=e.id_nombre1
+and e.tipo_e='udalerria'
+and a.id_nombre1=f.codmuni
+and g.url_2d='S_'||f.idnomcomarca
+and b.idut=c.idut
+group by (a.idnombre,a.url_2d,a.nombre_e,a.nombre_c,e.url_2d,e.nombre_e,e.nombre_c,g.url_2d,g.nombre_e,g.nombre_c)"
+idx_a["k_streets"]="b5mcode"
+
+# 6. c_basins (cuencas) (carga: 17")
 des_a["c_basins"]="Arroa / Cuenca / Basin"
 sql_a["c_basins"]="select
 a.url_2d b5mcode,
@@ -309,7 +335,7 @@ from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.cuencap b
 where a.url_2d='C_A'||b.idnombre"
 idx_a["c_basins"]="b5mcode"
 
-# 6. i_hydrography (hidrografía) (carga: 48")
+# 7. i_hydrography (hidrografía) (carga: 48")
 des_a["i_hydrography"]="Hidrografia / Hidrografía / Hydrography"
 sql_a["i_hydrography"]="select
 a.id_topo idtopo,
@@ -333,7 +359,7 @@ where a.id_nombre1=to_char(b.idnombre)
 group by(a.id_topo,a.id_nombre1,a.url_2d,a.nombre_e,a.nombre_c,b.idnomcuenca,b.cuenca_e,b.cuenca_c,a.tipo_e,a.tipo_c,a.tipo_i,a.codmunis,a.muni_e,a.muni_c)"
 idx_a["i_hydrography"]="b5mcode"
 
-# 7. z_districts (barrios y/o nombres urbanos) (carga: 16")
+# 8. z_districts (barrios y/o nombres urbanos) (carga: 16")
 des_a["z_districts"]="Auzo eta/edo hiri izena / Barrio y/o nombre urbano / District and/or urban name"
 sql_a["z_districts"]="select
 a.url_2d b5mcode,
@@ -354,7 +380,7 @@ and a.url_2d like 'Z_%'
 group by (a.url_2d,a.nombre_e,a.nombre_c,a.tipo_e,a.tipo_c,a.tipo_i,a.codmunis,a.muni_e,a.muni_c)"
 idx_a["z_districts"]="b5mcode"
 
-# 8. g_orography (toponimia de la orografía) (carga: 14")
+# 9. g_orography (toponimia de la orografía) (carga: 14")
 des_a["g_orography"]="Orografiaren toponimia / Toponimia de la orografía / Toponymy of the orography"
 sql_a["g_orography"]="select
 a.url_2d b5mcode,
@@ -375,7 +401,7 @@ and a.url_2d like 'G_%'
 group by (a.url_2d,a.nombre_e,a.nombre_c,a.tipo_e,a.tipo_c,a.tipo_i,a.codmunis,a.muni_e,a.muni_c)"
 idx_a["g_orography"]="b5mcode"
 
-# 9. r_grid (cuadrículas, pauta) (carga: 10")
+# 10. r_grid (cuadrículas, pauta) (carga: 10")
 des_a["r_grid"]="Lauki-sarea / Cuadrícula / Grid"
 sql_a["r_grid"]="select
 a.url_2d b5mcode,
@@ -490,7 +516,7 @@ and a.tipo_e='1:50000'
 and a.url_2d like 'R_%'"
 idx_a["r_grid"]="b5mcode"
 
-# 10. dw_download (descargas) (carga: 2'30")
+# 11. dw_download (descargas) (carga: 2'30")
 des_a["dw_download"]="Deskargak / Descargas / Downloads"
 sql_a["dw_download"]="@@_5@@select
 replace(a.url_2d,'R_','DW_') b5mcode,
@@ -521,7 +547,7 @@ and a.tipo_e='1x1 km'
 and a.url_2d like 'R_%'"
 idx_a["dw_download"]="b5mcode"
 
-# 11. sg_geodeticbenchmarks (señales geodésicas) (carga: 27")
+# 12. sg_geodeticbenchmarks (señales geodésicas) (carga: 27")
 sg_aju_eu="Doikuntza geodesikoa"
 sg_sen_eu="Seinale geodesikoa"
 sg_aju_es="Ajuste geodésico"
@@ -557,7 +583,7 @@ and d.url_2d='S_'||c.idnomcomarca
 order by a.pgeod_id"
 idx_a["sg_geodeticbenchmarks"]="b5mcode"
 
-# 12. dm_distancemunicipalities (distancia entre municipios) (carga: 1h12')
+# 13. dm_distancemunicipalities (distancia entre municipios) (carga: 1h12')
 des_a["dm_distancemunicipalities"]="Udalerrien arteko distantzia / Distancia entre municipios / Distance Between Municipalities"
 sql_a["dm_distancemunicipalities"]="select
 c.idut iddm,
@@ -641,7 +667,7 @@ on ${tabdm}(geom)
 indextype is mdsys.spatial_index
 parameters('layer_gtype=MULTILINE');"
 
-# 13. q_municipalcartography (cartografía municipal) (carga: 24")
+# 14. q_municipalcartography (cartografía municipal) (carga: 24")
 des_a["q_municipalcartography"]="Udal kartografiaren inbentarioa / Inventario de cartografía municipal / Municipal Cartography Inventory"
 sql_a["q_municipalcartography"]="select
 a.id_levan,
