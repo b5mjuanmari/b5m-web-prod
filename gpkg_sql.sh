@@ -545,10 +545,15 @@ a.size_kb,
 'M_'||a.codmuni b5mcode_others_m,
 trim(regexp_substr(b.municipio,'[^/]+',1,1)) b5mcode_others_m_name_eu,
 decode(trim(regexp_substr(b.municipio,'[^/]+',1,2)),null,b.municipio,trim(regexp_substr(b.municipio,'[^/]+',1,2))) b5mcode_others_m_name_es,
+decode(c.idnomcomarca,null,null,'S_'||c.idnomcomarca) b5mcode_others_s,
+d.nombre_e b5mcode_others_s_name_eu,
+d.nombre_c b5mcode_others_s_name_es,
 a.geom
-from o_mw_bta.puntogeodesicobta a,b5mweb_nombres.n_municipios b
+from o_mw_bta.puntogeodesicobta a,b5mweb_nombres.n_municipios b,b5mweb_25830.giputz c,b5mweb_nombres.solr_gen_toponimia_2d d
 where a.codmuni=b.codmuni
 and a.visible_web=1
+and a.codmuni=c.codmuni
+and d.url_2d='S_'||c.idnomcomarca
 order by a.pgeod_id"
 idx_a["sg_geodeticbenchmarks"]="b5mcode"
 
@@ -656,9 +661,14 @@ a.empresa empresa,
 'M_'||b.codmuni b5mcode_others_m,
 trim(regexp_substr(c.municipio,'[^/]+',1,1)) b5mcode_others_m_name_eu,
 decode(trim(regexp_substr(c.municipio,'[^/]+',1,2)),null,c.municipio,trim(regexp_substr(c.municipio,'[^/]+',1,2))) b5mcode_others_m_name_es,
+decode(e.idnomcomarca,null,null,'S_'||e.idnomcomarca) b5mcode_others_s,
+f.nombre_e b5mcode_others_s_name_eu,
+f.nombre_c b5mcode_others_s_name_es,
 d.polygon geom
-from b5mweb_nombres.g_levancarto a,b5mweb_nombres.g_rel_muni_levan b,b5mweb_nombres.n_municipios c,b5mweb_25830.cardigind d
+from b5mweb_nombres.g_levancarto a,b5mweb_nombres.g_rel_muni_levan b,b5mweb_nombres.n_municipios c,b5mweb_25830.cardigind d,b5mweb_25830.giputz e,b5mweb_nombres.solr_gen_toponimia_2d f
 where a.tag=b.tag
 and b.codmuni=c.codmuni
-and a.tag=d.tag"
+and a.tag=d.tag
+and c.codmuni=e.codmuni
+and f.url_2d='S_'||e.idnomcomarca"
 idx_a["q_municipalcartography"]="b5mcode"
