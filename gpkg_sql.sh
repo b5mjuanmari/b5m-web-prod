@@ -10,7 +10,7 @@ declare -A sql_a
 declare -A idx_a
 declare -A der_a
 
-# 1. m_municipalities (municipios) (carga: 19")
+# 1. m_municipalities (municipios) (carga: 13")
 des_a["m_municipalities"]="Udalerria / Municipio / Municipality"
 sql_a["m_municipalities"]="select
 a.url_2d b5mcode,
@@ -41,9 +41,9 @@ type_eu|Elementu geografikoaren mota euskaraz|Tipo del elemento geográfico en e
 type_es|Elementu geografikoaren mota gaztelaniaz|Tipo del elemento geográfico en castellano|Type of the geographic feature in Spanish#\
 type_en|Elementu geografikoaren mota ingelesez|Tipo del elemento geográfico en inglés|Type of the geographic feature in English"
 
-# 2. s_regions (comarcas) (carga: 36")
+# 2. s_regions (comarcas) (carga: 25")
 des_a["s_regions"]="Eskualdea / Comarca / Region"
-sql_a["s_regions"]="selecti
+sql_a["s_regions"]="select
 a.url_2d b5mcode,
 b.idnomcomarca b5mcode_region,
 a.nombre_e name_eu,
@@ -58,7 +58,7 @@ where a.url_2d='S_'||b.idnomcomarca
 group by (a.url_2d,b.idnomcomarca,a.nombre_e,a.nombre_c,a.tipo_e,a.tipo_c)"
 idx_a["s_regions"]="b5mcode"
 
-# 3. d_postaladdresses (direcciones postales) (carga: 1'40")
+# 3. d_postaladdresses (direcciones postales) (carga: 1'48")
 des_a["d_postaladdresses"]="Posta helbidea / Dirección postal / Postal Address"
 sql_a["d_postaladdresses"]="select
 a.idnombre idname,
@@ -179,7 +179,7 @@ where y.idut=z.idut
 group by (a.idnombre,a.idnombre,a.nomedif_e,a.nomedif_e,a.codmuni,a.municipio_e,a.municipio_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.cp,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,e.idnomcomarca,f.nombre_e,f.nombre_c)"
 idx_a["d_postaladdresses"]="b5mcode"
 
-# 4. e_buildings (Edficios) (carga: 1'41")
+# 4. e_buildings (Edficios) (carga: 1'49")
 des_a["e_buildings"]="Eraikina / Edficio / Building"
 sql_a["e_buildings"]="select
 a.idut idname,
@@ -290,9 +290,9 @@ and d.url_2d='S_'||c.idnomcomarca
 group by (a.idut,a.idut,a.idpostal,a.nomedif_e,a.nomedif_e,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,c.idnomcomarca,d.nombre_e,d.nombre_c)"
 idx_a["e_buildings"]="b5mcode"
 
-# 5. k_streets (calles) (carga: 4'44")
-des_a["k_streets"]="Kalea / Calle / Street"
-sql_a["k_streets"]="select
+# 5. k_streets_buildings (calles) (carga: 4'47")
+des_a["k_streets_buildings"]="Kalea (eraikin multzoa) / Calle (conjunto de edificios) / Street (building set)"
+sql_a["k_streets_buildings"]="select
 a.idnombre idname,
 a.url_2d b5mcode,
 a.nombre_e name_eu,
@@ -314,9 +314,9 @@ and a.id_nombre1=f.codmuni
 and g.url_2d='S_'||f.idnomcomarca
 and b.idut=c.idut
 group by (a.idnombre,a.url_2d,a.nombre_e,a.nombre_c,e.url_2d,e.nombre_e,e.nombre_c,g.url_2d,g.nombre_e,g.nombre_c)"
-idx_a["k_streets"]="b5mcode"
+idx_a["k_streets_buildings"]="b5mcode"
 
-# 6. c_basins (cuencas) (carga: 17")
+# 6. c_basins (cuencas) (carga: 28")
 des_a["c_basins"]="Arroa / Cuenca / Basin"
 sql_a["c_basins"]="select
 a.url_2d b5mcode,
@@ -335,7 +335,7 @@ from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.cuencap b
 where a.url_2d='C_A'||b.idnombre"
 idx_a["c_basins"]="b5mcode"
 
-# 7. i_hydrography (hidrografía) (carga: 48")
+# 7. i_hydrography (hidrografía) (carga: 43")
 des_a["i_hydrography"]="Hidrografia / Hidrografía / Hydrography"
 sql_a["i_hydrography"]="select
 a.id_topo idtopo,
@@ -359,7 +359,7 @@ where a.id_nombre1=to_char(b.idnombre)
 group by(a.id_topo,a.id_nombre1,a.url_2d,a.nombre_e,a.nombre_c,b.idnomcuenca,b.cuenca_e,b.cuenca_c,a.tipo_e,a.tipo_c,a.tipo_i,a.codmunis,a.muni_e,a.muni_c)"
 idx_a["i_hydrography"]="b5mcode"
 
-# 8. z_districts (barrios y/o nombres urbanos) (carga: 16")
+# 8. z_districts (barrios y/o nombres urbanos) (carga: 22")
 des_a["z_districts"]="Auzo eta/edo hiri izena / Barrio y/o nombre urbano / District and/or urban name"
 sql_a["z_districts"]="select
 a.url_2d b5mcode,
@@ -380,7 +380,7 @@ and a.url_2d like 'Z_%'
 group by (a.url_2d,a.nombre_e,a.nombre_c,a.tipo_e,a.tipo_c,a.tipo_i,a.codmunis,a.muni_e,a.muni_c)"
 idx_a["z_districts"]="b5mcode"
 
-# 9. g_orography (toponimia de la orografía) (carga: 14")
+# 9. g_orography (toponimia de la orografía) (carga: 16")
 des_a["g_orography"]="Orografiaren toponimia / Toponimia de la orografía / Toponymy of the orography"
 sql_a["g_orography"]="select
 a.url_2d b5mcode,
@@ -401,7 +401,7 @@ and a.url_2d like 'G_%'
 group by (a.url_2d,a.nombre_e,a.nombre_c,a.tipo_e,a.tipo_c,a.tipo_i,a.codmunis,a.muni_e,a.muni_c)"
 idx_a["g_orography"]="b5mcode"
 
-# 10. r_grid (cuadrículas, pauta) (carga: 10")
+# 10. r_grid (cuadrículas, pauta) (carga: 19")
 des_a["r_grid"]="Lauki-sarea / Cuadrícula / Grid"
 sql_a["r_grid"]="select
 a.url_2d b5mcode,
@@ -516,7 +516,7 @@ and a.tipo_e='1:50000'
 and a.url_2d like 'R_%'"
 idx_a["r_grid"]="b5mcode"
 
-# 11. dw_download (descargas) (carga: 2'30")
+# 11. dw_download (descargas) (carga: 2'25")
 des_a["dw_download"]="Deskargak / Descargas / Downloads"
 sql_a["dw_download"]="@@_5@@select
 replace(a.url_2d,'R_','DW_') b5mcode,
@@ -547,7 +547,7 @@ and a.tipo_e='1x1 km'
 and a.url_2d like 'R_%'"
 idx_a["dw_download"]="b5mcode"
 
-# 12. sg_geodeticbenchmarks (señales geodésicas) (carga: 27")
+# 12. sg_geodeticbenchmarks (señales geodésicas) (carga: 28")
 sg_aju_eu="Doikuntza geodesikoa"
 sg_sen_eu="Seinale geodesikoa"
 sg_aju_es="Ajuste geodésico"
@@ -667,7 +667,7 @@ on ${tabdm}(geom)
 indextype is mdsys.spatial_index
 parameters('layer_gtype=MULTILINE');"
 
-# 14. q_municipalcartography (cartografía municipal) (carga: 24")
+# 14. q_municipalcartography (cartografía municipal) (carga: 25")
 des_a["q_municipalcartography"]="Udal kartografiaren inbentarioa / Inventario de cartografía municipal / Municipal Cartography Inventory"
 sql_a["q_municipalcartography"]="select
 a.id_levan,
