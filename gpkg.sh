@@ -193,6 +193,9 @@ function hacer_gpkg {
 					gsub("\"YEAR\",\"PATH_DW\",\"TEMPLATE_DW\",\"URL_DW\",\"FORMAT_DW\",\"FORMAT_CODE\",\"FILE_TYPE_DW\"", "\"TYPES_DW\"")
 					gsub(",\"ORDER_DW\",\"CODE_DW\",\"GRID_DW\"", "")
 					gsub(",\"URL_METADATA\"", "")
+					gsub(",\"OWNER_EU\"", "")
+					gsub(",\"OWNER_ES\"", "")
+					gsub(",\"OWNER_EN\"", "")
 					print tolower($0)
 				}
 				' > "$csv1"
@@ -220,6 +223,9 @@ function hacer_gpkg {
 				dwn_frt_code=`echo "${dwn_e[12]}" | sed s/\"//g`
 				dwn_file_type=`echo "${dwn_e[13]}" | sed s/\"//g`
 				dwn_metad=`echo "${dwn_e[14]}" | sed s/\"//g`
+				dwn_own_eu=`echo "${dwn_e[15]}" | sed s/\"//g`
+				dwn_own_es=`echo "${dwn_e[16]}" | sed s/\"//g`
+				dwn_own_en=`echo "${dwn_e[17]}" | sed s/\"//g`
 				IFS=';' read -a dwn_dir1_a <<< "$dwn_dir1"
 				IFS=';' read -a dwn_typ1_a <<< "$dwn_typ1"
 				dwn_typ2=`echo ${dwn_dir1_a[0]} | gawk 'BEGIN { FS = "/" } { split($NF, a, "_"); print a[2]}'`
@@ -290,7 +296,8 @@ function hacer_gpkg {
 						let j=$j+1
 					done
 					dwn_format=`echo "$dwn_format" | gawk '{ print substr($0, 1, length($0)-1) " ]" }'`
-					dwn_format="${dwn_format}, 'url_metadata': '${dwn_metad}'"
+					#dwn_format="${dwn_format}, 'url_metadata': '${dwn_metad}'"
+					dwn_format="${dwn_format}, 'metadata': { 'url': '${dwn_metad}', 'owner_eu': '${dwn_own_eu}', 'owner_es': '${dwn_own_es}', 'owner_en': '${dwn_own_en}' }"
 					dwn_format="${dwn_format} }"
 					echo "${i},\"DW_${code_dw}\",${dwn_e[1]},${dwn_e[2]},${dwn_e[3]},${dwn_e[7]},${dwn_e[4]},${dwn_e[5]},${dwn_e[6]},\"${dwn_format}\"" >> "$csv1"
 					let i=$i+1
