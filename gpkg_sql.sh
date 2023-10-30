@@ -7,6 +7,8 @@
 
 declare -A des_a
 declare -A sql_a
+declare -A sql_b
+declare -A sql_c
 declare -A idx_a
 declare -A der_a
 
@@ -545,6 +547,28 @@ from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec1 b
 where a.nombre_e=b.tag
 and a.tipo_e='1x1 km'
 and a.url_2d like 'R_%'"
+sql_b["dw_download"]="select a.id_dw,
+b.order_dw,
+b.code_dw,
+b.grid_dw,
+b.name_eu,
+b.name_es,
+b.name_en,
+a.year,
+decode(instr(listagg(c.format_dir,';') within group (order by c.format_dir),'year'),0,a.path_dw,replace(listagg(c.format_dir,';') within group (order by c.format_dir),'year',a.path_dw||'/'||a.year)) path_dw,
+a.template_dw,
+replace(listagg(c.format_dir,';') within group (order by c.format_dir),'year',a.year) url_dw,
+listagg(c.format_dw,';') within group (order by c.format_dw) format_dw,
+listagg(c.format_code,';') within group (order by c.format_dw) format_code,
+d.file_type_dw,
+a.url_metadata
+from b5mweb_nombres.dw_list a,b5mweb_nombres.dw_types b,b5mweb_nombres.dw_formats c,b5mweb_nombres.dw_file_types d,b5mweb_nombres.dw_rel_formats e
+where a.id_type=b.id_type
+and a.id_file_type=d.id_file_type
+and a.id_dw=e.id_dw
+and c.id_format=e.id_format
+group by a.id_dw,b.order_dw,b.code_dw,b.grid_dw,b.name_eu,b.name_es,b.name_en,a.year,a.path_dw,a.template_dw,d.file_type_dw,a.url_metadata
+order by b.grid_dw desc,b.order_dw,a.year desc,b.code_dw desc"
 idx_a["dw_download"]="b5mcode"
 
 # 12. sg_geodeticbenchmarks (señales geodésicas) (carga: 28")
