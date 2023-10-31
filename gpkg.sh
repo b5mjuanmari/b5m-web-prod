@@ -296,7 +296,6 @@ function hacer_gpkg {
 						let j=$j+1
 					done
 					dwn_format=`echo "$dwn_format" | gawk '{ print substr($0, 1, length($0)-1) " ]" }'`
-					#dwn_format="${dwn_format}, 'url_metadata': '${dwn_metad}'"
 					dwn_format="${dwn_format}, 'metadata': { 'url': '${dwn_metad}', 'owner_eu': '${dwn_own_eu}', 'owner_es': '${dwn_own_es}', 'owner_en': '${dwn_own_en}' }"
 					dwn_format="${dwn_format} }"
 					echo "${i},\"DW_${code_dw}\",${dwn_e[1]},${dwn_e[2]},${dwn_e[3]},${dwn_e[7]},${dwn_e[4]},${dwn_e[5]},${dwn_e[6]},\"${dwn_format}\"" >> "$csv1"
@@ -445,7 +444,7 @@ function hacer_gpkg {
 	#	sqlplus -s ${usu}/${pas}@${bd} <<-EOF2 > /dev/null
 	#	$sql_ora
 	#	commit;
-
+	#
 	#	exit;
 	#	EOF2
 	#fi
