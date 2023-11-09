@@ -182,7 +182,7 @@ group by (a.idnombre,a.idnombre,a.nomedif_e,a.nomedif_e,a.codmuni,a.municipio_e,
 idx_a["d_postaladdresses"]="b5mcode"
 
 # 4. e_buildings (Edficios) (carga: 1'49")
-des_a["e_buildings"]="Eraikina / Edficio / Building"
+des_a["e_buildings"]="Eraikina / Edificio / Building"
 sql_a["e_buildings"]="select
 a.idut idname,
 'E_A'||a.idut b5mcode,
@@ -212,11 +212,15 @@ a.muni_c b5mcode_others_m_name_es,
 decode(c.idnomcomarca,null,null,'S_'||c.idnomcomarca) b5mcode_others_s,
 d.nombre_e b5mcode_others_s_name_eu,
 d.nombre_c b5mcode_others_s_name_es,
+replace(replace(replace(replace(rtrim(xmlagg(xmlelement(e,'[{''b5mcode_poi'':'''||e.b5mcode||'''|''name_eu'':'''||replace(e.name_eu,',','|')||'''|''name_es'':'''||replace(e.name_es,',','|')||'''|''type_eu'':'''||replace(e.type_eu,',','|')||'''}]',',').extract('//text()') order by e.name_eu).getclobval(),','),chr(38)||'apos;',''''),'[{''b5mcode_poi'':''''|''name_eu'':''''|''name_es'':''''|''type_eu'':''''}]',''),',',''),'|',',') poi_eu,
+replace(replace(replace(replace(rtrim(xmlagg(xmlelement(e,'[{''b5mcode_poi'':'''||e.b5mcode||'''|''name_eu'':'''||replace(e.name_eu,',','|')||'''|''name_es'':'''||replace(e.name_es,',','|')||'''|''type_es'':'''||replace(e.type_es,',','|')||'''}]',',').extract('//text()') order by e.name_eu).getclobval(),','),chr(38)||'apos;',''''),'[{''b5mcode_poi'':''''|''name_eu'':''''|''name_es'':''''|''type_es'':''''}]',''),',',''),'|',',') poi_es,
+replace(replace(replace(replace(rtrim(xmlagg(xmlelement(e,'[{''b5mcode_poi'':'''||e.b5mcode||'''|''name_eu'':'''||replace(e.name_eu,',','|')||'''|''name_es'':'''||replace(e.name_es,',','|')||'''|''type_en'':'''||replace(e.type_en,',','|')||'''}]',',').extract('//text()') order by e.name_eu).getclobval(),','),chr(38)||'apos;',''''),'[{''b5mcode_poi'':''''|''name_eu'':''''|''name_es'':''''|''type_en'':''''}]',''),',',''),'|',',') poi_en,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
-from b5mweb_nombres.n_edifgen a,b5mweb_25830.a_edifind b,b5mweb_25830.giputz c,b5mweb_nombres.solr_gen_toponimia_2d d
+from b5mweb_nombres.n_edifgen a,b5mweb_25830.a_edifind b,b5mweb_25830.giputz c,b5mweb_nombres.solr_gen_toponimia_2d d,b5mweb_nombres.solr_poi_2d e
 where a.idut=b.idut
 and a.codmuni=c.codmuni
 and d.url_2d='S_'||c.idnomcomarca
+and 'D_A'||a.idpostal=e.b5mcode_d(+)
 group by (a.idut,a.idut,a.idpostal,a.nomedif_e,a.nomedif_e,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,c.idnomcomarca,d.nombre_e,d.nombre_c)
 union all
 select
@@ -248,11 +252,15 @@ a.muni_c b5mcode_others_m_name_es,
 decode(c.idnomcomarca,null,null,'S_'||c.idnomcomarca) b5mcode_others_s,
 d.nombre_e b5mcode_others_s_name_eu,
 d.nombre_c b5mcode_others_s_name_es,
+replace(replace(replace(replace(rtrim(xmlagg(xmlelement(e,'[{''b5mcode_poi'':'''||e.b5mcode||'''|''name_eu'':'''||replace(e.name_eu,',','|')||'''|''name_es'':'''||replace(e.name_es,',','|')||'''|''type_eu'':'''||replace(e.type_eu,',','|')||'''}]',',').extract('//text()') order by e.name_eu).getclobval(),','),chr(38)||'apos;',''''),'[{''b5mcode_poi'':''''|''name_eu'':''''|''name_es'':''''|''type_eu'':''''}]',''),',',''),'|',',') poi_eu,
+replace(replace(replace(replace(rtrim(xmlagg(xmlelement(e,'[{''b5mcode_poi'':'''||e.b5mcode||'''|''name_eu'':'''||replace(e.name_eu,',','|')||'''|''name_es'':'''||replace(e.name_es,',','|')||'''|''type_es'':'''||replace(e.type_es,',','|')||'''}]',',').extract('//text()') order by e.name_eu).getclobval(),','),chr(38)||'apos;',''''),'[{''b5mcode_poi'':''''|''name_eu'':''''|''name_es'':''''|''type_es'':''''}]',''),',',''),'|',',') poi_es,
+replace(replace(replace(replace(rtrim(xmlagg(xmlelement(e,'[{''b5mcode_poi'':'''||e.b5mcode||'''|''name_eu'':'''||replace(e.name_eu,',','|')||'''|''name_es'':'''||replace(e.name_es,',','|')||'''|''type_en'':'''||replace(e.type_en,',','|')||'''}]',',').extract('//text()') order by e.name_eu).getclobval(),','),chr(38)||'apos;',''''),'[{''b5mcode_poi'':''''|''name_eu'':''''|''name_es'':''''|''type_en'':''''}]',''),',',''),'|',',') poi_en,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
-from b5mweb_nombres.n_edifgen a,b5mweb_25830.o_edifind b,b5mweb_25830.giputz c,b5mweb_nombres.solr_gen_toponimia_2d d
+from b5mweb_nombres.n_edifgen a,b5mweb_25830.o_edifind b,b5mweb_25830.giputz c,b5mweb_nombres.solr_gen_toponimia_2d d,b5mweb_nombres.solr_poi_2d e
 where a.idut=b.idut
 and a.codmuni=c.codmuni
 and d.url_2d='S_'||c.idnomcomarca
+and 'D_A'||a.idpostal=e.b5mcode_d(+)
 group by (a.idut,a.idut,a.idpostal,a.nomedif_e,a.nomedif_e,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,c.idnomcomarca,d.nombre_e,d.nombre_c)
 union all
 select
@@ -284,11 +292,15 @@ a.muni_c b5mcode_others_m_name_es,
 decode(c.idnomcomarca,null,null,'S_'||c.idnomcomarca) b5mcode_others_s,
 d.nombre_e b5mcode_others_s_name_eu,
 d.nombre_c b5mcode_others_s_name_es,
+replace(replace(replace(replace(rtrim(xmlagg(xmlelement(e,'[{''b5mcode_poi'':'''||e.b5mcode||'''|''name_eu'':'''||replace(e.name_eu,',','|')||'''|''name_es'':'''||replace(e.name_es,',','|')||'''|''type_eu'':'''||replace(e.type_eu,',','|')||'''}]',',').extract('//text()') order by e.name_eu).getclobval(),','),chr(38)||'apos;',''''),'[{''b5mcode_poi'':''''|''name_eu'':''''|''name_es'':''''|''type_eu'':''''}]',''),',',''),'|',',') poi_eu,
+replace(replace(replace(replace(rtrim(xmlagg(xmlelement(e,'[{''b5mcode_poi'':'''||e.b5mcode||'''|''name_eu'':'''||replace(e.name_eu,',','|')||'''|''name_es'':'''||replace(e.name_es,',','|')||'''|''type_es'':'''||replace(e.type_es,',','|')||'''}]',',').extract('//text()') order by e.name_eu).getclobval(),','),chr(38)||'apos;',''''),'[{''b5mcode_poi'':''''|''name_eu'':''''|''name_es'':''''|''type_es'':''''}]',''),',',''),'|',',') poi_es,
+replace(replace(replace(replace(rtrim(xmlagg(xmlelement(e,'[{''b5mcode_poi'':'''||e.b5mcode||'''|''name_eu'':'''||replace(e.name_eu,',','|')||'''|''name_es'':'''||replace(e.name_es,',','|')||'''|''type_en'':'''||replace(e.type_en,',','|')||'''}]',',').extract('//text()') order by e.name_eu).getclobval(),','),chr(38)||'apos;',''''),'[{''b5mcode_poi'':''''|''name_eu'':''''|''name_es'':''''|''type_en'':''''}]',''),',',''),'|',',') poi_en,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
-from b5mweb_nombres.n_edifgen a,b5mweb_25830.s_edifind b,b5mweb_25830.giputz c,b5mweb_nombres.solr_gen_toponimia_2d d
+from b5mweb_nombres.n_edifgen a,b5mweb_25830.s_edifind b,b5mweb_25830.giputz c,b5mweb_nombres.solr_gen_toponimia_2d d,b5mweb_nombres.solr_poi_2d e
 where a.idut=b.idut
 and a.codmuni=c.codmuni
 and d.url_2d='S_'||c.idnomcomarca
+and 'D_A'||a.idpostal=e.b5mcode_d(+)
 group by (a.idut,a.idut,a.idpostal,a.nomedif_e,a.nomedif_e,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,c.idnomcomarca,d.nombre_e,d.nombre_c)"
 idx_a["e_buildings"]="b5mcode"
 
@@ -727,7 +739,7 @@ and f.url_2d='S_'||e.idnomcomarca"
 idx_a["q_municipalcartography"]="b5mcode"
 
 # 15. poi_pointsofinterest (puntos de interés) (carga: 25")
-des_a["poi_pointsofinterest"]="Interesguneak / Puntos de interés / Points of Interest"
+des_a["poi_pointsofinterest"]="Interesgunea / Punto de interés / Point of Interest"
 sql_a["poi_pointsofinterest"]="select
 a.id_actividad id_poi,
 'POI_' || a.id_actividad b5mcode,
@@ -817,6 +829,7 @@ case
     then 'https://b5m.gipuzkoa.eus/api/1.0/en/library/openlayers-ext/resources/img/placemarker_icons/wb_01.png'
   else 'https://b5m.gipuzkoa.eus/api/1.0/en/library/openlayers-ext/resources/img/placemarker_icons/wb_01_01.png'
 end icon,
+'D_A'||a.id_postal b5mcode_d,
 b.codmuni codmuni,
 b.muni_e muni_eu,
 b.muni_c muni_es,
@@ -827,7 +840,7 @@ decode(substr(b.noportal,1,2),'00',substr(b.noportal,3,3),decode(substr(b.noport
 b.bis bis,
 b.codpostal postal_code,
 '1' official,
-sdo_geom.sdo_centroid(c.polygon,m.diminfo)
+sdo_geom.sdo_centroid(c.polygon,m.diminfo) geom
 from b5mweb_nombres.n_actipuerta a,b5mweb_nombres.n_edifdirpos b,b5mweb_25830.a_edifind c,user_sdo_geom_metadata m
 where a.cla_santi in('C.4.1','C.4.2','C.4.3','C.4.5','F.1.1.1','T.1','T.16','T.18','C.8.7','C.8.8','C.8.9','B.1.5','C.1.1','C.1.2','C.1.4','C.2.4')
 and a.id_postal=b.idnombre
