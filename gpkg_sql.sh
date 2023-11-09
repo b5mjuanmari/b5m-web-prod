@@ -738,7 +738,7 @@ and c.codmuni=e.codmuni
 and f.url_2d='S_'||e.idnomcomarca"
 idx_a["q_municipalcartography"]="b5mcode"
 
-# 15. poi_pointsofinterest (puntos de interés) (carga: 25")
+# 15. poi_pointsofinterest (puntos de interés) (carga: 11")
 des_a["poi_pointsofinterest"]="Interesgunea / Punto de interés / Point of Interest"
 sql_a["poi_pointsofinterest"]="select
 a.id_actividad id_poi,
@@ -746,89 +746,20 @@ a.id_actividad id_poi,
 a.cla_santi id_type_poi,
 decode(a.nombre_comercial_e, null, a.nombre_comercial_c, a.nombre_comercial_e) name_eu,
 a.nombre_comercial_c name_es,
-a.m_actividad_e type_eu,
-a.m_actividad type_es,
-a.m_actividad type_en,
-a.m_actividad_e||'...' type_description_eu,
-a.m_actividad||'...' type_description_es,
-a.m_actividad||'...' type_description_en,
-case
-  when a.cla_santi='C.4.1' or a.cla_santi='C.4.2' or a.cla_santi='C.4.3' or a.cla_santi='C.4.5'
-    then 'Osasuna'
-  when a.cla_santi='F.1.1.1' or a.cla_santi='T.1' or a.cla_santi='T.16' or a.cla_santi='T.18'
-    then 'Turismoa'
-  when a.cla_santi='C.8.7' or a.cla_santi='C.8.8' or a.cla_santi='C.8.9'
-    then 'Kultura'
-  when a.cla_santi='B.1.5' or a.cla_santi='C.1.1' or a.cla_santi='C.1.2' or a.cla_santi='C.1.4' or a.cla_santi='C.2.4'
-    then 'Adminstrazioa'
-  else 'Gainerakoa'
-end category_eu,
-case
-  when a.cla_santi='C.4.1' or a.cla_santi='C.4.2' or a.cla_santi='C.4.3' or a.cla_santi='C.4.5'
-    then 'Sanidad'
-  when a.cla_santi='F.1.1.1' or a.cla_santi='T.1' or a.cla_santi='T.16' or a.cla_santi='T.18'
-    then 'Turismo'
-  when a.cla_santi='C.8.7' or a.cla_santi='C.8.8' or a.cla_santi='C.8.9'
-    then 'Cultura'
-  when a.cla_santi='B.1.5' or a.cla_santi='C.1.1' or a.cla_santi='C.1.2' or a.cla_santi='C.1.4' or a.cla_santi='C.2.4'
-    then 'Adminstración'
-  else 'Resto'
-end category_es,
-case
-  when a.cla_santi='C.4.1' or a.cla_santi='C.4.2' or a.cla_santi='C.4.3' or a.cla_santi='C.4.5'
-    then 'Healthcare'
-  when a.cla_santi='F.1.1.1' or a.cla_santi='T.1' or a.cla_santi='T.16' or a.cla_santi='T.18'
-    then 'Tourism'
-  when a.cla_santi='C.8.7' or a.cla_santi='C.8.8' or a.cla_santi='C.8.9'
-    then 'Culture'
-  when a.cla_santi='B.1.5' or a.cla_santi='C.1.1' or a.cla_santi='C.1.2' or a.cla_santi='C.1.4' or a.cla_santi='C.2.4'
-    then 'Administration'
-  else 'Gainerakoa'
-end category_en,
-case
-  when a.cla_santi='C.4.1' or a.cla_santi='C.4.2' or a.cla_santi='C.4.3' or a.cla_santi='C.4.5'
-    then 'Osasun zentroak, farmaziak eta klinikak'
-  when a.cla_santi='F.1.1.1' or a.cla_santi='T.1' or a.cla_santi='T.16' or a.cla_santi='T.18'
-    then 'Turismo bulegoak, monumentuak, xarma duten txokoak eta espazio natural interesgarriak'
-  when a.cla_santi='C.8.7' or a.cla_santi='C.8.8' or a.cla_santi='C.8.9'
-    then 'Kultur etxeak, zinemak, antzoki eta kontzertu aretoak, museoak'
-  when a.cla_santi='B.1.5' or a.cla_santi='C.1.1' or a.cla_santi='C.1.2' or a.cla_santi='C.1.4' or a.cla_santi='C.2.4'
-    then 'Herri administrazioa eta eraikin publikoak'
-  else 'Gainerakoa...'
-end category_description_eu,
-case
-  when a.cla_santi='C.4.1' or a.cla_santi='C.4.2' or a.cla_santi='C.4.3' or a.cla_santi='C.4.5'
-    then 'Centros de salud, farmacias y clínicas médicas'
-  when a.cla_santi='F.1.1.1' or a.cla_santi='T.1' or a.cla_santi='T.16' or a.cla_santi='T.18'
-    then 'Oficinas de turismo, monumentos, rincones con encanto y espacios naturales de interés'
-  when a.cla_santi='C.8.7' or a.cla_santi='C.8.8' or a.cla_santi='C.8.9'
-    then 'Casas de cultura, cines, teatros y salas de conciertos, museos'
-  when a.cla_santi='B.1.5' or a.cla_santi='C.1.1' or a.cla_santi='C.1.2' or a.cla_santi='C.1.4' or a.cla_santi='C.2.4'
-    then 'Administración pública y edificios públicos'
-  else 'Resto...'
-end category_description_es,
-case
-  when a.cla_santi='C.4.1' or a.cla_santi='C.4.2' or a.cla_santi='C.4.3' or a.cla_santi='C.4.5'
-    then 'Healthcare centres, pharmacies and medical clinics'
-  when a.cla_santi='F.1.1.1' or a.cla_santi='T.1' or a.cla_santi='T.16' or a.cla_santi='T.18'
-    then 'Tourism offices, monuments, charming places and interesting natural spaces'
-  when a.cla_santi='C.8.7' or a.cla_santi='C.8.8' or a.cla_santi='C.8.9'
-    then 'Culture centres, cinemas, theatres and concert places, museums'
-  when a.cla_santi='B.1.5' or a.cla_santi='C.1.1' or a.cla_santi='C.1.2' or a.cla_santi='C.1.4' or a.cla_santi='C.2.4'
-    then 'Public administration and public buildings'
-  else 'Rest...'
-end category_description_en,
-case
-  when a.cla_santi='C.4.1' or a.cla_santi='C.4.2' or a.cla_santi='C.4.3' or a.cla_santi='C.4.5'
-    then 'https://b5m.gipuzkoa.eus/api/1.0/en/library/openlayers-ext/resources/img/placemarker_icons/wb_02_01.png'
-  when a.cla_santi='F.1.1.1' or a.cla_santi='T.1' or a.cla_santi='T.16' or a.cla_santi='T.18'
-    then 'https://b5m.gipuzkoa.eus/api/1.0/en/library/openlayers-ext/resources/img/placemarker_icons/wb_07_14.png'
-  when a.cla_santi='C.8.7' or a.cla_santi='C.8.8' or a.cla_santi='C.8.9'
-    then 'https://b5m.gipuzkoa.eus/api/1.0/en/library/openlayers-ext/resources/img/placemarker_icons/wb_08_01.png'
-  when a.cla_santi='B.1.5' or a.cla_santi='C.1.1' or a.cla_santi='C.1.2' or a.cla_santi='C.1.4' or a.cla_santi='C.2.4'
-    then 'https://b5m.gipuzkoa.eus/api/1.0/en/library/openlayers-ext/resources/img/placemarker_icons/wb_01.png'
-  else 'https://b5m.gipuzkoa.eus/api/1.0/en/library/openlayers-ext/resources/img/placemarker_icons/wb_01_01.png'
-end icon,
+e.title_eu class_eu,
+e.title_es class_es,
+e.title_en class_en,
+e.description_eu class_description_eu,
+e.description_es class_description_es,
+e.description_en class_description_en,
+i.url||'/'||g.icon class_icon,
+d.title_eu category_eu,
+d.title_es category_es,
+d.title_en category_en,
+d.description_eu category_description_eu,
+d.description_es category_description_es,
+d.description_en category_description_en,
+i.url||'/'||h.icon category_icon,
 'D_A'||a.id_postal b5mcode_d,
 b.codmuni codmuni,
 b.muni_e muni_eu,
@@ -838,15 +769,22 @@ b.calle_e street_eu,
 b.calle_c street_es,
 decode(substr(b.noportal,1,2),'00',substr(b.noportal,3,3),decode(substr(b.noportal,1,1),'0',substr(b.noportal,2,3),b.noportal)) door_number,
 b.bis bis,
+b.accesorio accessory,
 b.codpostal postal_code,
 '1' official,
 sdo_geom.sdo_centroid(c.polygon,m.diminfo) geom
-from b5mweb_nombres.n_actipuerta a,b5mweb_nombres.n_edifdirpos b,b5mweb_25830.a_edifind c,user_sdo_geom_metadata m
-where a.cla_santi in('C.4.1','C.4.2','C.4.3','C.4.5','F.1.1.1','T.1','T.16','T.18','C.8.7','C.8.8','C.8.9','B.1.5','C.1.1','C.1.2','C.1.4','C.2.4')
-and a.id_postal=b.idnombre
+from b5mweb_nombres.n_actipuerta a,b5mweb_nombres.n_edifdirpos b,b5mweb_25830.a_edifind c,b5mweb_nombres.poi_categories d,b5mweb_nombres.poi_classes e,b5mweb_nombres.poi_cat_class f,b5mweb_nombres.poi_icons g,b5mweb_nombres.poi_icons h,b5mweb_nombres.poi_icons_url i,user_sdo_geom_metadata m
+where a.id_postal=b.idnombre
 and a.idut=c.idut
 and m.table_name='A_EDIFIND'
 and m.column_name='POLYGON'
 and a.id_postal<>0
+and d.id=f.poi_category_id
+and e.id=f.poi_class_id
+and a.cla_santi=e.code
+and e.icon_id=g.id
+and d.icon_id=h.id
+and i.id=1
+and d.enabled=1
 order by a.id_actividad"
 idx_a["poi_pointsofinterest"]="b5mcode"
