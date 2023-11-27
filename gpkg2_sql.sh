@@ -30,55 +30,80 @@ d_gpk="d_postaladdresses"
 d_des=("Posta helbidea" "Dirección postal" "Postal Address")
 d_abs=("B5m D kodea" "B5m código D" "B5m Code D")
 
-# 4. e_buildings (Edficios) (carga: 1'49")
-des_a["e_buildings"]="Eraikina / Edificio / Building"
+# 4. e_buildings
+e_gpk="e_buildings"
+e_des=("Eraikina" "Edificio" "Building")
+e_abs=("B5m E kodea" "B5m código E" "B5m Code E")
 
-# 5. k_streets_buildings (calles) (carga: 4'47")
-des_a["k_streets_buildings"]="Kalea (eraikin multzoa) / Calle (conjunto de edificios) / Street (building set)"
+# 5. k_streets_buildings
+k_gpk="k_streets_buildings"
+k_des=("Kalea (eraikin multzoa)" "Calle (conjunto de edificios)" "Street (building set)")
+k_abs=("B5m K kodea" "B5m código K" "B5m Code K")
 
-# 6. c_basins (cuencas) (carga: 28")
-des_a["c_basins"]="Arroa / Cuenca / Basin"
+# 6. c_basins
+c_gpk="c_basins"
+c_des=("Arroa" "Cuenca" "Basin")
+c_abs=("B5m C kodea" "B5m código C" "B5m Code C")
 
-# 7. i_hydrography (hidrografía) (carga: 43")
-des_a["i_hydrography"]="Hidrografia / Hidrografía / Hydrography"
+# 7. i_hydrography
+i_gpk="i_hydrography"
+i_des=("Hidrografia" "Hidrografía" "Hydrography")
+i_abs=("B5m I kodea" "B5m código I" "B5m Code I")
 
-# 8. z_districts (barrios y/o nombres urbanos) (carga: 22")
-des_a["z_districts"]="Auzo eta/edo hiri izena / Barrio y/o nombre urbano / District and/or urban name"
+# 8. z_districts
+z_gpk="z_districts"
+z_des=("Auzo eta/edo hiri izena" "Barrio y/o nombre urbano" "District and/or urban name")
+z_abs=("B5m Z kodea" "B5m código Z" "B5m Code Z")
 
-# 9. g_orography (toponimia de la orografía) (carga: 16")
-des_a["g_orography"]="Orografiaren toponimia / Toponimia de la orografía / Toponymy of the orography"
+# 9. g_orography
+g_gpk="g_orography"
+g_des=("Orografiaren toponimia" "Toponimia de la orografía" "Toponymy of the orography")
+g_abs=("B5m G kodea" "B5m código G" "B5m Code G")
 
-# 10. r_grid (cuadrículas, pauta) (carga: 19")
-des_a["r_grid"]="Lauki-sarea / Cuadrícula / Grid"
+# 10. r_grid
+r_gpk="r_grid"
+r_des=("Lauki-sarea" "Cuadrícula" "Grid")
+r_abs=("B5m R kodea" "B5m código R" "B5m Code R")
 
-# 11. dw_download (descargas) (carga: 2'25")
-des_a["dw_download"]="Deskargak / Descargas / Downloads"
+# 11. dw_download
+dw_gpk="dw_download"
+dw_des=("Deskargak" "Descargas" "Downloads")
+dw_abs=("B5m DW kodea" "B5m código DW" "B5m Code DW")
 
-# 12. sg_geodeticbenchmarks (señales geodésicas) (carga: 28")
-des_a["sg_geodeticbenchmarks"]="Seinale geodesikoa / Señal geodésica / Geodetic Benchmark"
+# 12. sg_geodeticbenchmarks
+sg_gpk="sg_geodeticbenchmarks"
+sg_des=("Seinale geodesikoa" "Señal geodésica" "Geodetic Benchmark")
+sg_abs=("B5m SG kodea" "B5m código SG" "B5m Code SG")
 
-# 13. dm_distancemunicipalities (distancia entre municipios) (carga: 1h12')
-des_a["dm_distancemunicipalities"]="Udalerrien arteko distantzia / Distancia entre municipios / Distance Between Municipalities"
+# 13. dm_distancemunicipalities
+dm_gpk="dm_distancemunicipalities"
+dm_des=("Udalerrien arteko distantzia" "Distancia entre municipios" "Distance Between Municipalities")
+dm_abs=("B5m DM kodea" "B5m código DM" "B5m Code DM")
 
-# 14. q_municipalcartography (cartografía municipal) (carga: 25")
-des_a["q_municipalcartography"]="Udal kartografiaren inbentarioa / Inventario de cartografía municipal / Municipal Cartography Inventory"
+# 14. q_municipalcartography
+q_gpk="q_municipalcartography"
+q_des=("Udal kartografiaren inbentarioa" "Inventario de cartografía municipal" "Municipal Cartography Inventory")
+q_abs=("B5m Q kodea" "B5m código Q" "B5m Code Q")
 
-# 15. poi_pointsofinterest (puntos de interés) (carga: 11")
-des_a["poi_pointsofinterest"]="Interesgunea / Punto de interés / Point of Interest"
+# 15. poi_pointsofinterest
+poi_gpk="poi_pointsofinterest"
+poi_des=("Interesgunea" "Punto de interés" "Point of Interest")
+poi_abs=("B5m POI kodea" "B5m código POI" "B5m Code POI")
 
-# ===================
-#
-# 1. m_municipalities
-#
-# ===================
+# =================== #
+#                     #
+# 1. m_municipalities #
+#                     #
+# =================== #
 
 m_sql_01="select
 a.url_2d b5mcode,
+upper(substr(a.tipo_e,1,1))||substr(a.tipo_e,2,length(a.tipo_e)-1) type_eu,
+upper(substr(a.tipo_c,1,1))||substr(a.tipo_c,2,length(a.tipo_c)-1) type_es,
+upper(substr(a.tipo_i,1,1))||substr(a.tipo_i,2,length(a.tipo_i)-1) type_en,
 a.nombre_e name_eu,
 a.nombre_c name_es,
-a.tipo_e type_eu,
-a.tipo_c type_es,
-a.tipo_i type_en,
+'"$updd"' update_date,
 '1' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.giputz b
@@ -92,7 +117,7 @@ replace(
 rtrim(
 replace(
 replace(
-'''featuretypename'':''${s_gpk}'','||
+'''featuretypenamez'':''${s_gpk}'','||
 '''description'':''${s_des[0]}'','||
 '''abstract'':''${s_abs[0]}'','||
 '''numberMatched'':'||
@@ -191,10 +216,33 @@ type_eu|Elementu geografikoaren mota euskaraz|Tipo del elemento geográfico en e
 type_es|Elementu geografikoaren mota gaztelaniaz|Tipo del elemento geográfico en castellano|Type of the geographic feature in Spanish#\
 type_en|Elementu geografikoaren mota ingelesez|Tipo del elemento geográfico en inglés|Type of the geographic feature in English"
 
-# ============
-#
-# 2. s_regions
-#
-# ============
+# ============ #
+#              #
+# 2. s_regions #
+#              #
+# ============ #
 
-s_sql_01="select"
+s_sql_01="select
+a.url_2d b5mcode,
+b.idnomcomarca b5mcode_region,
+upper(substr(a.tipo_e,1,1))||substr(a.tipo_e,2,length(a.tipo_e)-1) type_eu,
+upper(substr(a.tipo_c,1,1))||substr(a.tipo_c,2,length(a.tipo_c)-1) type_es,
+'Region' type_en,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+'"$updd"' update_date,
+'1' official,
+sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.giputz b
+where a.url_2d='S_'||b.idnomcomarca
+group by (a.url_2d,b.idnomcomarca,a.tipo_e,a.tipo_c,a.nombre_e,a.nombre_c)"
+
+s_idx="b5mcode"
+
+# ==================== #
+#                      #
+# 3. d_postaladdresses #
+#                      #
+# ==================== #
+
+d_sql_01="select"

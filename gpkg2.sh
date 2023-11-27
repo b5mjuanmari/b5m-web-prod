@@ -24,9 +24,8 @@ set NLS_LANG=.UTF8
 dir="${HOME}/SCRIPTS/GPKG"
 gpkd="/home/data/gpkg2"
 gpkp="$gpkd"
-usr="b5mweb_25830"
-pas="web+"
-db="bdet"
+con1="b5mweb_25830/web+@//exploracle:1521/bdet"
+con2="etl_cfg/web+@//etlowb:1521/bdowb"
 tpl="giputz"
 usrd1="juanmari"
 usrd2="develop"
@@ -68,48 +67,80 @@ then
 fi
 nf=`gawk '{t=substr($0,1,1);if((t=="1")||(t=="2")||(t=="3")){print $0}}' "$fconf" | wc -l`
 
-# Menpekotasunak / Dependencias
-source "${dir}/gpkg2_fnc.sh"
-source "${dir}/gpkg2_sql.sh"
-
-# Hasiera / Inicio
-ini="Hasiera / Inicio: $scr - $(date '+%Y-%m-%d %H:%M:%S')"
-msg "$ini"
-cd "$dir"
-
 # =============================================== #
 #  +-------------------------------------------+  #
 #  |     Datuak kargatzea / Carga de datos     |  #
 #  +-------------------------------------------+  #
 # =============================================== #
 
-# =================================================== #
-#                                                     #
-# 1. m_municipalities (udalerriak / municipios) (13") #
-#                                                     #
-# =================================================== #
+# ===================== #
+#                       #
+# 0.1. update_date info #
+#                       #
+# ===================== #
+
+updd=`sqlplus -s ${con2} <<-EOF
+set feedback off
+set linesize 32767
+set trim on
+set pages 0
+
+select to_char(fecha_inicio,'YYYY-MM-DD')
+from etl_sinc
+where rownum=1
+order by id_sinc desc;
+
+exit;
+EOF`
+
+# ================================== #
+#                                    #
+# 0.2. Menpekotasunak / Dependencias #
+#                                    #
+# ================================== #
+
+source "${dir}/gpkg2_fnc.sh"
+source "${dir}/gpkg2_sql.sh"
+
+# ===================== #
+#                       #
+# 0.3. Hasiera / Inicio #
+#                       #
+# ===================== #
+
+ini="Hasiera / Inicio: $scr - $(date '+%Y-%m-%d %H:%M:%S')"
+msg "$ini"
+cd "$dir"
+
+# ============================================= #
+#                                               #
+# 1. m_municipalities (udalerriak / municipios) #
+#                                               #
+# ============================================= #
+
+# 9"
 
 # Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
-let i1=$i1+1
 vconf=`grep "$m_gpk" "$fconf"`
 IFS='|' read -a aconf <<< "$vconf"
 typ01="${aconf[0]}"
 gpk01="${aconf[1]}"
-des01="${aconf[2]}"
+des01="${s_des[0]} - ${s_des[1]} - ${s_des[2]}"
 if [ "$m_gpk" = "$gpk01" ] && ([ $typ01 = "1" ] || [ "$typ01" = "2" ])
 then
-	msg "${i1}/${nf}: $(date '+%Y-%m-%d %H:%M:%S') - $gpk01 - $des01\c"
+	let i1=$i1+1
+	msg "${i1}/${nf}: $(date '+%Y-%m-%d %H:%M:%S') - $gpk01 - ${m_des[0]}\c"
 	f01="${tmpd}/${m_gpk}_01.gpkg"
 	c01="${tmpd}/${m_gpk}_01.csv"
 	f02="${tmpd}/${m_gpk}.gpkg"
 
 	# Oinarrizko datuak / Datos básicos
 	rm "$f01" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${usr}/${pas}@${db}:${tpl} -nln "$m_gpk" -lco DESCRIPTION="$des01" -sql "$m_sql_01"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con1}:${tpl} -nln "$m_gpk" -lco DESCRIPTION="$des01" -sql "$m_sql_01"
 
 	# more_info
 	rm "$c01" 2> /dev/null
-	sqlplus -s ${usr}/${pas}@${db} <<-EOF1 | gawk '
+	sqlplus -s ${con1} <<-EOF1 | gawk '
 	{
 	  if (NR != 1)
 	  	print $0
@@ -143,12 +174,50 @@ then
 	rfl "$f02" "$m_gpk"
 
 	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
-	cop_gpk "$typ01" "$m_gpk"
-	msg " - ${typ01}\c"
+	cp_gpk "$typ01" "$m_gpk"
+	msg " - ${typ01}"
+	rm "$f02" 2> /dev/null
 fi
 
-# Bukaera / Final
-msg ""
+# ==================================== #
+#                                      #
+# 2. s_regions (eskualdeak / comarcas) #
+#                                      #
+# ==================================== #
+
+# 19"
+
+# Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
+vconf=`grep "$s_gpk" "$fconf"`
+IFS='|' read -a aconf <<< "$vconf"
+typ01="${aconf[0]}"
+gpk01="${aconf[1]}"
+des01="${s_des[0]} - ${s_des[1]} - ${s_des[2]}"
+if [ "$s_gpk" = "$gpk01" ] && ([ $typ01 = "1" ] || [ "$typ01" = "2" ])
+then
+	let i1=$i1+1
+	msg "${i1}/${nf}: $(date '+%Y-%m-%d %H:%M:%S') - $gpk01 - ${s_des[0]}\c"
+	f01="${tmpd}/${s_gpk}.gpkg"
+
+	# Oinarrizko datuak / Datos básicos
+	rm "$f01" 2> /dev/null
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con1}:${tpl} -nln "$s_gpk" -lco DESCRIPTION="$des01" -sql "$s_sql_01"
+
+	# Eremuak berrizendatu / Renombrar campos
+	rfl "$f01" "$s_gpk"
+
+	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
+	cp_gpk "$typ01" "$s_gpk"
+	msg " - ${typ01}"
+	rm "$f02" 2> /dev/null
+fi
+
+# ===================== #
+#                       #
+# 99.0. Bukaera / Final #
+#                       #
+# ===================== #
+
 msg "$fin"
 fin="Bukaera / Final:  $scr - $(date '+%Y-%m-%d %H:%M:%S')"
 msg "$fin"

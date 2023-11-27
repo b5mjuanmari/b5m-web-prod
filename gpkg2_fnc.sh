@@ -60,7 +60,7 @@ function cnx {
 	done
 }
 
-function cop_gpk {
+function cp_gpk {
 	tmpg="/tmp/${2}.gpkg"
 	fidg="${gpkd}/${2}.gpkg"
 	fipg="${gpkp}/${2}.gpkg"
