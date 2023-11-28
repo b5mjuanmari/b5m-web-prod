@@ -112,11 +112,11 @@ ini="Hasiera / Inicio: $scr - $(date '+%Y-%m-%d %H:%M:%S')"
 msg "$ini"
 cd "$dir"
 
-# ============================================= #
-#                                               #
-# 1. m_municipalities (udalerriak / municipios) #
-#                                               #
-# ============================================= #
+# =========================================== #
+#                                             #
+# 1. m_municipalities (udalerria / municipio) #
+#                                             #
+# =========================================== #
 
 # 9"
 
@@ -161,7 +161,6 @@ then
 
 	exit;
 	EOF1
-	rm "$f02" 2> /dev/null
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" "$c01" -nln "${m_gpk}_more_info" -lco DESCRIPTION="${des01} more info"
 	rm "$c01" 2> /dev/null
 
@@ -179,11 +178,11 @@ then
 	rm "$f02" 2> /dev/null
 fi
 
-# ==================================== #
-#                                      #
-# 2. s_regions (eskualdeak / comarcas) #
-#                                      #
-# ==================================== #
+# ================================== #
+#                                    #
+# 2. s_regions (eskualdea / comarca) #
+#                                    #
+# ================================== #
 
 # 19"
 
@@ -210,6 +209,105 @@ then
 	cp_gpk "$typ01" "$s_gpk"
 	msg " - ${typ01}"
 	rm "$f02" 2> /dev/null
+fi
+
+# ========================================================= #
+#                                                           #
+# 3. d_postaladdresses (posta helbidea / dirección postal") #
+#                                                           #
+# ========================================================= #
+
+# ?"
+
+# Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
+vconf=`grep "$d_gpk" "$fconf"`
+IFS='|' read -a aconf <<< "$vconf"
+typ01="${aconf[0]}"
+gpk01="${aconf[1]}"
+des01="${s_des[0]} - ${s_des[1]} - ${s_des[2]}"
+if [ "$d_gpk" = "$gpk01" ] && ([ $typ01 = "1" ] || [ "$typ01" = "2" ])
+then
+	let i1=$i1+1
+	msg "${i1}/${nf}: $(date '+%Y-%m-%d %H:%M:%S') - $gpk01 - ${d_des[0]}\c"
+	f01="${tmpd}/${d_gpk}_01.gpkg"
+	c01="${tmpd}/${d_gpk}_01.csv"
+	c02="${tmpd}/${d_gpk}_02.csv"
+	f02="${tmpd}/${d_gpk}.gpkg"
+
+	# Oinarrizko datuak / Datos básicos
+	rm "$f01" 2> /dev/null
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con1}:${tpl} -nln "$d_gpk" -lco DESCRIPTION="$des01" -sql "$d_sql_01"
+
+	# more_info
+	rm "$c01" 2> /dev/null
+	sqlplus -s ${con1} <<-EOF1 | gawk '
+	{
+	  if (NR != 1)
+	  	print $0
+	}
+	' > "$c01"
+	set serveroutput on
+	set feedback off
+	set linesize 32767
+	set long 20000000
+	set longchunksize 20000000
+	set trim on
+	set pages 0
+	set tab on
+	set spa 0
+	set mark csv on
+
+	${d_sql_02};
+
+	exit;
+	EOF1
+	rm "$f02" 2> /dev/null
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" "$c01" -nln "${d_gpk}_more_info" -lco DESCRIPTION="${des01} more info"
+	#rm "$c01" 2> /dev/null
+
+	# poi
+	rm "$c02" 2> /dev/null
+	sqlplus -s ${con1} <<-EOF1 | gawk '
+	{
+	gsub("poi_null","")
+	if (NR != 1) {
+		if (NR == 2)
+			print tolower($0)
+		else
+			print $0
+	}
+	}
+	' > "$c02"
+	set serveroutput on
+	set feedback off
+	set linesize 32767
+	set long 20000000
+	set longchunksize 20000000
+	set trim on
+	set pages 0
+	set tab on
+	set spa 0
+	set mark csv on
+
+	${d_sql_03};
+
+	exit;
+	EOF1
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" "$c02" -nln "${d_gpk}_poi" -lco DESCRIPTION="${des01} poi"
+	#rm "$c02" 2> /dev/null
+
+	# Behin betiko GPKGa / GPKG definitivo
+	rm "$f02" 2> /dev/null
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f02" "$f01" -nln "$d_gpk" -lco DESCRIPTION="$des01" -sql "$d_sql_04"
+	#rm "$f01" 2> /dev/null
+
+	# Eremuak berrizendatu / Renombrar campos
+	rfl "$f02" "$d_gpk"
+
+	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
+	#cp_gpk "$typ01" "$d_gpk"
+	msg " - ${typ01}"
+	#rm "$f02" 2> /dev/null
 fi
 
 # ===================== #

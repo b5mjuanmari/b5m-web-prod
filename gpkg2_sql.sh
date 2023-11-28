@@ -117,7 +117,7 @@ replace(
 rtrim(
 replace(
 replace(
-'''featuretypenamez'':''${s_gpk}'','||
+'''featuretypename'':''${s_gpk}'','||
 '''description'':''${s_des[0]}'','||
 '''abstract'':''${s_abs[0]}'','||
 '''numberMatched'':'||
@@ -245,4 +245,280 @@ s_idx="b5mcode"
 #                      #
 # ==================== #
 
-d_sql_01="select"
+d_sql_01="select
+a.idut,
+'E_A'||a.idut b5mcode,
+decode(a.idpostal, 0, null, 'D_A'||a.idpostal) b5mcode2,
+replace(decode(a.nomedif_e,null,a.calle_e||', '||a.noportal||' '||a.muni_e,a.nomedif_e||' - '||a.calle_e||', '||a.noportal||' '||a.muni_e),' - , ',',') name_eu,
+replace(decode(a.nomedif_e,null,decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c)||', '||a.noportal||' '||a.muni_c,a.nomedif_e||' - '||decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c)||', '||a.noportal||' '||a.muni_c),' - , ',',') name_es,
+a.codmuni codmuni,
+a.muni_e muni_eu,
+a.muni_c muni_es,
+a.codcalle codstreet,
+a.calle_e street_eu,
+decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c) street_es,
+a.noportal door_number,
+decode(a.bis,' ','',a.bis) bis,
+a.accesorio accessory,
+decode(a.codpostal,' ',null,to_number(a.codpostal)) postal_code,
+a.distrito coddistr,
+a.seccion codsec,
+a.nomedif_e name_building_eu,
+a.nomedif_e name_building_es,
+'"$updd"' update_date,
+'1' official,
+'K_'||a.codmuni||'_'||substr(a.codcalle,2) b5mcode_others_k,
+a.calle_e b5mcode_others_k_name_eu,
+decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c) b5mcode_others_k_name_es,
+'M_'||a.codmuni b5mcode_others_m,
+a.muni_e b5mcode_others_m_name_eu,
+a.muni_c b5mcode_others_m_name_es,
+decode(c.idnomcomarca,null,null,'S_'||c.idnomcomarca) b5mcode_others_s,
+d.nombre_e b5mcode_others_s_name_eu,
+d.nombre_c b5mcode_others_s_name_es,
+sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
+from b5mweb_nombres.n_edifgen a,b5mweb_25830.a_edifind b,(select distinct codmuni,idnomcomarca from b5mweb_25830.giputz) c,b5mweb_nombres.solr_gen_toponimia_2d d
+where a.idut=b.idut
+and a.codmuni=c.codmuni
+and d.url_2d='S_'||c.idnomcomarca
+and a.idut in(57169,62397,79512,79575)
+group by (a.idut,a.idut,a.idpostal,a.nomedif_e,a.nomedif_e,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.accesorio,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c,c.idnomcomarca,d.nombre_e,d.nombre_c)"
+
+d_sql_02="select
+decode(a.idpostal, 0, null, 'D_A'||a.idpostal) b5mcode,
+replace(
+'[{'||
+rtrim(
+replace(
+replace(
+'''featuretypename'':''${k_gpk}'','||
+'''description'':''${k_des[0]}'','||
+'''abstract'':''${k_abs[0]}'','||
+'''numberMatched'':'||
+xmlelement(
+  e,count(a.codmuni)||',''features'':[',
+  xmlagg(xmlelement(e,
+    '{''b5mcode'':'''||'K_'||a.codmuni||'_'||substr(a.codcalle,2)
+    ||'''|''name_eu'':'''||replace(a.calle_e,',','|')
+    ||'''|''name_es'':'''||replace(decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c),',','|')
+    ||'''}'
+    ,'#')
+  )
+).extract('//text()').getclobval(),
+'|',','),
+'#',','),
+',')
+||']'
+||'},{'||
+rtrim(
+replace(
+replace(
+'''featuretypename'':''${m_gpk}'','||
+'''description'':''${m_des[0]}'','||
+'''abstract'':''${m_abs[0]}'','||
+'''numberMatched'':'||
+xmlelement(
+  e,count(a.codmuni)||',''features'':[',
+  xmlagg(xmlelement(e,
+    '{''b5mcode'':'''||'M_'||a.codmuni
+    ||'''|''name_eu'':'''||replace(a.muni_e,',','|')
+    ||'''|''name_es'':'''||replace(a.muni_c,',','|')
+    ||'''}'
+    ,'#')
+  )
+).extract('//text()').getclobval(),
+'|',','),
+'#',','),
+',')
+||']'
+||'},{'||
+rtrim(
+replace(
+replace(
+'''featuretypename'':''${s_gpk}'','||
+'''description'':''${s_des[0]}'','||
+'''abstract'':''${s_abs[0]}'','||
+'''numberMatched'':'||
+xmlelement(
+  e,count(c.idnomcomarca)||',''features'':[',
+  xmlagg(xmlelement(e,
+    '{''b5mcode'':'''||decode(c.idnomcomarca,null,null,'S_'||c.idnomcomarca)
+    ||'''|''name_eu'':'''||replace(d.nombre_e,',','|')
+    ||'''|''name_es'':'''||replace(d.nombre_c,',','|')
+    ||'''}'
+    ,'#')
+  )
+).extract('//text()').getclobval(),
+'|',','),
+'#',','),
+',')
+||']'
+||'}'
+||']',
+chr(38)||'apos;','''')
+more_info_eu,
+replace(
+'[{'||
+rtrim(
+replace(
+replace(
+'''featuretypename'':''${k_gpk}'','||
+'''description'':''${k_des[1]}'','||
+'''abstract'':''${k_abs[1]}'','||
+'''numberMatched'':'||
+xmlelement(
+  e,count(a.codmuni)||',''features'':[',
+  xmlagg(xmlelement(e,
+    '{''b5mcode'':'''||'K_'||a.codmuni||'_'||substr(a.codcalle,2)
+    ||'''|''name_eu'':'''||replace(a.calle_e,',','|')
+    ||'''|''name_es'':'''||replace(decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c),',','|')
+    ||'''}'
+    ,'#')
+  )
+).extract('//text()').getclobval(),
+'|',','),
+'#',','),
+',')
+||']'
+||'},{'||
+rtrim(
+replace(
+replace(
+'''featuretypename'':''${m_gpk}'','||
+'''description'':''${m_des[1]}'','||
+'''abstract'':''${m_abs[1]}'','||
+'''numberMatched'':'||
+xmlelement(
+  e,count(a.codmuni)||',''features'':[',
+  xmlagg(xmlelement(e,
+    '{''b5mcode'':'''||'M_'||a.codmuni
+    ||'''|''name_eu'':'''||replace(a.muni_e,',','|')
+    ||'''|''name_es'':'''||replace(a.muni_c,',','|')
+    ||'''}'
+    ,'#')
+  )
+).extract('//text()').getclobval(),
+'|',','),
+'#',','),
+',')
+||']'
+||'},{'||
+rtrim(
+replace(
+replace(
+'''featuretypename'':''${s_gpk}'','||
+'''description'':''${s_des[1]}'','||
+'''abstract'':''${s_abs[1]}'','||
+'''numberMatched'':'||
+xmlelement(
+  e,count(c.idnomcomarca)||',''features'':[',
+  xmlagg(xmlelement(e,
+    '{''b5mcode'':'''||decode(c.idnomcomarca,null,null,'S_'||c.idnomcomarca)
+    ||'''|''name_eu'':'''||replace(d.nombre_e,',','|')
+    ||'''|''name_es'':'''||replace(d.nombre_c,',','|')
+    ||'''}'
+    ,'#')
+  )
+).extract('//text()').getclobval(),
+'|',','),
+'#',','),
+',')
+||']'
+||'}'
+||']',
+chr(38)||'apos;','''')
+more_info_es,
+replace(
+'[{'||
+rtrim(
+replace(
+replace(
+'''featuretypename'':''${k_gpk}'','||
+'''description'':''${k_des[2]}'','||
+'''abstract'':''${k_abs[2]}'','||
+'''numberMatched'':'||
+xmlelement(
+  e,count(a.codmuni)||',''features'':[',
+  xmlagg(xmlelement(e,
+    '{''b5mcode'':'''||'K_'||a.codmuni||'_'||substr(a.codcalle,2)
+    ||'''|''name_eu'':'''||replace(a.calle_e,',','|')
+    ||'''|''name_es'':'''||replace(decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c),',','|')
+    ||'''}'
+    ,'#')
+  )
+).extract('//text()').getclobval(),
+'|',','),
+'#',','),
+',')
+||']'
+||'},{'||
+rtrim(
+replace(
+replace(
+'''featuretypename'':''${m_gpk}'','||
+'''description'':''${m_des[2]}'','||
+'''abstract'':''${m_abs[2]}'','||
+'''numberMatched'':'||
+xmlelement(
+  e,count(a.codmuni)||',''features'':[',
+  xmlagg(xmlelement(e,
+    '{''b5mcode'':'''||'M_'||a.codmuni
+    ||'''|''name_eu'':'''||replace(a.muni_e,',','|')
+    ||'''|''name_es'':'''||replace(a.muni_c,',','|')
+    ||'''}'
+    ,'#')
+  )
+).extract('//text()').getclobval(),
+'|',','),
+'#',','),
+',')
+||']'
+||'},{'||
+rtrim(
+replace(
+replace(
+'''featuretypename'':''${s_gpk}'','||
+'''description'':''${s_des[2]}'','||
+'''abstract'':''${s_abs[2]}'','||
+'''numberMatched'':'||
+xmlelement(
+  e,count(c.idnomcomarca)||',''features'':[',
+  xmlagg(xmlelement(e,
+    '{''b5mcode'':'''||decode(c.idnomcomarca,null,null,'S_'||c.idnomcomarca)
+    ||'''|''name_eu'':'''||replace(d.nombre_e,',','|')
+    ||'''|''name_es'':'''||replace(d.nombre_c,',','|')
+    ||'''}'
+    ,'#')
+  )
+).extract('//text()').getclobval(),
+'|',','),
+'#',','),
+',')
+||']'
+||'}'
+||']',
+chr(38)||'apos;','''')
+more_info_en
+from b5mweb_nombres.n_edifgen a,(select distinct codmuni,idnomcomarca from b5mweb_25830.giputz) c,b5mweb_nombres.solr_gen_toponimia_2d d
+where a.codmuni=c.codmuni
+and d.url_2d='S_'||c.idnomcomarca
+and a.idut in(57169,62397,79512,79575)
+group by (a.idpostal,a.codmuni,a.codcalle,a.calle_e,a.calle_c,a.muni_e,a.muni_c,c.idnomcomarca,d.nombre_e,d.nombre_c)"
+
+d_sql_03="select
+b5mcode_d,
+replace('['||rtrim(replace(replace(replace(replace(replace(rtrim(xmlagg(xmlelement(e,'{''b5mcode_poi'':'''||b5mcode||'''|''name_eu'':'''||replace(name_eu,',','|')||'''|''name_es'':'''||replace(name_es,',','|')||'''|''class'':'''||replace(class_eu,',','|')||'''|''class_description'':'''||replace(class_description_eu,',','|')||'''|''class_icon'':'''||replace(class_icon,',','|')||'''|''category'':'''||replace(category_eu,',','|')||'''|''category_description'':'''||replace(category_description_eu,',','|')||'''|''category_icon'':'''||replace(category_icon,',','|')||'''}','#').extract('//text()') order by category_eu,class_eu,name_eu,b5mcode).getclobval(),','),chr(38)||'apos;',''''),'{''b5mcode_poi'':''''|''name_eu'':''''|''name_es'':''''|''class'':''''|''class_description'':''''|''class_icon'':''''|''category'':''''|''category_description'':''''|''category_icon'':''''}#',''),',',''),'|',','),'#',','),',')||']','[]','poi_null') poi_eu,
+replace('['||rtrim(replace(replace(replace(replace(replace(rtrim(xmlagg(xmlelement(e,'{''b5mcode_poi'':'''||b5mcode||'''|''name_eu'':'''||replace(name_eu,',','|')||'''|''name_es'':'''||replace(name_es,',','|')||'''|''class'':'''||replace(class_es,',','|')||'''|''class_description'':'''||replace(class_description_es,',','|')||'''|''class_icon'':'''||replace(class_icon,',','|')||'''|''category'':'''||replace(category_es,',','|')||'''|''category_description'':'''||replace(category_description_es,',','|')||'''|''category_icon'':'''||replace(category_icon,',','|')||'''}','#').extract('//text()') order by category_es,class_es,name_es,b5mcode).getclobval(),','),chr(38)||'apos;',''''),'{''b5mcode_poi'':''''|''name_eu'':''''|''name_es'':''''|''class'':''''|''class_description'':''''|''class_icon'':''''|''category'':''''|''category_description'':''''|''category_icon'':''''}#',''),',',''),'|',','),'#',','),',')||']','[]','poi_null') poi_es,
+replace('['||rtrim(replace(replace(replace(replace(replace(rtrim(xmlagg(xmlelement(e,'{''b5mcode_poi'':'''||b5mcode||'''|''name_eu'':'''||replace(name_eu,',','|')||'''|''name_es'':'''||replace(name_es,',','|')||'''|''class'':'''||replace(class_en,',','|')||'''|''class_description'':'''||replace(class_description_en,',','|')||'''|''class_icon'':'''||replace(class_icon,',','|')||'''|''category'':'''||replace(category_en,',','|')||'''|''category_description'':'''||replace(category_description_en,',','|')||'''|''category_icon'':'''||replace(category_icon,',','|')||'''}','#').extract('//text()') order by category_en,class_en,name_eu,b5mcode).getclobval(),','),chr(38)||'apos;',''''),'{''b5mcode_poi'':''''|''name_eu'':''''|''name_es'':''''|''class'':''''|''class_description'':''''|''class_icon'':''''|''category'':''''|''category_description'':''''|''category_icon'':''''}#',''),',',''),'|',','),'#',','),',')||']','[]','poi_null') poi_en
+from b5mweb_nombres.solr_poi_2d
+where b5mcode_d in('D_A30270','D_A30278','D_A50373','D_A57413')
+group by (b5mcode_d)"
+
+d_sql_04="select
+a.*,
+b.poi_eu,
+b.poi_es,
+b.poi_en
+from ${d_gpk} a
+left join ${d_gpk}_poi b
+on a.b5mcode2 = b.b5mcode_d"
