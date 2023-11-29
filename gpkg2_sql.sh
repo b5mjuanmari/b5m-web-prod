@@ -117,9 +117,9 @@ replace(
 rtrim(
 replace(
 replace(
-'''featuretypename'':''${s_gpk}'','||
-'''description'':''${s_des[0]}'','||
-'''abstract'':''${s_abs[0]}'','||
+'''featuretypename'':''ZZ_S_FTN'','||
+'''description'':''ZZ_S_DES'','||
+'''abstract'':''ZZ_S_ABS'','||
 '''numberMatched'':'||
 xmlelement(
   e,count(b.idnomcomarca)||',''features'':[',
@@ -137,59 +137,7 @@ xmlelement(
 ||']'
 ||'}]',
 chr(38)||'apos;','''')
-more_info_eu,
-replace(
-'[{'||
-rtrim(
-replace(
-replace(
-'''featuretypename'':''${s_gpk}'','||
-'''description'':''${s_des[1]}'','||
-'''abstract'':''${s_abs[1]}'','||
-'''numberMatched'':'||
-xmlelement(
-  e,count(b.idnomcomarca)||',''features'':[',
-  xmlagg(xmlelement(e,
-    '{''b5mcode'':'''||c.url_2d
-    ||'''|''name_eu'':'''||replace(c.nombre_e,',','|')
-    ||'''|''name_es'':'''||replace(c.nombre_c,',','|')
-    ||'''}'
-    ,'#')
-  )
-).extract('//text()').getclobval(),
-'|',','),
-'#',','),
-',')
-||']'
-||'}]',
-chr(38)||'apos;','''')
-more_info_es,
-replace(
-'[{'||
-rtrim(
-replace(
-replace(
-'''featuretypename'':''${s_gpk}'','||
-'''description'':''${s_des[2]}'','||
-'''abstract'':''${s_abs[2]}'','||
-'''numberMatched'':'||
-xmlelement(
-  e,count(b.idnomcomarca)||',''features'':[',
-  xmlagg(xmlelement(e,
-    '{''b5mcode'':'''||c.url_2d
-    ||'''|''name_eu'':'''||replace(c.nombre_e,',','|')
-    ||'''|''name_es'':'''||replace(c.nombre_c,',','|')
-    ||'''}'
-    ,'#')
-  )
-).extract('//text()').getclobval(),
-'|',','),
-'#',','),
-',')
-||']'
-||'}]',
-chr(38)||'apos;','''')
-more_info_en
+more_info
 from b5mweb_nombres.solr_gen_toponimia_2d a,(select distinct codmuni,idnomcomarca from b5mweb_25830.giputz) b,b5mweb_nombres.solr_gen_toponimia_2d c
 where a.url_2d='M_'||b.codmuni
 and c.url_2d='S_'||b.idnomcomarca

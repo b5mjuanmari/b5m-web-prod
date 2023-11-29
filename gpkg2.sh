@@ -99,8 +99,8 @@ EOF`
 #                                    #
 # ================================== #
 
-source "${dir}/gpkg2_fnc.sh"
 source "${dir}/gpkg2_sql.sh"
+source "${dir}/gpkg2_fnc.sh"
 
 # ===================== #
 #                       #
@@ -140,27 +140,7 @@ then
 
 	# more_info
 	rm "$c01" 2> /dev/null
-	sqlplus -s ${con1} <<-EOF1 | gawk '
-	{
-	  if (NR != 1)
-	  	print $0
-	}
-	' > "$c01"
-	set serveroutput on
-	set feedback off
-	set linesize 32767
-	set long 20000000
-	set longchunksize 20000000
-	set trim on
-	set pages 0
-	set tab on
-	set spa 0
-	set mark csv on
-
-	${m_sql_02};
-
-	exit;
-	EOF1
+	sql_more_info "$c01" "$m_sql_02"
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${m_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
 	rm "$c01" 2> /dev/null
 
@@ -240,119 +220,14 @@ then
 
 	# more_info
 	rm "$c01" 2> /dev/null
-	sqlplus -s ${con1} <<-EOF1 | gawk \
-	-v k_gpk="$k_gpk" \
-	-v k_des0="${k_des[0]}" \
-	-v k_abs0="${k_abs[0]}" \
-	-v k_des1="${k_des[1]}" \
-	-v k_abs1="${k_abs[1]}" \
-	-v k_des2="${k_des[2]}" \
-	-v k_abs2="${k_abs[2]}" \
-	-v m_gpk="$m_gpk" \
-	-v m_des0="${m_des[0]}" \
-	-v m_abs0="${m_abs[0]}" \
-	-v m_des1="${m_des[1]}" \
-	-v m_abs1="${m_abs[1]}" \
-	-v m_des2="${m_des[2]}" \
-	-v m_abs2="${m_abs[2]}" \
-	-v s_gpk="$s_gpk" \
-	-v s_des0="${s_des[0]}" \
-	-v s_abs0="${s_abs[0]}" \
-	-v s_des1="${s_des[1]}" \
-	-v s_abs1="${s_abs[1]}" \
-	-v s_des2="${s_des[2]}" \
-	-v s_abs2="${s_abs[2]}" \
-	'
-	BEGIN {
-		FS="\",\""
-	}
-	{
-	  if (NR == 1) {
-			getline
-			gsub("MORE_INFO", "MORE_INFO_EU")
-			print $0",\"MORE_INFO_ES\",\"MORE_INFO_EN\""
-		} else {
-			a0=$2
-			a1=$2
-			a2=$2
-			gsub("ZZ_K_FTN", k_gpk, a0)
-			gsub("ZZ_K_DES", k_des0, a0)
-			gsub("ZZ_K_ABS", k_abs0, a0)
-			gsub("ZZ_K_FTN", k_gpk, a1)
-			gsub("ZZ_K_DES", k_des1, a1)
-			gsub("ZZ_K_ABS", k_abs1, a1)
-			gsub("ZZ_K_FTN", k_gpk, a2)
-			gsub("ZZ_K_DES", k_des2, a2)
-			gsub("ZZ_K_ABS", k_abs2, a2)
-			gsub("ZZ_M_FTN", m_gpk, a0)
-			gsub("ZZ_M_DES", m_des0, a0)
-			gsub("ZZ_M_ABS", m_abs0, a0)
-			gsub("ZZ_M_FTN", m_gpk, a1)
-			gsub("ZZ_M_DES", m_des1, a1)
-			gsub("ZZ_M_ABS", m_abs1, a1)
-			gsub("ZZ_M_FTN", m_gpk, a2)
-			gsub("ZZ_M_DES", m_des2, a2)
-			gsub("ZZ_M_ABS", m_abs2, a2)
-			gsub("ZZ_S_FTN", s_gpk, a0)
-			gsub("ZZ_S_DES", s_des0, a0)
-			gsub("ZZ_S_ABS", s_abs0, a0)
-			gsub("ZZ_S_FTN", s_gpk, a1)
-			gsub("ZZ_S_DES", s_des1, a1)
-			gsub("ZZ_S_ABS", s_abs1, a1)
-			gsub("ZZ_S_FTN", s_gpk, a2)
-			gsub("ZZ_S_DES", s_des2, a2)
-			gsub("ZZ_S_ABS", s_abs2, a2)
-			print $1"\",\""a0",\""a1",\""a2
-		}
-	}
-	' > "$c01"
-	set serveroutput on
-	set feedback off
-	set linesize 32767
-	set long 20000000
-	set longchunksize 20000000
-	set trim on
-	set pages 0
-	set tab on
-	set spa 0
-	set mark csv on
-
-	${d_sql_02};
-
-	exit;
-	EOF1
+	sql_more_info "$c01" "$d_sql_02"
 	rm "$f02" 2> /dev/null
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${d_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
 	rm "$c01" 2> /dev/null
 
 	# poi
 	rm "$c02" 2> /dev/null
-	sqlplus -s ${con1} <<-EOF1 | gawk '
-	{
-	gsub("poi_null","")
-	if (NR != 1) {
-		if (NR == 2)
-			print tolower($0)
-		else
-			print $0
-	}
-	}
-	' > "$c02"
-	set serveroutput on
-	set feedback off
-	set linesize 32767
-	set long 20000000
-	set longchunksize 20000000
-	set trim on
-	set pages 0
-	set tab on
-	set spa 0
-	set mark csv on
-
-	${d_sql_03};
-
-	exit;
-	EOF1
+	sql_poi "$c02" "$d_sql_03"
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${d_gpk}_poi" -lco DESCRIPTION="${des01} poi" "$f01" "$c02"
 	rm "$c02" 2> /dev/null
 
@@ -400,119 +275,14 @@ then
 
 	# more_info
 	rm "$c01" 2> /dev/null
-	sqlplus -s ${con1} <<-EOF1 | gawk \
-	-v k_gpk="$k_gpk" \
-	-v k_des0="${k_des[0]}" \
-	-v k_abs0="${k_abs[0]}" \
-	-v k_des1="${k_des[1]}" \
-	-v k_abs1="${k_abs[1]}" \
-	-v k_des2="${k_des[2]}" \
-	-v k_abs2="${k_abs[2]}" \
-	-v m_gpk="$m_gpk" \
-	-v m_des0="${m_des[0]}" \
-	-v m_abs0="${m_abs[0]}" \
-	-v m_des1="${m_des[1]}" \
-	-v m_abs1="${m_abs[1]}" \
-	-v m_des2="${m_des[2]}" \
-	-v m_abs2="${m_abs[2]}" \
-	-v s_gpk="$s_gpk" \
-	-v s_des0="${s_des[0]}" \
-	-v s_abs0="${s_abs[0]}" \
-	-v s_des1="${s_des[1]}" \
-	-v s_abs1="${s_abs[1]}" \
-	-v s_des2="${s_des[2]}" \
-	-v s_abs2="${s_abs[2]}" \
-	'
-	BEGIN {
-		FS="\",\""
-	}
-	{
-	  if (NR == 1) {
-			getline
-			gsub("MORE_INFO", "MORE_INFO_EU")
-			print $0",\"MORE_INFO_ES\",\"MORE_INFO_EN\""
-		} else {
-			a0=$2
-			a1=$2
-			a2=$2
-			gsub("ZZ_K_FTN", k_gpk, a0)
-			gsub("ZZ_K_DES", k_des0, a0)
-			gsub("ZZ_K_ABS", k_abs0, a0)
-			gsub("ZZ_K_FTN", k_gpk, a1)
-			gsub("ZZ_K_DES", k_des1, a1)
-			gsub("ZZ_K_ABS", k_abs1, a1)
-			gsub("ZZ_K_FTN", k_gpk, a2)
-			gsub("ZZ_K_DES", k_des2, a2)
-			gsub("ZZ_K_ABS", k_abs2, a2)
-			gsub("ZZ_M_FTN", m_gpk, a0)
-			gsub("ZZ_M_DES", m_des0, a0)
-			gsub("ZZ_M_ABS", m_abs0, a0)
-			gsub("ZZ_M_FTN", m_gpk, a1)
-			gsub("ZZ_M_DES", m_des1, a1)
-			gsub("ZZ_M_ABS", m_abs1, a1)
-			gsub("ZZ_M_FTN", m_gpk, a2)
-			gsub("ZZ_M_DES", m_des2, a2)
-			gsub("ZZ_M_ABS", m_abs2, a2)
-			gsub("ZZ_S_FTN", s_gpk, a0)
-			gsub("ZZ_S_DES", s_des0, a0)
-			gsub("ZZ_S_ABS", s_abs0, a0)
-			gsub("ZZ_S_FTN", s_gpk, a1)
-			gsub("ZZ_S_DES", s_des1, a1)
-			gsub("ZZ_S_ABS", s_abs1, a1)
-			gsub("ZZ_S_FTN", s_gpk, a2)
-			gsub("ZZ_S_DES", s_des2, a2)
-			gsub("ZZ_S_ABS", s_abs2, a2)
-			print $1"\",\""a0",\""a1",\""a2
-		}
-	}
-	' > "$c01"
-	set serveroutput on
-	set feedback off
-	set linesize 32767
-	set long 20000000
-	set longchunksize 20000000
-	set trim on
-	set pages 0
-	set tab on
-	set spa 0
-	set mark csv on
-
-	${e_sql_02};
-
-	exit;
-	EOF1
+	sql_more_info "$c01" "$e_sql_02"
 	rm "$f02" 2> /dev/null
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
 	rm "$c01" 2> /dev/null
 
 	# poi
 	rm "$c02" 2> /dev/null
-	sqlplus -s ${con1} <<-EOF1 | gawk '
-	{
-	gsub("poi_null","")
-	if (NR != 1) {
-		if (NR == 2)
-			print tolower($0)
-		else
-			print $0
-	}
-	}
-	' > "$c02"
-	set serveroutput on
-	set feedback off
-	set linesize 32767
-	set long 20000000
-	set longchunksize 20000000
-	set trim on
-	set pages 0
-	set tab on
-	set spa 0
-	set mark csv on
-
-	${e_sql_03};
-
-	exit;
-	EOF1
+	sql_poi "$c02" "$e_sql_03"
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}_poi" -lco DESCRIPTION="${des01} poi" "$f01" "$c02"
 	rm "$c02" 2> /dev/null
 
