@@ -161,12 +161,12 @@ then
 
 	exit;
 	EOF1
-	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" "$c01" -nln "${m_gpk}_more_info" -lco DESCRIPTION="${des01} more info"
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${m_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
 	rm "$c01" 2> /dev/null
 
 	# Behin betiko GPKGa / GPKG definitivo
 	rm "$f02" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f02" "$f01" -nln "$m_gpk" -lco DESCRIPTION="$des01" -sql "$m_sql_03"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "$m_gpk" -lco DESCRIPTION="$des01" -sql "$m_sql_03" "$f02" "$f01"
 	rm "$f01" 2> /dev/null
 
 	# Eremuak berrizendatu / Renombrar campos
@@ -208,7 +208,7 @@ then
 	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
 	cp_gpk "$typ01" "$s_gpk"
 	msg " - ${typ01}"
-	rm "$f02" 2> /dev/null
+	rm "$f01" 2> /dev/null
 fi
 
 # ========================================================= #
@@ -217,7 +217,7 @@ fi
 #                                                           #
 # ========================================================= #
 
-# ?"
+# 8'49"
 
 # Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
 vconf=`grep "$d_gpk" "$fconf"`
@@ -240,10 +240,70 @@ then
 
 	# more_info
 	rm "$c01" 2> /dev/null
-	sqlplus -s ${con1} <<-EOF1 | gawk '
+	sqlplus -s ${con1} <<-EOF1 | gawk \
+	-v k_gpk="$k_gpk" \
+	-v k_des0="${k_des[0]}" \
+	-v k_abs0="${k_abs[0]}" \
+	-v k_des1="${k_des[1]}" \
+	-v k_abs1="${k_abs[1]}" \
+	-v k_des2="${k_des[2]}" \
+	-v k_abs2="${k_abs[2]}" \
+	-v m_gpk="$m_gpk" \
+	-v m_des0="${m_des[0]}" \
+	-v m_abs0="${m_abs[0]}" \
+	-v m_des1="${m_des[1]}" \
+	-v m_abs1="${m_abs[1]}" \
+	-v m_des2="${m_des[2]}" \
+	-v m_abs2="${m_abs[2]}" \
+	-v s_gpk="$s_gpk" \
+	-v s_des0="${s_des[0]}" \
+	-v s_abs0="${s_abs[0]}" \
+	-v s_des1="${s_des[1]}" \
+	-v s_abs1="${s_abs[1]}" \
+	-v s_des2="${s_des[2]}" \
+	-v s_abs2="${s_abs[2]}" \
+	'
+	BEGIN {
+		FS="\",\""
+	}
 	{
-	  if (NR != 1)
-	  	print $0
+	  if (NR == 1) {
+			getline
+			gsub("MORE_INFO", "MORE_INFO_EU")
+			print $0",\"MORE_INFO_ES\",\"MORE_INFO_EN\""
+		} else {
+			a0=$2
+			a1=$2
+			a2=$2
+			gsub("ZZ_K_FTN", k_gpk, a0)
+			gsub("ZZ_K_DES", k_des0, a0)
+			gsub("ZZ_K_ABS", k_abs0, a0)
+			gsub("ZZ_K_FTN", k_gpk, a1)
+			gsub("ZZ_K_DES", k_des1, a1)
+			gsub("ZZ_K_ABS", k_abs1, a1)
+			gsub("ZZ_K_FTN", k_gpk, a2)
+			gsub("ZZ_K_DES", k_des2, a2)
+			gsub("ZZ_K_ABS", k_abs2, a2)
+			gsub("ZZ_M_FTN", m_gpk, a0)
+			gsub("ZZ_M_DES", m_des0, a0)
+			gsub("ZZ_M_ABS", m_abs0, a0)
+			gsub("ZZ_M_FTN", m_gpk, a1)
+			gsub("ZZ_M_DES", m_des1, a1)
+			gsub("ZZ_M_ABS", m_abs1, a1)
+			gsub("ZZ_M_FTN", m_gpk, a2)
+			gsub("ZZ_M_DES", m_des2, a2)
+			gsub("ZZ_M_ABS", m_abs2, a2)
+			gsub("ZZ_S_FTN", s_gpk, a0)
+			gsub("ZZ_S_DES", s_des0, a0)
+			gsub("ZZ_S_ABS", s_abs0, a0)
+			gsub("ZZ_S_FTN", s_gpk, a1)
+			gsub("ZZ_S_DES", s_des1, a1)
+			gsub("ZZ_S_ABS", s_abs1, a1)
+			gsub("ZZ_S_FTN", s_gpk, a2)
+			gsub("ZZ_S_DES", s_des2, a2)
+			gsub("ZZ_S_ABS", s_abs2, a2)
+			print $1"\",\""a0",\""a1",\""a2
+		}
 	}
 	' > "$c01"
 	set serveroutput on
@@ -262,8 +322,8 @@ then
 	exit;
 	EOF1
 	rm "$f02" 2> /dev/null
-	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" "$c01" -nln "${d_gpk}_more_info" -lco DESCRIPTION="${des01} more info"
-	#rm "$c01" 2> /dev/null
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${d_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
+	rm "$c01" 2> /dev/null
 
 	# poi
 	rm "$c02" 2> /dev/null
@@ -293,21 +353,22 @@ then
 
 	exit;
 	EOF1
-	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" "$c02" -nln "${d_gpk}_poi" -lco DESCRIPTION="${des01} poi"
-	#rm "$c02" 2> /dev/null
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${d_gpk}_poi" -lco DESCRIPTION="${des01} poi" "$f01" "$c02"
+	rm "$c02" 2> /dev/null
 
 	# Behin betiko GPKGa / GPKG definitivo
 	rm "$f02" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f02" "$f01" -nln "$d_gpk" -lco DESCRIPTION="$des01" -sql "$d_sql_04"
-	#rm "$f01" 2> /dev/null
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${d_gpk}_2" -lco DESCRIPTION="${des01} 2" -sql "${d_sql_04}" "$f01" "$f01"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "$d_gpk" -lco DESCRIPTION="$des01" -sql "$d_sql_05" "$f02" "$f01"
+	rm "$f01" 2> /dev/null
 
 	# Eremuak berrizendatu / Renombrar campos
 	rfl "$f02" "$d_gpk"
 
 	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
-	#cp_gpk "$typ01" "$d_gpk"
+	cp_gpk "$typ01" "$d_gpk"
 	msg " - ${typ01}"
-	#rm "$f02" 2> /dev/null
+	rm "$f02" 2> /dev/null
 fi
 
 # ===================== #
