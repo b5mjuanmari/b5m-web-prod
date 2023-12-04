@@ -693,7 +693,7 @@ xmlelement(
 ||']',
 chr(38)||'apos;','''')
 more_info
-from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_nombres.solr_gen_toponimia_2d b,b5mweb_25830.giputz c,b5mweb_nombres.solr_gen_toponimia_2d d
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_nombres.solr_gen_toponimia_2d b,(select codmuni,idnomcomarca,sdo_aggr_union(sdoaggrtype(polygon,0.005)) polygon from b5mweb_25830.giputz group by codmuni,idnomcomarca) c,b5mweb_nombres.solr_gen_toponimia_2d d
 where a.id_nombre1=b.id_nombre1
 and a.tipo_e='kalea'
 and b.tipo_e='udalerria'
@@ -782,7 +782,7 @@ xmlelement(
 ||']',
 chr(38)||'apos;','''')
 more_info
-from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_nombres.solr_gen_toponimia_2d b,b5mweb_25830.giputz c,b5mweb_nombres.solr_gen_toponimia_2d d
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_nombres.solr_gen_toponimia_2d b,(select codmuni,idnomcomarca,sdo_aggr_union(sdoaggrtype(polygon,0.005)) polygon from b5mweb_25830.giputz group by codmuni,idnomcomarca) c,b5mweb_nombres.solr_gen_toponimia_2d d
 where a.id_nombre1=b.id_nombre1
 and a.tipo_e='kalea'
 and b.tipo_e='udalerria'
