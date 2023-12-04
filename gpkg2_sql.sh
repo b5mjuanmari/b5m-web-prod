@@ -9,11 +9,11 @@
 # ====================================================== #
 #
 
-# ===========================
-#
-# Zerrenda osoa / Lista total
-#
-# ===========================
+# =========================== #
+#                             #
+# Zerrenda osoa / Lista total #
+#                             #
+# =========================== #
 
 # 1. m_municipalities
 m_gpk="m_municipalities"
@@ -40,52 +40,57 @@ k_gpk="k_streets_buildings"
 k_des=("Kalea (eraikin multzoa)" "Calle (conjunto de edificios)" "Street (building set)")
 k_abs=("B5m K kodea" "B5m código K" "B5m Code K")
 
-# 6. c_basins
+# 6. v_streets_axis
+v_gpk="v_streets_axis"
+v_des=("Kalea (ardatza)" "Calle (eje)" "Street (axis)")
+v_abs=("B5m V kodea" "B5m código V" "B5m Code V")
+
+# 7. c_basins
 c_gpk="c_basins"
 c_des=("Arroa" "Cuenca" "Basin")
 c_abs=("B5m C kodea" "B5m código C" "B5m Code C")
 
-# 7. i_hydrography
+# 8. i_hydrography
 i_gpk="i_hydrography"
 i_des=("Hidrografia" "Hidrografía" "Hydrography")
 i_abs=("B5m I kodea" "B5m código I" "B5m Code I")
 
-# 8. z_districts
+# 9. z_districts
 z_gpk="z_districts"
 z_des=("Auzo eta/edo hiri izena" "Barrio y/o nombre urbano" "District and/or urban name")
 z_abs=("B5m Z kodea" "B5m código Z" "B5m Code Z")
 
-# 9. g_orography
+# 10. g_orography
 g_gpk="g_orography"
 g_des=("Orografiaren toponimia" "Toponimia de la orografía" "Toponymy of the orography")
 g_abs=("B5m G kodea" "B5m código G" "B5m Code G")
 
-# 10. r_grid
+# 11. r_grid
 r_gpk="r_grid"
 r_des=("Lauki-sarea" "Cuadrícula" "Grid")
 r_abs=("B5m R kodea" "B5m código R" "B5m Code R")
 
-# 11. dw_download
+# 12. dw_download
 dw_gpk="dw_download"
 dw_des=("Deskargak" "Descargas" "Downloads")
 dw_abs=("B5m DW kodea" "B5m código DW" "B5m Code DW")
 
-# 12. sg_geodeticbenchmarks
+# 13. sg_geodeticbenchmarks
 sg_gpk="sg_geodeticbenchmarks"
 sg_des=("Seinale geodesikoa" "Señal geodésica" "Geodetic Benchmark")
 sg_abs=("B5m SG kodea" "B5m código SG" "B5m Code SG")
 
-# 13. dm_distancemunicipalities
+# 14. dm_distancemunicipalities
 dm_gpk="dm_distancemunicipalities"
 dm_des=("Udalerrien arteko distantzia" "Distancia entre municipios" "Distance Between Municipalities")
 dm_abs=("B5m DM kodea" "B5m código DM" "B5m Code DM")
 
-# 14. q_municipalcartography
+# 15. q_municipalcartography
 q_gpk="q_municipalcartography"
 q_des=("Udal kartografiaren inbentarioa" "Inventario de cartografía municipal" "Municipal Cartography Inventory")
 q_abs=("B5m Q kodea" "B5m código Q" "B5m Code Q")
 
-# 15. poi_pointsofinterest
+# 16. poi_pointsofinterest
 poi_gpk="poi_pointsofinterest"
 poi_des=("Interesgunea" "Punto de interés" "Point of Interest")
 poi_abs=("B5m POI kodea" "B5m código POI" "B5m Code POI")
@@ -108,7 +113,8 @@ a.nombre_c name_es,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.giputz b
 where a.url_2d='M_'||b.codmuni
-group by (a.url_2d,a.nombre_e,a.nombre_c,a.tipo_e,a.tipo_c,a.tipo_i)"
+group by (a.url_2d,a.nombre_e,a.nombre_c,a.tipo_e,a.tipo_c,a.tipo_i)
+order by a.url_2d"
 
 m_sql_02="select
 a.url_2d b5mcode,
@@ -128,7 +134,7 @@ xmlelement(
     ||'''|''name_eu'':'''||replace(c.nombre_e,',','|')
     ||'''|''name_es'':'''||replace(c.nombre_c,',','|')
     ||'''}'
-    ,'#')
+    ,'#') order by c.nombre_e
   )
 ).extract('//text()').getclobval(),
 '|',','),
@@ -141,7 +147,8 @@ more_info
 from b5mweb_nombres.solr_gen_toponimia_2d a,(select distinct codmuni,idnomcomarca from b5mweb_25830.giputz) b,b5mweb_nombres.solr_gen_toponimia_2d c
 where a.url_2d='M_'||b.codmuni
 and c.url_2d='S_'||b.idnomcomarca
-group by (a.url_2d,b.idnomcomarca)"
+group by (a.url_2d,b.idnomcomarca)
+order by a.url_2d"
 
 m_sql_03="select
 a.*,
@@ -172,7 +179,6 @@ type_en|Elementu geografikoaren mota ingelesez|Tipo del elemento geográfico en 
 
 s_sql_01="select
 a.url_2d b5mcode,
-b.idnomcomarca b5mcode_region,
 upper(substr(a.tipo_e,1,1))||substr(a.tipo_e,2,length(a.tipo_e)-1) type_eu,
 upper(substr(a.tipo_c,1,1))||substr(a.tipo_c,2,length(a.tipo_c)-1) type_es,
 'Region' type_en,
@@ -183,9 +189,8 @@ a.nombre_c name_es,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.giputz b
 where a.url_2d='S_'||b.idnomcomarca
-group by (a.url_2d,b.idnomcomarca,a.tipo_e,a.tipo_c,a.nombre_e,a.nombre_c)"
-
-s_idx="b5mcode"
+group by (a.url_2d,b.idnomcomarca,a.tipo_e,a.tipo_c,a.nombre_e,a.nombre_c)
+order by a.url_2d"
 
 # ==================== #
 #                      #
@@ -289,7 +294,7 @@ xmlelement(
     ||'''|''name_eu'':'''||replace(a.calle_e,',','|')
     ||'''|''name_es'':'''||replace(decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c),',','|')
     ||'''}'
-    ,'#')
+    ,'#') order by a.calle_e
   )
 ).extract('//text()').getclobval(),
 '|',','),
@@ -311,7 +316,7 @@ xmlelement(
     ||'''|''name_eu'':'''||replace(a.muni_e,',','|')
     ||'''|''name_es'':'''||replace(a.muni_c,',','|')
     ||'''}'
-    ,'#')
+    ,'#') order by a.muni_e
   )
 ).extract('//text()').getclobval(),
 '|',','),
@@ -333,7 +338,7 @@ xmlelement(
     ||'''|''name_eu'':'''||replace(d.nombre_e,',','|')
     ||'''|''name_es'':'''||replace(d.nombre_c,',','|')
     ||'''}'
-    ,'#')
+    ,'#') order by d.nombre_e
   )
 ).extract('//text()').getclobval(),
 '|',','),
@@ -356,7 +361,8 @@ replace('['||rtrim(replace(replace(replace(replace(replace(rtrim(xmlagg(xmleleme
 replace('['||rtrim(replace(replace(replace(replace(replace(rtrim(xmlagg(xmlelement(e,'{''b5mcode_poi'':'''||b5mcode||'''|''name_eu'':'''||replace(name_eu,',','|')||'''|''name_es'':'''||replace(name_es,',','|')||'''|''class'':'''||replace(class_es,',','|')||'''|''class_description'':'''||replace(class_description_es,',','|')||'''|''class_icon'':'''||replace(class_icon,',','|')||'''|''category'':'''||replace(category_es,',','|')||'''|''category_description'':'''||replace(category_description_es,',','|')||'''|''category_icon'':'''||replace(category_icon,',','|')||'''}','#').extract('//text()') order by category_es,class_es,name_es,b5mcode).getclobval(),','),chr(38)||'apos;',''''),'{''b5mcode_poi'':''''|''name_eu'':''''|''name_es'':''''|''class'':''''|''class_description'':''''|''class_icon'':''''|''category'':''''|''category_description'':''''|''category_icon'':''''}#',''),',',''),'|',','),'#',','),',')||']','[]','poi_null') poi_es,
 replace('['||rtrim(replace(replace(replace(replace(replace(rtrim(xmlagg(xmlelement(e,'{''b5mcode_poi'':'''||b5mcode||'''|''name_eu'':'''||replace(name_eu,',','|')||'''|''name_es'':'''||replace(name_es,',','|')||'''|''class'':'''||replace(class_en,',','|')||'''|''class_description'':'''||replace(class_description_en,',','|')||'''|''class_icon'':'''||replace(class_icon,',','|')||'''|''category'':'''||replace(category_en,',','|')||'''|''category_description'':'''||replace(category_description_en,',','|')||'''|''category_icon'':'''||replace(category_icon,',','|')||'''}','#').extract('//text()') order by category_en,class_en,name_eu,b5mcode).getclobval(),','),chr(38)||'apos;',''''),'{''b5mcode_poi'':''''|''name_eu'':''''|''name_es'':''''|''class'':''''|''class_description'':''''|''class_icon'':''''|''category'':''''|''category_description'':''''|''category_icon'':''''}#',''),',',''),'|',','),'#',','),',')||']','[]','poi_null') poi_en
 from b5mweb_nombres.solr_poi_2d
-group by (b5mcode_d)"
+group by (b5mcode_d)
+order by b5mcode_d"
 
 d_sql_04="select
 a.*,
@@ -478,7 +484,7 @@ xmlelement(
     ||'''|''name_eu'':'''||replace(a.calle_e,',','|')
     ||'''|''name_es'':'''||replace(decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c),',','|')
     ||'''}'
-    ,'#')
+    ,'#') order by a.calle_e
   )
 ).extract('//text()').getclobval(),
 '|',','),
@@ -500,7 +506,7 @@ xmlelement(
     ||'''|''name_eu'':'''||replace(a.muni_e,',','|')
     ||'''|''name_es'':'''||replace(a.muni_c,',','|')
     ||'''}'
-    ,'#')
+    ,'#') order by a.muni_e
   )
 ).extract('//text()').getclobval(),
 '|',','),
@@ -522,7 +528,7 @@ xmlelement(
     ||'''|''name_eu'':'''||replace(d.nombre_e,',','|')
     ||'''|''name_es'':'''||replace(d.nombre_c,',','|')
     ||'''}'
-    ,'#')
+    ,'#') order by d.nombre_e
   )
 ).extract('//text()').getclobval(),
 '|',','),
@@ -557,7 +563,7 @@ xmlelement(
     ||'''|''name_eu'':'''||replace(a.muni_e,',','|')
     ||'''|''name_es'':'''||replace(a.muni_c,',','|')
     ||'''}'
-    ,'#')
+    ,'#') order by a.muni_e
   )
 ).extract('//text()').getclobval(),
 '|',','),
@@ -579,7 +585,7 @@ xmlelement(
     ||'''|''name_eu'':'''||replace(d.nombre_e,',','|')
     ||'''|''name_es'':'''||replace(d.nombre_c,',','|')
     ||'''}'
-    ,'#')
+    ,'#') order by d.nombre_e
   )
 ).extract('//text()').getclobval(),
 '|',','),
@@ -615,3 +621,250 @@ b.poi_en
 from ${e_gpk}_2 a
 left join ${e_gpk}_poi b
 on a.b5mcode2 = b.b5mcode"
+
+# ====================== #
+#                        #
+# 5. k_streets_buildings #
+#                        #
+# ====================== #
+
+k_sql_01="select
+a.url_2d b5mcode,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+'"$updd"' update_date,
+'1' official,
+sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.a_edifind b,b5mweb_nombres.n_edifgen c
+where a.id_nombre1=c.codmuni
+and '0'||a.id_nombre2=c.codcalle
+and b.idut=c.idut
+group by (a.url_2d,a.nombre_e,a.nombre_c)
+order by a.url_2d"
+
+k_sql_02="select
+a.url_2d b5mcode,
+replace(
+'[{'||
+rtrim(
+replace(
+replace(
+'''featuretypename'':''ZZ_M_FTN'','||
+'''description'':''ZZ_M_DES'','||
+'''abstract'':''ZZ_M_ABS'','||
+'''numberMatched'':'||
+xmlelement(
+  e,count(b.url_2d)||',''features'':[',
+  xmlagg(xmlelement(e,
+    '{''b5mcode'':'''||b.url_2d
+    ||'''|''name_eu'':'''||replace(b.nombre_e,',','|')
+    ||'''|''name_es'':'''||replace(b.nombre_e,',','|')
+    ||'''}'
+    ,'#') order by b.nombre_e
+  )
+).extract('//text()').getclobval(),
+'|',','),
+'#',','),
+',')
+||']'
+||'},{'||
+rtrim(
+replace(
+replace(
+'''featuretypename'':''ZZ_S_FTN'','||
+'''description'':''ZZ_S_DES'','||
+'''abstract'':''ZZ_S_ABS'','||
+'''numberMatched'':'||
+xmlelement(
+  e,count(d.url_2d)||',''features'':[',
+  xmlagg(xmlelement(e,
+    '{''b5mcode'':'''||d.url_2d
+    ||'''|''name_eu'':'''||replace(d.nombre_e,',','|')
+    ||'''|''name_es'':'''||replace(d.nombre_c,',','|')
+    ||'''}'
+    ,'#') order by d.nombre_e
+  )
+).extract('//text()').getclobval(),
+'|',','),
+'#',','),
+',')
+||']'
+||'}'
+||']',
+chr(38)||'apos;','''')
+more_info
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_nombres.solr_gen_toponimia_2d b,b5mweb_25830.giputz c,b5mweb_nombres.solr_gen_toponimia_2d d
+where a.id_nombre1=b.id_nombre1
+and a.tipo_e='kalea'
+and b.tipo_e='udalerria'
+and a.id_nombre1=c.codmuni
+and d.url_2d='S_'||c.idnomcomarca
+group by (a.url_2d)
+order by a.url_2d"
+
+k_sql_03="select
+a.*,
+b.more_info_eu,
+b.more_info_es,
+b.more_info_en
+from ${k_gpk} a
+left join ${k_gpk}_more_info b
+on a.b5mcode = b.b5mcode"
+
+# ================= #
+#                   #
+# 6. v_streets_axis #
+#                   #
+# ================= #
+
+v_sql_01="select
+replace(a.url_2d,'K_','V_') b5mcode,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+'"$updd"' update_date,
+'1' official,
+sdo_aggr_union(sdoaggrtype(b.polyline,0.005)) geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.vialesind b,b5mweb_nombres.v_rel_vial_tramo c,b5mweb_nombres.n_calles d
+where a.idnombre=d.idnombre
+and c.idnombre=d.idnombre
+and b.idut=c.idut
+group by (a.url_2d,a.nombre_e,a.nombre_c)
+order by a.url_2d"
+
+v_sql_02="select
+replace(a.url_2d,'K_','V_') b5mcode,
+replace(
+'[{'||
+rtrim(
+replace(
+replace(
+'''featuretypename'':''ZZ_M_FTN'','||
+'''description'':''ZZ_M_DES'','||
+'''abstract'':''ZZ_M_ABS'','||
+'''numberMatched'':'||
+xmlelement(
+  e,count(b.url_2d)||',''features'':[',
+  xmlagg(xmlelement(e,
+    '{''b5mcode'':'''||b.url_2d
+    ||'''|''name_eu'':'''||replace(b.nombre_e,',','|')
+    ||'''|''name_es'':'''||replace(b.nombre_e,',','|')
+    ||'''}'
+    ,'#') order by b.nombre_e
+  )
+).extract('//text()').getclobval(),
+'|',','),
+'#',','),
+',')
+||']'
+||'},{'||
+rtrim(
+replace(
+replace(
+'''featuretypename'':''ZZ_S_FTN'','||
+'''description'':''ZZ_S_DES'','||
+'''abstract'':''ZZ_S_ABS'','||
+'''numberMatched'':'||
+xmlelement(
+  e,count(d.url_2d)||',''features'':[',
+  xmlagg(xmlelement(e,
+    '{''b5mcode'':'''||d.url_2d
+    ||'''|''name_eu'':'''||replace(d.nombre_e,',','|')
+    ||'''|''name_es'':'''||replace(d.nombre_c,',','|')
+    ||'''}'
+    ,'#') order by d.nombre_e
+  )
+).extract('//text()').getclobval(),
+'|',','),
+'#',','),
+',')
+||']'
+||'}'
+||']',
+chr(38)||'apos;','''')
+more_info
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_nombres.solr_gen_toponimia_2d b,b5mweb_25830.giputz c,b5mweb_nombres.solr_gen_toponimia_2d d
+where a.id_nombre1=b.id_nombre1
+and a.tipo_e='kalea'
+and b.tipo_e='udalerria'
+and a.id_nombre1=c.codmuni
+and d.url_2d='S_'||c.idnomcomarca
+group by (a.url_2d)
+order by a.url_2d"
+
+v_sql_03="select
+a.*,
+b.more_info_eu,
+b.more_info_es,
+b.more_info_en
+from ${v_gpk} a
+left join ${v_gpk}_more_info b
+on a.b5mcode = b.b5mcode"
+
+# =========== #
+#             #
+# 7. c_basins #
+#             #
+# =========== #
+
+c_sql_01="select
+a.url_2d b5mcode,
+a.tipo_e type_eu,
+a.tipo_c type_es,
+a.tipo_i type_en,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+'"$updd"' update_date,
+'1' official,
+b.polygon geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.cuencap b
+where a.url_2d='C_A'||b.idnombre"
+
+c_sql_02="select
+a.url_2d b5mcode,
+replace(
+'[{'||
+rtrim(
+replace(
+replace(
+'''featuretypename'':''ZZ_M_FTN'','||
+'''description'':''ZZ_M_DES'','||
+'''abstract'':''ZZ_M_ABS'','||
+'''numberMatched'':'||
+xmlelement(
+  e,count(c.codmuni)||',''features'':[',
+  xmlagg(xmlelement(e,
+    '{''b5mcode'':'''||d.url_2d
+    ||'''|''name_eu'':'''||replace(d.nombre_e,',','|')
+    ||'''|''name_es'':'''||replace(d.nombre_c,',','|')
+    ||'''}'
+    ,'#') order by d.nombre_e
+  )
+).extract('//text()').getclobval(),
+'|',','),
+'#',','),
+',')
+||']'
+||'}]',
+chr(38)||'apos;','''')
+more_info
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.cuencap b,(select codmuni,sdo_aggr_union(sdoaggrtype(polygon,0.005)) polygon from b5mweb_25830.giputz group by codmuni) c,b5mweb_nombres.solr_gen_toponimia_2d d
+where a.url_2d='C_A'||b.idnombre
+and sdo_relate(b.polygon,c.polygon,'mask=contains+covers+equal+touch+overlapbdyintersect')='TRUE'
+and c.codmuni=d.id_nombre1
+and d.tipo_e in ('agintekidetza','mankomunitatea','partzuergoa','udalerria')
+group by (a.url_2d)"
+
+c_sql_03="select
+a.*,
+b.more_info_eu,
+b.more_info_es,
+b.more_info_en
+from ${c_gpk} a
+left join ${c_gpk}_more_info b
+on a.b5mcode = b.b5mcode"
+
+# ======= #
+#         #
+# 99. end #
+#         #
+# ======= #
