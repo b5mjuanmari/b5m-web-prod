@@ -188,6 +188,85 @@ function sql_more_info {
 	EOF1
 }
 
+function sql_more_info2 {
+	# more_info-a JSON moduan jartzeko SQL eta GAWK prozesua
+	# Proceso SQL y GAWK para poner el more_info en forma de JSON
+	sqlplus -s ${con1} <<-EOF1 | gawk \
+	'
+	BEGIN {
+		FS = "\",\""
+		OFS = "\",\""
+		print "\"B5MCODE","MORE_INFO_EU","MORE_INFO_ES","MORE_INFO_EN\""
+	}
+	{
+		a11 = "["
+		a21 = a11
+		a31 = a11
+		$NF = substr($NF, 1, length($NF)-1)
+		if (NR <=2 ) {
+			getline
+		} else {
+			i = 2
+			j = 1
+			for (i = 2; i <= NF; i++ + i++ + i++ + i++) {
+				i2 = $(i + 1); i3 = $(i + 2); i4 = $(i + 3);
+				split($i, i1, "|")
+				i2c = split(i2, i2a, "|")
+				i3c = split(i3, i3a, "|")
+				i4c = split(i4, i4a, "|")
+				if (j > 1)
+					a1 = ","
+				else
+					a1 = ""
+				a1 = a1 "{#featuretypename#:#ZZ_FTN#,#description#:#ZZ_DES_EU#,#abstract#:#ZZ_ABS_EU#,"
+				a1 = a1 "#numberMatched#:"i2c","
+				a1 = a1 "#features#:["
+				for (k = 1; k <= i2c; k++) {
+					if (k > 1)
+						a1 = a1 ","
+					a1 = a1 "{#b5mcode#:#"i2a[k]"#,"
+					a1 = a1 "#name_eu#:#"i3a[k]"#,"
+					a1 = a1 "#name_es#:#"i4a[k]"#}"
+				}
+				a1 = a1 "]"
+				a1 = a1 "}"
+				gsub("#", "\x27", a1)
+				if (i2c == 0)
+					a1 = ""
+				a2 = a1; a3 = a1
+				gsub("_EU", "_ES", a2); gsub("_EU", "_EN", a3)
+				gsub("ZZ_FTN", i1[1], a1); gsub("ZZ_DES_EU", i1[2], a1); gsub("ZZ_ABS_EU", i1[5], a1)
+				gsub("ZZ_FTN", i1[1], a2); gsub("ZZ_DES_ES", i1[3], a2); gsub("ZZ_ABS_ES", i1[6], a2)
+				gsub("ZZ_FTN", i1[1], a3); gsub("ZZ_DES_EN", i1[4], a3); gsub("ZZ_ABS_EN", i1[7], a3)
+				a11 = a11 "" a1
+				a21 = a21 "" a2
+				a31 = a31 "" a3
+				j++
+			}
+			a11 = a11 "]"
+			a21 = a21 "]"
+			a31 = a31 "]"
+			print $1,a11,a21,a31"\""
+		}
+	}
+	' > "$1"
+	set serveroutput on
+	set feedback off
+	set linesize 32767
+	set long 20000000
+	set longchunksize 20000000
+	set trim on
+	set pages 0
+	set tab on
+	set spa 0
+	set mark csv on
+
+	${2};
+
+	exit;
+	EOF1
+}
+
 function sql_poi {
 	# POIak kudeatzeko SQL prozesua / Proceso SQL para gestionar los POIs
 	sqlplus -s ${con1} <<-EOF1 | gawk '

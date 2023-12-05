@@ -863,6 +863,51 @@ from ${c_gpk} a
 left join ${c_gpk}_more_info b
 on a.b5mcode = b.b5mcode"
 
+# ================ #
+#                  #
+# 8. i_hydrography #
+#                  #
+# ================ #
+
+i_sql_01="select
+a.url_2d b5mcode,
+a.tipo_e type_eu,
+a.tipo_c type_es,
+a.tipo_i type_en,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+'"$updd"' update_date,
+'1' official,
+sdo_aggr_concat_lines(b.polyline) geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.ibaiak b
+where a.id_nombre1=to_char(b.idnombre)
+group by(a.url_2d,a.tipo_e,a.tipo_c,a.tipo_i,a.nombre_e,a.nombre_c)
+order by a.url_2d"
+
+i_sql_02="select
+a.url_2d b5mcode,
+'"$c_gpk"|"${c_des[0]}"|"${c_des[1]}"|"${c_des[2]}"|"${c_abs[0]}"|"${c_abs[1]}"|"${c_abs[2]}"' b5mcode_others_c_type,
+decode(b.idnomcuenca,null,null,'C_A'||b.idnomcuenca) b5mcode_others_c,
+b.cuenca_e b5mcode_others_c_name_eu,
+b.cuenca_c b5mcode_others_c_name_es,
+'"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_c_type,
+decode(a.codmunis,null,null,'M_'||replace(a.codmunis,',','|M_')) b5mcode_others_m,
+replace(a.muni_e,',','|') b5mcode_others_m_name_eu,
+replace(a.muni_c,',','|') b5mcode_others_m_name_es
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.ibaiak b
+where a.id_nombre1=to_char(b.idnombre)
+group by(a.url_2d,b.idnomcuenca,b.cuenca_e,b.cuenca_c,a.codmunis,a.muni_e,a.muni_c)
+order by a.url_2d"
+
+i_sql_03="select
+a.*,
+b.more_info_eu,
+b.more_info_es,
+b.more_info_en
+from ${i_gpk} a
+left join ${i_gpk}_more_info b
+on a.b5mcode = b.b5mcode"
+
 # ======= #
 #         #
 # 99. end #
