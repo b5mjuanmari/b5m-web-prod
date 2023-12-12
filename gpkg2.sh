@@ -489,6 +489,100 @@ then
 	rm "$f02" 2> /dev/null
 fi
 
+# =================================================================== #
+#                                                                     #
+# 9. z_districts (auzo eta/edo hiri izena / barrio y/o nombre urbano) #
+#                                                                     #
+# =================================================================== #
+
+# 11"
+
+# Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
+vconf=`grep "$z_gpk" "$fconf"`
+IFS='|' read -a aconf <<< "$vconf"
+typ01="${aconf[0]}"
+gpk01="${aconf[1]}"
+des01="${z_des[0]} - ${z_des[1]} - ${z_des[2]}"
+if [ "$z_gpk" = "$gpk01" ] && ([ $typ01 = "1" ] || [ "$typ01" = "2" ])
+then
+	let i1=$i1+1
+	msg "${i1}/${nf}: $(date '+%Y-%m-%d %H:%M:%S') - $gpk01 - ${z_des[0]}\c"
+	f01="${tmpd}/${z_gpk}_01.gpkg"
+	c01="${tmpd}/${z_gpk}_01.csv"
+	f02="${tmpd}/${z_gpk}.gpkg"
+
+	# Oinarrizko datuak / Datos básicos
+	rm "$f01" 2> /dev/null
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con1}:${tpl} -nln "$z_gpk" -lco DESCRIPTION="$des01" -sql "$z_sql_01"
+
+	# more_info
+	rm "$c01" 2> /dev/null
+	sql_more_info2 "$c01" "$z_sql_02"
+	rm "$f02" 2> /dev/null
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${z_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
+	rm "$c01" 2> /dev/null
+
+	# Behin betiko GPKGa / GPKG definitivo
+	rm "$f02" 2> /dev/null
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "$z_gpk" -lco DESCRIPTION="$des01" -sql "$z_sql_03" "$f02" "$f01"
+	rm "$f01" 2> /dev/null
+
+	# Eremuak berrizendatu / Renombrar campos
+	rfl "$f02" "$z_gpk"
+
+	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
+	cp_gpk "$typ01" "$z_gpk"
+	msg " - ${typ01}"
+	rm "$f02" 2> /dev/null
+fi
+
+# ==================================================================== #
+#                                                                      #
+# 10. g_orography (orografiaren toponimia / toponimia de la orografia) #
+#                                                                      #
+# ==================================================================== #
+
+# 36"
+
+# Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
+vconf=`grep "$g_gpk" "$fconf"`
+IFS='|' read -a aconf <<< "$vconf"
+typ01="${aconf[0]}"
+gpk01="${aconf[1]}"
+des01="${g_des[0]} - ${g_des[1]} - ${g_des[2]}"
+if [ "$g_gpk" = "$gpk01" ] && ([ $typ01 = "1" ] || [ "$typ01" = "2" ])
+then
+	let i1=$i1+1
+	msg "${i1}/${nf}: $(date '+%Y-%m-%d %H:%M:%S') - $gpk01 - ${g_des[0]}\c"
+	f01="${tmpd}/${g_gpk}_01.gpkg"
+	c01="${tmpd}/${g_gpk}_01.csv"
+	f02="${tmpd}/${g_gpk}.gpkg"
+
+	# Oinarrizko datuak / Datos básicos
+	rm "$f01" 2> /dev/null
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con1}:${tpl} -nln "$g_gpk" -lco DESCRIPTION="$des01" -sql "$g_sql_01"
+
+	# more_info
+	rm "$c01" 2> /dev/null
+	sql_more_info2 "$c01" "$g_sql_02"
+	rm "$f02" 2> /dev/null
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${g_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
+	rm "$c01" 2> /dev/null
+
+	# Behin betiko GPKGa / GPKG definitivo
+	rm "$f02" 2> /dev/null
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "$g_gpk" -lco DESCRIPTION="$des01" -sql "$g_sql_03" "$f02" "$f01"
+	rm "$f01" 2> /dev/null
+
+	# Eremuak berrizendatu / Renombrar campos
+	rfl "$f02" "$g_gpk"
+
+	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
+	cp_gpk "$typ01" "$g_gpk"
+	msg " - ${typ01}"
+	rm "$f02" 2> /dev/null
+fi
+
 # ===================== #
 #                       #
 # 99.0. Bukaera / Final #

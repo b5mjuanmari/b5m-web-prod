@@ -817,7 +817,8 @@ a.nombre_c name_es,
 '1' official,
 b.polygon geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.cuencap b
-where a.url_2d='C_A'||b.idnombre"
+where a.url_2d='C_A'||b.idnombre
+order by a.url_2d"
 
 c_sql_02="select
 a.url_2d b5mcode,
@@ -852,7 +853,8 @@ where a.url_2d='C_A'||b.idnombre
 and sdo_relate(b.polygon,c.polygon,'mask=contains+covers+equal+touch+overlapbdyintersect')='TRUE'
 and c.codmuni=d.id_nombre1
 and d.tipo_e in ('agintekidetza','mankomunitatea','partzuergoa','udalerria')
-group by (a.url_2d)"
+group by (a.url_2d)
+order by a.url_2d"
 
 c_sql_03="select
 a.*,
@@ -881,8 +883,8 @@ a.nombre_c name_es,
 sdo_aggr_concat_lines(b.polyline) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.ibaiak b
 where a.id_nombre1=to_char(b.idnombre)
-group by(a.url_2d,a.tipo_e,a.tipo_c,a.tipo_i,a.nombre_e,a.nombre_c)
-order by a.url_2d"
+group by(a.url_2d,a.tipo_e,a.tipo_c,a.tipo_i,a.nombre_e,a.nombre_c,a.idnombre)
+order by a.idnombre"
 
 i_sql_02="select
 a.url_2d b5mcode,
@@ -890,14 +892,14 @@ a.url_2d b5mcode,
 decode(b.idnomcuenca,null,null,'C_A'||b.idnomcuenca) b5mcode_others_c,
 b.cuenca_e b5mcode_others_c_name_eu,
 b.cuenca_c b5mcode_others_c_name_es,
-'"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_c_type,
+'"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_m_type,
 decode(a.codmunis,null,null,'M_'||replace(a.codmunis,',','|M_')) b5mcode_others_m,
 replace(a.muni_e,',','|') b5mcode_others_m_name_eu,
 replace(a.muni_c,',','|') b5mcode_others_m_name_es
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.ibaiak b
 where a.id_nombre1=to_char(b.idnombre)
-group by(a.url_2d,b.idnomcuenca,b.cuenca_e,b.cuenca_c,a.codmunis,a.muni_e,a.muni_c)
-order by a.url_2d"
+group by(a.url_2d,b.idnomcuenca,b.cuenca_e,b.cuenca_c,a.codmunis,a.muni_e,a.muni_c,a.idnombre)
+order by a.idnombre"
 
 i_sql_03="select
 a.*,
@@ -906,6 +908,90 @@ b.more_info_es,
 b.more_info_en
 from ${i_gpk} a
 left join ${i_gpk}_more_info b
+on a.b5mcode = b.b5mcode"
+
+# ============== #
+#                #
+# 9. z_districts #
+#                #
+# ============== #
+
+z_sql_01="select
+a.url_2d b5mcode,
+a.tipo_e type_eu,
+a.tipo_c type_es,
+a.tipo_i type_en,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+'"$updd"' update_date,
+'0' official,
+sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.barrioind b,b5mweb_nombres.b_barrios c
+where a.id_nombre1=c.idnombre
+and b.idut=c.idut
+and a.url_2d like 'Z_A%'
+group by (a.url_2d,a.tipo_e,a.tipo_c,a.tipo_i,a.nombre_e,a.nombre_c,a.idnombre)
+order by a.idnombre"
+
+z_sql_02="select
+distinct url_2d b5mcode,
+'"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_m_type,
+decode(codmunis,null,null,'M_'||replace(codmunis,',','|M_')) b5mcode_others_m,
+replace(muni_e,',','|') b5mcode_others_m_name_eu,
+replace(muni_c,',','|') b5mcode_others_m_name_es
+from b5mweb_nombres.solr_gen_toponimia_2d
+where url_2d like 'Z_A%'
+order by to_number(replace(url_2d,'Z_A',''))"
+
+z_sql_03="select
+a.*,
+b.more_info_eu,
+b.more_info_es,
+b.more_info_en
+from ${z_gpk} a
+left join ${z_gpk}_more_info b
+on a.b5mcode = b.b5mcode"
+
+# =============== #
+#                 #
+# 10. g_orography #
+#                 #
+# =============== #
+
+g_sql_01="select
+a.url_2d b5mcode,
+a.tipo_e type_eu,
+a.tipo_c type_es,
+a.tipo_i type_en,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+'"$updd"' update_date,
+'0' official,
+sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.montesind b,b5mweb_nombres.o_orograf c
+where a.id_nombre1=c.idnombre
+and b.idut=c.idut
+and a.url_2d like 'G_A%'
+group by (a.url_2d,a.tipo_e,a.tipo_c,a.tipo_i,a.nombre_e,a.nombre_c,a.idnombre)
+order by a.idnombre"
+
+g_sql_02="select
+distinct url_2d b5mcode,
+'"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_m_type,
+decode(codmunis,null,null,'M_'||replace(codmunis,',','|M_')) b5mcode_others_m,
+replace(muni_e,',','|') b5mcode_others_m_name_eu,
+replace(muni_c,',','|') b5mcode_others_m_name_es
+from b5mweb_nombres.solr_gen_toponimia_2d
+where url_2d like 'G_A%'
+order by to_number(replace(url_2d,'G_A',''))"
+
+g_sql_03="select
+a.*,
+b.more_info_eu,
+b.more_info_es,
+b.more_info_en
+from ${g_gpk} a
+left join ${g_gpk}_more_info b
 on a.b5mcode = b.b5mcode"
 
 # ======= #
