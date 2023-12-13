@@ -24,8 +24,7 @@ set NLS_LANG=.UTF8
 dir="${HOME}/SCRIPTS/GPKG"
 gpkd="/home/data/gpkg2"
 gpkp="$gpkd"
-con1="b5mweb_25830/web+@//exploracle:1521/bdet"
-con2="etl_cfg/web+@//etlowb:1521/bdowb"
+con="b5mweb_25830/web+@//exploracle:1521/bdet"
 tpl="giputz"
 usrd1="juanmari"
 usrd2="develop"
@@ -79,16 +78,20 @@ nf=`gawk '{t=substr($0,1,1);if((t=="1")||(t=="2")||(t=="3")){print $0}}' "$fconf
 #                       #
 # ===================== #
 
-updd=`sqlplus -s ${con2} <<-EOF
+updd=`sqlplus -s ${con} <<-EOF | gawk '
+{
+	print $0
+	exit
+}
+'
 set feedback off
 set linesize 32767
 set trim on
 set pages 0
 
-select to_char(fecha_inicio,'YYYY-MM-DD')
-from etl_sinc
-where rownum=1
-order by id_sinc desc;
+select to_char(fecha_ini,'YYYY-MM-DD'),to_char(fecha_ini,'YYYY-MM-DD')
+from b5mweb_nombres.etl_sinc
+order by idsinc desc;
 
 exit;
 EOF`
@@ -136,7 +139,7 @@ then
 
 	# Oinarrizko datuak / Datos básicos
 	rm "$f01" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con1}:${tpl} -nln "$m_gpk" -lco DESCRIPTION="$des01" -sql "$m_sql_01"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$m_gpk" -lco DESCRIPTION="$des01" -sql "$m_sql_01"
 
 	# more_info
 	rm "$c01" 2> /dev/null
@@ -180,7 +183,7 @@ then
 
 	# Oinarrizko datuak / Datos básicos
 	rm "$f01" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con1}:${tpl} -nln "$s_gpk" -lco DESCRIPTION="$des01" -sql "$s_sql_01"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$s_gpk" -lco DESCRIPTION="$des01" -sql "$s_sql_01"
 
 	# Eremuak berrizendatu / Renombrar campos
 	rfl "$f01" "$s_gpk"
@@ -216,7 +219,7 @@ then
 
 	# Oinarrizko datuak / Datos básicos
 	rm "$f01" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con1}:${tpl} -nln "$d_gpk" -lco DESCRIPTION="$des01" -sql "$d_sql_01"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$d_gpk" -lco DESCRIPTION="$des01" -sql "$d_sql_01"
 
 	# more_info
 	rm "$c01" 2> /dev/null
@@ -271,7 +274,7 @@ then
 
 	# Oinarrizko datuak / Datos básicos
 	rm "$f01" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con1}:${tpl} -nln "$e_gpk" -lco DESCRIPTION="$des01" -sql "$e_sql_01"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$e_gpk" -lco DESCRIPTION="$des01" -sql "$e_sql_01"
 
 	# more_info
 	rm "$c01" 2> /dev/null
@@ -325,7 +328,7 @@ then
 
 	# Oinarrizko datuak / Datos básicos
 	rm "$f01" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con1}:${tpl} -nln "$k_gpk" -lco DESCRIPTION="$des01" -sql "$k_sql_01"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$k_gpk" -lco DESCRIPTION="$des01" -sql "$k_sql_01"
 
 	# more_info
 	rm "$c01" 2> /dev/null
@@ -372,7 +375,7 @@ then
 
 	# Oinarrizko datuak / Datos básicos
 	rm "$f01" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con1}:${tpl} -nln "$v_gpk" -lco DESCRIPTION="$des01" -sql "$v_sql_01"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$v_gpk" -lco DESCRIPTION="$des01" -sql "$v_sql_01"
 
 	# more_info
 	rm "$c01" 2> /dev/null
@@ -419,7 +422,7 @@ then
 
 	# Oinarrizko datuak / Datos básicos
 	rm "$f01" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con1}:${tpl} -nln "$c_gpk" -lco DESCRIPTION="$des01" -sql "$c_sql_01"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$c_gpk" -lco DESCRIPTION="$des01" -sql "$c_sql_01"
 
 	# more_info
 	rm "$c01" 2> /dev/null
@@ -466,7 +469,7 @@ then
 
 	# Oinarrizko datuak / Datos básicos
 	rm "$f01" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con1}:${tpl} -nln "$i_gpk" -lco DESCRIPTION="$des01" -sql "$i_sql_01"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$i_gpk" -lco DESCRIPTION="$des01" -sql "$i_sql_01"
 
 	# more_info
 	rm "$c01" 2> /dev/null
@@ -513,7 +516,7 @@ then
 
 	# Oinarrizko datuak / Datos básicos
 	rm "$f01" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con1}:${tpl} -nln "$z_gpk" -lco DESCRIPTION="$des01" -sql "$z_sql_01"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$z_gpk" -lco DESCRIPTION="$des01" -sql "$z_sql_01"
 
 	# more_info
 	rm "$c01" 2> /dev/null
@@ -560,7 +563,7 @@ then
 
 	# Oinarrizko datuak / Datos básicos
 	rm "$f01" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con1}:${tpl} -nln "$g_gpk" -lco DESCRIPTION="$des01" -sql "$g_sql_01"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$g_gpk" -lco DESCRIPTION="$des01" -sql "$g_sql_01"
 
 	# more_info
 	rm "$c01" 2> /dev/null
@@ -607,7 +610,7 @@ then
 
 	# Oinarrizko datuak / Datos básicos
 	rm "$f01" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con1}:${tpl} -nln "$t_gpk" -lco DESCRIPTION="$des01" -sql "$t_sql_01"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$t_gpk" -lco DESCRIPTION="$des01" -sql "$t_sql_01"
 
 	# more_info
 	rm "$c01" 2> /dev/null
