@@ -78,20 +78,18 @@ nf=`gawk '{t=substr($0,1,1);if((t=="1")||(t=="2")||(t=="3")){print $0}}' "$fconf
 #                       #
 # ===================== #
 
-updd=`sqlplus -s ${con} <<-EOF | gawk '
-{
-	print $0
-	exit
-}
-'
+updd=`sqlplus -s ${con} <<-EOF
 set feedback off
 set linesize 32767
 set trim on
 set pages 0
 
-select to_char(fecha_ini,'YYYY-MM-DD'),to_char(fecha_ini,'YYYY-MM-DD')
+select *
+from (select to_char(fecha_ini,'YYYY-MM-DD')
 from b5mweb_nombres.etl_sinc
-order by idsinc desc;
+where estado='OK'
+order by idsinc desc)
+where rownum=1;
 
 exit;
 EOF`
@@ -224,7 +222,6 @@ then
 	# more_info
 	rm "$c01" 2> /dev/null
 	sql_more_info "$c01" "$d_sql_02"
-	rm "$f02" 2> /dev/null
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${d_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
 	rm "$c01" 2> /dev/null
 
@@ -246,7 +243,7 @@ then
 	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
 	cp_gpk "$typ01" "$d_gpk"
 	msg " - ${typ01}"
-42m "$f02" 2> /dev/null
+	rm "$f02" 2> /dev/null
 fi
 
 # ==================================== #
@@ -270,29 +267,40 @@ then
 	f01="${tmpd}/${e_gpk}_01.gpkg"
 	c01="${tmpd}/${e_gpk}_01.csv"
 	c02="${tmpd}/${e_gpk}_02.csv"
+	c03="${tmpd}/${e_gpk}_03.csv"
 	f02="${tmpd}/${e_gpk}.gpkg"
 
 	# Oinarrizko datuak / Datos básicos
 	rm "$f01" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$e_gpk" -lco DESCRIPTION="$des01" -sql "$e_sql_01"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "${e_gpk}_1" -lco DESCRIPTION="${des01} 1" -sql "$e_sql_01"
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "${e_gpk}_2" -lco DESCRIPTION="${des01} 2" -sql "$e_sql_02"
 
 	# more_info
 	rm "$c01" 2> /dev/null
-	sql_more_info "$c01" "$e_sql_02"
-	rm "$f02" 2> /dev/null
-	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
+	sql_more_info "$c01" "$e_sql_03"
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}_more_info_1" -lco DESCRIPTION="${des01} more info 1" "$f01" "$c01"
 	rm "$c01" 2> /dev/null
+	rm "$c02" 2> /dev/null
+	sql_more_info "$c02" "$e_sql_04"
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}_more_info_2" -lco DESCRIPTION="${des01} more info 2" "$f01" "$c02"
+	rm "$c02" 2> /dev/null
 
 	# poi
-	rm "$c02" 2> /dev/null
-	sql_poi "$c02" "$e_sql_03"
-	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}_poi" -lco DESCRIPTION="${des01} poi" "$f01" "$c02"
-	rm "$c02" 2> /dev/null
+	rm "$c03" 2> /dev/null
+	sql_poi "$c03" "$e_sql_05"
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}_poi" -lco DESCRIPTION="${des01} poi" "$f01" "$c03"
+	rm "$c03" 2> /dev/null
+
+	# Joins
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}_3" -lco DESCRIPTION="${des01} 3" -sql "${e_sql_06}" "$f01" "$f01"
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}_4" -lco DESCRIPTION="${des01} 4" -sql "${e_sql_07}" "$f01" "$f01"
+	fidm=`ogrinfo -ro -sql "select max(fid) from ${e_gpk}_3" "$f01" | tail -2 | gawk '{ print $NF }'`
+	ogr2ogr -f "GPKG" -update -sql "update ${e_gpk}_4 set fid=fid+${fidm}" "$f01" "$f01"
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}_5" -lco DESCRIPTION="${des01} 5" -sql "${e_sql_08}" "$f01" "$f01"
 
 	# Behin betiko GPKGa / GPKG definitivo
 	rm "$f02" 2> /dev/null
-	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}_2" -lco DESCRIPTION="${des01} 2" -sql "${e_sql_04}" "$f01" "$f01"
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "$e_gpk" -lco DESCRIPTION="$des01" -sql "$e_sql_05" "$f02" "$f01"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}" -lco DESCRIPTION="$des01" -sql "$e_sql_09" "$f02" "$f01"
 	rm "$f01" 2> /dev/null
 
 	# Eremuak berrizendatu / Renombrar campos
@@ -301,7 +309,7 @@ then
 	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
 	cp_gpk "$typ01" "$e_gpk"
 	msg " - ${typ01}"
-5rm "$f02" 2> /dev/null
+	rm "$f02" 2> /dev/null
 fi
 
 # ================================================================================ #
@@ -333,7 +341,6 @@ then
 	# more_info
 	rm "$c01" 2> /dev/null
 	sql_more_info "$c01" "$k_sql_02"
-	rm "$f02" 2> /dev/null
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${k_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
 	rm "$c01" 2> /dev/null
 
@@ -380,7 +387,6 @@ then
 	# more_info
 	rm "$c01" 2> /dev/null
 	sql_more_info "$c01" "$v_sql_02"
-	rm "$f02" 2> /dev/null
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${v_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
 	rm "$c01" 2> /dev/null
 
@@ -427,7 +433,6 @@ then
 	# more_info
 	rm "$c01" 2> /dev/null
 	sql_more_info "$c01" "$c_sql_02"
-	rm "$f02" 2> /dev/null
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${c_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
 	rm "$c01" 2> /dev/null
 
@@ -474,7 +479,6 @@ then
 	# more_info
 	rm "$c01" 2> /dev/null
 	sql_more_info2 "$c01" "$i_sql_02"
-	rm "$f02" 2> /dev/null
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${i_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
 	rm "$c01" 2> /dev/null
 
@@ -521,7 +525,6 @@ then
 	# more_info
 	rm "$c01" 2> /dev/null
 	sql_more_info2 "$c01" "$z_sql_02"
-	rm "$f02" 2> /dev/null
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${z_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
 	rm "$c01" 2> /dev/null
 
@@ -568,7 +571,6 @@ then
 	# more_info
 	rm "$c01" 2> /dev/null
 	sql_more_info2 "$c01" "$g_sql_02"
-	rm "$f02" 2> /dev/null
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${g_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
 	rm "$c01" 2> /dev/null
 
@@ -615,7 +617,6 @@ then
 	# more_info
 	rm "$c01" 2> /dev/null
 	sql_more_info2 "$c01" "$t_sql_02"
-	rm "$f02" 2> /dev/null
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${t_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
 	rm "$c01" 2> /dev/null
 

@@ -105,7 +105,7 @@ function cp_gpk {
 
 function sql_more_info {
 	# more_info-a kudeatzeko SQL prozesua / Proceso SQL para gestionar el more_info
-	sqlplus -s ${con1} <<-EOF1 | gawk \
+	sqlplus -s ${con} <<-EOF1 | gawk \
 	-v k_gpk="$k_gpk" \
 	-v k_des0="${k_des[0]}" \
 	-v k_abs0="${k_abs[0]}" \
@@ -191,7 +191,7 @@ function sql_more_info {
 function sql_more_info2 {
 	# more_info-a JSON moduan jartzeko SQL eta GAWK prozesua
 	# Proceso SQL y GAWK para poner el more_info en forma de JSON
-	sqlplus -s ${con1} <<-EOF1 | gawk \
+	sqlplus -s ${con} <<-EOF1 | gawk \
 	'
 	BEGIN {
 		FS = "\",\""
@@ -269,7 +269,7 @@ function sql_more_info2 {
 
 function sql_poi {
 	# POIak kudeatzeko SQL prozesua / Proceso SQL para gestionar los POIs
-	sqlplus -s ${con1} <<-EOF1 | gawk '
+	sqlplus -s ${con} <<-EOF1 | gawk '
 	{
 	gsub("poi_null","")
 	if (NR != 1) {
