@@ -380,7 +380,6 @@ chr(38)||'apos;','''')
 more_info
 from (select distinct idpostal,codcalle,calle_e,calle_c,codmuni,muni_e,muni_c from b5mweb_nombres.n_edifgen) a,(select distinct codmuni,idnomcomarca from b5mweb_25830.giputz) c,b5mweb_nombres.solr_gen_toponimia_2d d
 where a.codmuni=c.codmuni
-and a.idpostal in (22188,57413,57466)
 and d.url_2d='S_'||c.idnomcomarca
 and a.idpostal<>0
 group by (a.idpostal)"
@@ -634,13 +633,13 @@ replace(
 '''abstract'':''ZZ_S_ABS'','||
 '''numberMatched'':'||
 xmlelement(
-  e,count(c.idnomcomarca)||',''features'':[',
+  e,count(b.idnomcomarca)||',''features'':[',
   xmlagg(xmlelement(e,
-    '{''b5mcode'':'''||decode(c.idnomcomarca,null,null,'S_'||c.idnomcomarca)
-    ||'''|''name_eu'':'''||replace(d.nombre_e,',','|')
-    ||'''|''name_es'':'''||replace(d.nombre_c,',','|')
+    '{''b5mcode'':'''||decode(b.idnomcomarca,null,null,'S_'||b.idnomcomarca)
+    ||'''|''name_eu'':'''||replace(c.nombre_e,',','|')
+    ||'''|''name_es'':'''||replace(c.nombre_c,',','|')
     ||'''}'
-    ,'#') order by d.nombre_e
+    ,'#') order by c.nombre_e
   )
 ).extract('//text()').getclobval(),
 '|',','),
@@ -651,10 +650,45 @@ xmlelement(
 ||']',
 chr(38)||'apos;','''')
 more_info
-from b5mweb_nombres.n_edifgen a,(select distinct codmuni,idnomcomarca from b5mweb_25830.giputz) c,b5mweb_nombres.solr_gen_toponimia_2d d
-where a.codmuni=c.codmuni
-and d.url_2d='S_'||c.idnomcomarca
+from b5mweb_nombres.n_edifgen a,(select distinct codmuni,idnomcomarca from b5mweb_25830.giputz) b,b5mweb_nombres.solr_gen_toponimia_2d c
+where a.codmuni=b.codmuni
+and c.url_2d='S_'||b.idnomcomarca
 and a.idpostal=0
+group by (a.idut)
+union all
+select
+'E_A'||a.idut b5mcode,
+replace(
+'[{'||
+rtrim(
+replace(
+replace(
+'''featuretypename'':''ZZ_M_FTN'','||
+'''description'':''ZZ_M_DES'','||
+'''abstract'':''ZZ_M_ABS'','||
+'''numberMatched'':'||
+xmlelement(
+  e,count(a.codmuni)||',''features'':[',
+  xmlagg(xmlelement(e,
+    '{''b5mcode'':'''||'M_'||a.codmuni
+    ||'''|''name_eu'':'''||replace(a.muni_e,',','|')
+    ||'''|''name_es'':'''||replace(a.muni_c,',','|')
+    ||'''}'
+    ,'#') order by a.muni_e
+  )
+).extract('//text()').getclobval(),
+'|',','),
+'#',','),
+',')
+||']'
+||'}'
+||']',
+chr(38)||'apos;','''')
+more_info
+from b5mweb_nombres.n_edifgen a,(select distinct codmuni,idnomcomarca from b5mweb_25830.giputz) b
+where a.codmuni=b.codmuni
+and a.idpostal=0
+and b.idnomcomarca is null
 group by (a.idut)"
 
 e_sql_05="$d_sql_03"
