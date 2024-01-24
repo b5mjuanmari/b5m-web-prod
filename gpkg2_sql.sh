@@ -1147,6 +1147,55 @@ from ${t_gpk} a
 left join ${t_gpk}_more_info b
 on a.b5mcode = b.b5mcode"
 
+# ========================== #
+#                            #
+# 12. q_municipalcartography #
+#                            #
+# ========================== #
+
+q_sql_01="select
+'Q_' || a.id_levan b5mcode,
+replace(a.nombre,'\"','') name_eu,
+replace(a.nombre,'\"','') name_es,
+a.propietario owner_eu,
+a.propietario owner_es,
+a.empresa company,
+a.escala scale,
+to_char(a.f_digitalizacion,'YYYY-MM-DD') digitalisation_date,
+to_char(a.f_levanoriginal,'YYYY-MM-DD') survey_date,
+to_char(a.f_ultactua,'YYYY-MM-DD') last_update_date,
+'https://b5m.gipuzkoa.eus/map-2022/eu/Q_' || a.id_levan map_link_eu,
+'https://b5m.gipuzkoa.eus/map-2022/es/Q_' || a.id_levan map_link_es,
+'"$updd"' update_date,
+'1' official,
+sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
+from b5mweb_nombres.g_levancarto a,b5mweb_25830.cardigind b
+where a.tag=b.tag
+group by (a.id_levan,a.nombre,a.propietario,a.empresa,a.escala,a.f_digitalizacion,a.f_levanoriginal,a.f_ultactua)"
+
+q_sql_02="select
+'Q_' || a.id_levan b5mcode,
+'"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_m_type,
+rtrim(xmlagg(xmlelement(e,'M_'||c.codmuni,'|').extract('//text()') order by d.nombre_e).getclobval(),'|') b5mcode_others_m,
+rtrim(xmlagg(xmlelement(e,d.nombre_e,'|').extract('//text()') order by d.nombre_e).getclobval(),'|') b5mcode_others_m_name_eu,
+rtrim(xmlagg(xmlelement(e,d.nombre_c,'|').extract('//text()') order by d.nombre_e).getclobval(),'|') b5mcode_others_m_name_es
+from b5mweb_nombres.g_levancarto a,b5mweb_nombres.g_rel_muni_levan b,b5mweb_nombres.n_municipios c,b5mweb_nombres.solr_gen_toponimia_2d d
+where a.tag=b.tag
+and b.codmuni=c.codmuni
+and c.codmuni=d.id_nombre1
+and d.tipo_e in ('agintekidetza','mankomunitatea','partzuergoa','udalerria')
+group by a.id_levan
+order by a.id_levan"
+
+q_sql_03="select
+a.*,
+b.more_info_eu,
+b.more_info_es,
+b.more_info_en
+from ${q_gpk} a
+left join ${q_gpk}_more_info b
+on a.b5mcode = b.b5mcode"
+
 # ======= #
 #         #
 # 99. end #
