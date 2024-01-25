@@ -1153,6 +1153,8 @@ on a.b5mcode = b.b5mcode"
 #                            #
 # ========================== #
 
+q_url="https://b5m.gipuzkoa.eus/map-2022/eu/Q_"
+
 q_sql_01="select
 'Q_' || a.id_levan b5mcode,
 replace(a.nombre,'\"','') name_eu,
@@ -1164,8 +1166,8 @@ a.escala scale,
 to_char(a.f_digitalizacion,'YYYY-MM-DD') digitalisation_date,
 to_char(a.f_levanoriginal,'YYYY-MM-DD') survey_date,
 to_char(a.f_ultactua,'YYYY-MM-DD') last_update_date,
-'https://b5m.gipuzkoa.eus/map-2022/eu/Q_' || a.id_levan map_link_eu,
-'https://b5m.gipuzkoa.eus/map-2022/es/Q_' || a.id_levan map_link_es,
+'"$q_url"' || a.id_levan map_link_eu,
+'"$q_url"' || a.id_levan map_link_es,
 '"$updd"' update_date,
 '1' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
@@ -1194,6 +1196,63 @@ b.more_info_es,
 b.more_info_en
 from ${q_gpk} a
 left join ${q_gpk}_more_info b
+on a.b5mcode = b.b5mcode"
+
+# ========================= #
+#                           #
+# 13. sg_geodeticbenchmarks #
+#                           #
+# ========================= #
+
+sg_aju_eu="Doikuntza geodesikoa"
+sg_sen_eu="Seinale geodesikoa"
+sg_aju_es="Ajuste geodésico"
+sg_sen_es="Señal geodésica"
+sg_aju_en="Geodetic Adjustment"
+sg_sen_en="Geodetic Benchmark"
+sg_url="https://b5m.gipuzkoa.eus/geodesia/pdf"
+
+sg_sql_01="select
+'SG_'||pgeod_id b5mcode,
+nombre name_eu,
+nombre name_es,
+decode(ajuste,1,'${sg_aju_eu}','${sg_sen_eu}') type_eu,
+decode(ajuste,1,'${sg_aju_es}','${sg_sen_es}') type_es,
+decode(ajuste,1,'${sg_aju_en}','${sg_sen_en}') type_en,
+'${sg_url}/'||archivo link,
+file_type,
+size_kb,
+'"$updd"' update_date,
+'1' official,
+geom
+from o_mw_bta.puntogeodesicobta
+where visible_web=1
+order by pgeod_id"
+
+sg_sql_02="select
+'SG_'||a.pgeod_id b5mcode,
+'"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_m_type,
+'M_'||a.codmuni b5mcode_others_m,
+trim(regexp_substr(b.municipio,'[^/]+',1,1)) b5mcode_others_m_name_eu,
+decode(trim(regexp_substr(b.municipio,'[^/]+',1,2)),null,b.municipio,trim(regexp_substr(b.municipio,'[^/]+',1,2))) b5mcode_others_m_name_es,
+'"$s_gpk"|"${s_des[0]}"|"${s_des[1]}"|"${s_des[2]}"|"${s_abs[0]}"|"${s_abs[1]}"|"${s_abs[2]}"' b5mcode_others_s_type,
+decode(c.idnomcomarca,null,null,'S_'||c.idnomcomarca) b5mcode_others_s,
+d.nombre_e b5mcode_others_s_name_eu,
+d.nombre_c b5mcode_others_s_name_es
+from o_mw_bta.puntogeodesicobta a,b5mweb_nombres.n_municipios b,(select distinct codmuni,idnomcomarca from b5mweb_25830.giputz) c,b5mweb_nombres.solr_gen_toponimia_2d d
+where a.codmuni=b.codmuni
+and a.visible_web=1
+and a.codmuni=c.codmuni
+and d.url_2d='S_'||c.idnomcomarca
+order by a.pgeod_id"
+
+sg_sql_03="select
+a.*,
+b.more_info_eu,
+b.more_info_es,
+b.more_info_en
+from ${sg_gpk} a
+left join ${sg_gpk}_more_info b
 on a.b5mcode = b.b5mcode"
 
 # ======= #
