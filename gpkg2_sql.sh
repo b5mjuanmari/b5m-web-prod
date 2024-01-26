@@ -80,40 +80,56 @@ sg_gpk="sg_geodeticbenchmarks"
 sg_des=("Seinale geodesikoa" "Señal geodésica" "Geodetic Benchmark")
 sg_abs=("B5m SG kodea" "B5m código SG" "B5m Code SG")
 
-# 14. cv_speleology
-cv_gpk="cv_speleology"
-cv_des=("Leizea eta espeleologia" "Cueva y espeleología" "Cave and speleology")
-cv_abs=("B5m CV kodea" "B5m código CV" "B5m Code CV")
+# 14. em_megalithicsites
+em_gpk="em_megalithicsites"
+em_des=("Estazio megalitikoa" "Estación megalítica" "Megalith Site")
+em_abs=("B5m EM kodea" "B5m código EM" "B5m Code EM")
 
 # 15. gk_megaliths
 gk_gpk="gk_megaliths"
 gk_des=("Megalitoa" "Megalito" "Megalith")
 gk_abs=("B5m GK kodea" "B5m código GK" "B5m Code GK")
 
-# 16. bi_biotopes
+# 16. cv_speleology
+cv_gpk="cv_speleology"
+cv_des=("Leizea eta espeleologia" "Cueva y espeleología" "Cave and speleology")
+cv_abs=("B5m CV kodea" "B5m código CV" "B5m Code CV")
+
+# 17. bi_biotopes
 bi_gpk="bi_biotopes"
 bi_des=("Biotopo" "Biotopo" "Biotope")
 bi_abs=("B5m BI kodea" "B5m código BI" "B5m Code BI")
 
-# 17. poi_pointsofinterest
+# 18. poi_pointsofinterest
 poi_gpk="poi_pointsofinterest"
 poi_des=("Interesgunea" "Punto de interés" "Point of Interest")
 poi_abs=("B5m POI kodea" "B5m código POI" "B5m Code POI")
 
-# 18. dm_distancemunicipalities
+# 19. dm_distancemunicipalities
 dm_gpk="dm_distancemunicipalities"
 dm_des=("Udalerrien arteko distantzia" "Distancia entre municipios" "Distance Between Municipalities")
 dm_abs=("B5m DM kodea" "B5m código DM" "B5m Code DM")
 
-# 19. r_grid
+# 20. r_grid
 r_gpk="r_grid"
 r_des=("Lauki-sarea" "Cuadrícula" "Grid")
 r_abs=("B5m R kodea" "B5m código R" "B5m Code R")
 
-# 20. dw_download
+# 21. dw_download
 dw_gpk="dw_download"
 dw_des=("Deskargak" "Descargas" "Downloads")
 dw_abs=("B5m DW kodea" "B5m código DW" "B5m Code DW")
+
+# ========= #
+#           #
+# Aldagaiak #
+#           #
+# ========= #
+
+url_map="https://b5m.gipuzkoa.eus/map-2022"
+url_map_eu="${url_map}/eu/"
+url_map_es="${url_map}/es/"
+url_map_en="${url_map}/en/"
 
 # =================== #
 #                     #
@@ -934,35 +950,13 @@ order by a.url_2d"
 
 c_sql_02="select
 a.url_2d b5mcode,
-replace(
-'[{'||
-rtrim(
-replace(
-replace(
-'''featuretypename'':''ZZ_M_FTN'','||
-'''description'':''ZZ_M_DES'','||
-'''abstract'':''ZZ_M_ABS'','||
-'''numberMatched'':'||
-xmlelement(
-  e,count(c.codmuni)||',''features'':[',
-  xmlagg(xmlelement(e,
-    '{''b5mcode'':'''||d.url_2d
-    ||'''|''name_eu'':'''||replace(d.nombre_e,',','|')
-    ||'''|''name_es'':'''||replace(d.nombre_c,',','|')
-    ||'''}'
-    ,'#') order by d.nombre_e
-  )
-).extract('//text()').getclobval(),
-'|',','),
-'#',','),
-',')
-||']'
-||'}]',
-chr(38)||'apos;','''')
-more_info
+'"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_m_type,
+rtrim(xmlagg(xmlelement(e,d.url_2d,'|').extract('//text()') order by d.nombre_e).getclobval(),'|') b5mcode_others_m,
+rtrim(xmlagg(xmlelement(e,d.nombre_e,'|').extract('//text()') order by d.nombre_e).getclobval(),'|') b5mcode_others_m_name_eu,
+rtrim(xmlagg(xmlelement(e,d.nombre_c,'|').extract('//text()') order by d.nombre_e).getclobval(),'|') b5mcode_others_m_name_es
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.cuencap b,(select codmuni,sdo_aggr_union(sdoaggrtype(polygon,0.005)) polygon from b5mweb_25830.giputz group by codmuni) c,b5mweb_nombres.solr_gen_toponimia_2d d
 where a.url_2d='C_A'||b.idnombre
-and sdo_relate(b.polygon,c.polygon,'mask=contains+covers+equal+touch+overlapbdyintersect')='TRUE'
+and sdo_relate(b.polygon,c.polygon,'mask=contains+covers+equal+touch+overlapbdyintersect+inside')='TRUE'
 and c.codmuni=d.id_nombre1
 and d.tipo_e in ('agintekidetza','mankomunitatea','partzuergoa','udalerria')
 group by (a.url_2d)
@@ -1153,27 +1147,27 @@ on a.b5mcode = b.b5mcode"
 #                            #
 # ========================== #
 
-q_url="https://b5m.gipuzkoa.eus/map-2022/eu/Q_"
-
 q_sql_01="select
 'Q_' || a.id_levan b5mcode,
 replace(a.nombre,'\"','') name_eu,
 replace(a.nombre,'\"','') name_es,
 a.propietario owner_eu,
 a.propietario owner_es,
-a.empresa company,
+b.nombre company,
 a.escala scale,
 to_char(a.f_digitalizacion,'YYYY-MM-DD') digitalisation_date,
 to_char(a.f_levanoriginal,'YYYY-MM-DD') survey_date,
 to_char(a.f_ultactua,'YYYY-MM-DD') last_update_date,
-'"$q_url"' || a.id_levan map_link_eu,
-'"$q_url"' || a.id_levan map_link_es,
+'"$url_map_eu"Q_'||a.id_levan map_link_eu,
+'"$url_map_es"Q_'||a.id_levan map_link_es,
+'"$url_map_en"Q_'||a.id_levan map_link_en,
 '"$updd"' update_date,
 '1' official,
-sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
-from b5mweb_nombres.g_levancarto a,b5mweb_25830.cardigind b
-where a.tag=b.tag
-group by (a.id_levan,a.nombre,a.propietario,a.empresa,a.escala,a.f_digitalizacion,a.f_levanoriginal,a.f_ultactua)"
+c.geom
+from b5mweb_nombres.g_levantamiento a, b5mweb_nombres.g_empresas b,b5mweb_25830.cartoaggr c
+where a.id_levan=c.id_levan
+and a.id_empresa=b.id_empresa
+order by a.id_levan"
 
 q_sql_02="select
 'Q_' || a.id_levan b5mcode,
@@ -1254,6 +1248,77 @@ b.more_info_en
 from ${sg_gpk} a
 left join ${sg_gpk}_more_info b
 on a.b5mcode = b.b5mcode"
+
+# ====================== #
+#                        #
+# 14. em_megalithicsites #
+#                        #
+# ====================== #
+
+em_sql_01="select
+'EM_A'||idnombre b5mcode,
+izena name_eu,
+nombre name_es,
+tipo_e type_eu,
+tipo_c type_es,
+tipo_c type_en,
+'"$url_map_eu"' || 'EM_A'||idnombre map_link_eu,
+'"$url_map_es"' || 'EM_A'||idnombre map_link_es,
+'"$url_map_en"' || 'EM_A'||idnombre map_link_en,
+'"$updd"' update_date,
+'1' official,
+polygon
+from b5mweb_25830.monuestmegal
+order by idnombre"
+
+em_sql_02="select
+'EM_A'||a.idnombre b5mcode,
+'"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_m_type,
+rtrim(xmlagg(xmlelement(e,'M_'||b.codmuni,'|').extract('//text()') order by c.nombre_e).getclobval(),'|') b5mcode_others_m,
+rtrim(xmlagg(xmlelement(e,c.nombre_e,'|').extract('//text()') order by c.nombre_e).getclobval(),'|') b5mcode_others_m_name_eu,
+rtrim(xmlagg(xmlelement(e,c.nombre_c,'|').extract('//text()') order by c.nombre_e).getclobval(),'|') b5mcode_others_m_name_es
+from b5mweb_25830.monuestmegal a,(select codmuni,sdo_aggr_union(sdoaggrtype(polygon,0.005)) polygon from b5mweb_25830.giputz group by codmuni) b,b5mweb_nombres.solr_gen_toponimia_2d c
+where sdo_relate(a.polygon,b.polygon,'mask=contains+covers+equal+touch+overlapbdyintersect+inside')='TRUE'
+and b.codmuni=c.id_nombre1
+and c.tipo_e in ('agintekidetza','mankomunitatea','partzuergoa','udalerria')
+group by a.idnombre
+order by a.idnombre"
+
+em_sql_03="select
+a.*,
+b.more_info_eu,
+b.more_info_es,
+b.more_info_en
+from ${em_gpk} a
+left join ${em_gpk}_more_info b
+on a.b5mcode = b.b5mcode"
+
+# ================= #
+#                   #
+# 16. cv_speleology #
+#                   #
+# ================= #
+
+cv_sql_01="select
+a.url_2d b5mcode,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+a.tipo_e type_eu,
+a.tipo_c type_es,
+a.tipo_i type_en,
+'"$url_map_eu"'||a.url_2d map_link_eu,
+'"$url_map_es"'||a.url_2d map_link_es,
+'"$url_map_en"'||a.url_2d map_link_en,
+b.web_e catalog_link,
+b.origen_e source_eu,
+b.origen_c source_es,
+b.origen_c source_en,
+'"$updd"' update_date,
+'1' official,
+b.geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.cuevas b
+where a.id_nombre1=b.tag
+order by a.id_nombre1"
 
 # ======= #
 #         #

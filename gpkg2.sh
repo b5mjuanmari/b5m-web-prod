@@ -410,7 +410,7 @@ fi
 #                             #
 # =========================== #
 
-# 36"
+# 27"
 
 # Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
 vconf=`grep "$c_gpk" "$fconf"`
@@ -432,7 +432,7 @@ then
 
 	# more_info
 	rm "$c01" 2> /dev/null
-	sql_more_info "$c01" "$c_sql_02"
+	sql_more_info2 "$c01" "$c_sql_02"
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${c_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
 	rm "$c01" 2> /dev/null
 
@@ -640,7 +640,7 @@ fi
 #                                                                                                    #
 # ================================================================================================== #
 
-# 5h29'
+# 29"
 
 # Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
 vconf=`grep "$q_gpk" "$fconf"`
@@ -722,6 +722,98 @@ then
 
 	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
 	cp_gpk "$typ01" "$sg_gpk"
+	msg " - ${typ01}"
+	rm "$f02" 2> /dev/null
+fi
+
+# =================================================================== #
+#                                                                     #
+# 14. em_megalithicsites (estazio megalitikoa / estación megalítica ) #
+#                                                                     #
+# =================================================================== #
+
+# 35"
+
+# Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
+vconf=`grep "$em_gpk" "$fconf"`
+IFS='|' read -a aconf <<< "$vconf"
+typ01="${aconf[0]}"
+gpk01="${aconf[1]}"
+des01="${em_des[0]} - ${em_des[1]} - ${em_des[2]}"
+if [ "$em_gpk" = "$gpk01" ] && ([ $typ01 = "1" ] || [ "$typ01" = "2" ])
+then
+	let i1=$i1+1
+	msg "${i1}/${nf}: $(date '+%Y-%m-%d %H:%M:%S') - $gpk01 - ${em_des[0]}\c"
+	f01="${tmpd}/${em_gpk}_01.gpkg"
+	c01="${tmpd}/${em_gpk}_01.csv"
+	f02="${tmpd}/${em_gpk}.gpkg"
+
+	# Oinarrizko datuak / Datos básicos
+	rm "$f01" 2> /dev/null
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$em_gpk" -lco DESCRIPTION="$des01" -sql "$em_sql_01"
+
+	# more_info
+	rm "$c01" 2> /dev/null
+	sql_more_info2 "$c01" "$em_sql_02"
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${em_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
+	rm "$c01" 2> /dev/null
+
+	# Behin betiko GPKGa / GPKG definitivo
+	rm "$f02" 2> /dev/null
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "$em_gpk" -lco DESCRIPTION="$des01" -sql "$em_sql_03" "$f02" "$f01"
+	rm "$f01" 2> /dev/null
+
+	# Eremuak berrizendatu / Renombrar campos
+	rfl "$f02" "$em_gpk"
+
+	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
+	cp_gpk "$typ01" "$em_gpk"
+	msg " - ${typ01}"
+	rm "$f02" 2> /dev/null
+fi
+
+# ================================================================== #
+#                                                                    #
+# 16. cv_speleology (leizea eta espeleologia / cueva y espeleología) #
+#                                                                    #
+# ================================================================== #
+
+# ??"
+
+# Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
+vconf=`grep "$cv_gpk" "$fconf"`
+IFS='|' read -a aconf <<< "$vconf"
+typ01="${aconf[0]}"
+gpk01="${aconf[1]}"
+des01="${cv_des[0]} - ${cv_des[1]} - ${cv_des[2]}"
+if [ "$cv_gpk" = "$gpk01" ] && ([ $typ01 = "1" ] || [ "$typ01" = "2" ])
+then
+	let i1=$i1+1
+	msg "${i1}/${nf}: $(date '+%Y-%m-%d %H:%M:%S') - $gpk01 - ${cv_des[0]}\c"
+	f01="${tmpd}/${cv_gpk}_01.gpkg"
+	c01="${tmpd}/${cv_gpk}_01.csv"
+	f02="${tmpd}/${cv_gpk}.gpkg"
+
+	# Oinarrizko datuak / Datos básicos
+	rm "$f01" 2> /dev/null
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$cv_gpk" -lco DESCRIPTION="$des01" -sql "$cv_sql_01"
+
+	# more_info
+	rm "$c01" 2> /dev/null
+	sql_more_info2 "$c01" "$cv_sql_02"
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${cv_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
+	rm "$c01" 2> /dev/null
+
+	# Behin betiko GPKGa / GPKG definitivo
+	rm "$f02" 2> /dev/null
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "$cv_gpk" -lco DESCRIPTION="$des01" -sql "$cv_sql_03" "$f02" "$f01"
+	rm "$f01" 2> /dev/null
+
+	# Eremuak berrizendatu / Renombrar campos
+	rfl "$f02" "$cv_gpk"
+
+	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
+	cp_gpk "$typ01" "$cv_gpk"
 	msg " - ${typ01}"
 	rm "$f02" 2> /dev/null
 fi
