@@ -732,7 +732,7 @@ fi
 #                                                                     #
 # =================================================================== #
 
-# 35"
+# 32"
 
 # Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
 vconf=`grep "$em_gpk" "$fconf"`
@@ -768,6 +768,52 @@ then
 
 	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
 	cp_gpk "$typ01" "$em_gpk"
+	msg " - ${typ01}"
+	rm "$f02" 2> /dev/null
+fi
+
+# ======================================= #
+#                                         #
+# 15. gk_megaliths (megalitoa / megalito) #
+#                                         #
+# ======================================= #
+
+# ??"
+
+# Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
+vconf=`grep "$gk_gpk" "$fconf"`
+IFS='|' read -a aconf <<< "$vconf"
+typ01="${aconf[0]}"
+gpk01="${aconf[1]}"
+des01="${gk_des[0]} - ${gk_des[1]} - ${gk_des[2]}"
+if [ "$gk_gpk" = "$gpk01" ] && ([ $typ01 = "1" ] || [ "$typ01" = "2" ])
+then
+	let i1=$i1+1
+	msg "${i1}/${nf}: $(date '+%Y-%m-%d %H:%M:%S') - $gpk01 - ${gk_des[0]}\c"
+	f01="${tmpd}/${gk_gpk}_01.gpkg"
+	c01="${tmpd}/${gk_gpk}_01.csv"
+	f02="${tmpd}/${gk_gpk}.gpkg"
+
+	# Oinarrizko datuak / Datos básicos
+	rm "$f01" 2> /dev/null
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$gk_gpk" -lco DESCRIPTION="$des01" -sql "$gk_sql_01"
+
+	# more_info
+	rm "$c01" 2> /dev/null
+	sql_more_info2 "$c01" "$gk_sql_02"
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${gk_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
+	rm "$c01" 2> /dev/null
+
+	# Behin betiko GPKGa / GPKG definitivo
+	rm "$f02" 2> /dev/null
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "$gk_gpk" -lco DESCRIPTION="$des01" -sql "$gk_sql_03" "$f02" "$f01"
+	rm "$f01" 2> /dev/null
+
+	# Eremuak berrizendatu / Renombrar campos
+	rfl "$f02" "$gk_gpk"
+
+	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
+	cp_gpk "$typ01" "$gk_gpk"
 	msg " - ${typ01}"
 	rm "$f02" 2> /dev/null
 fi

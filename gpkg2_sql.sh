@@ -1293,6 +1293,54 @@ from ${em_gpk} a
 left join ${em_gpk}_more_info b
 on a.b5mcode = b.b5mcode"
 
+# ================ #
+#                  #
+# 15. gk_megaliths #
+#                  #
+# ================ #
+
+gk_sql_01="select
+a.url_2d b5mcode,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+a.tipo_e type_eu,
+a.tipo_c type_es,
+a.tipo_i type_en,
+'"$url_map_eu"'||a.url_2d map_link_eu,
+'"$url_map_es"'||a.url_2d map_link_es,
+'"$url_map_en"'||a.url_2d map_link_en,
+b.bopv official_gazette_link,
+'"$updd"' update_date,
+'1' official,
+b.geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.monu3 b
+where a.id_nombre1=to_char(b.tag)
+order by a.id_nombre1"
+
+gk_sql_02="select
+distinct a.url_2d b5mcode,
+'"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_m_type,
+decode(a.codmunis,null,null,'M_'||replace(a.codmunis,',','|M_')) b5mcode_others_m,
+replace(a.muni_e,',','|') b5mcode_others_m_name_eu,
+replace(a.muni_c,',','|') b5mcode_others_m_name_es,
+'"$em_gpk"|"${em_des[0]}"|"${em_des[1]}"|"${em_des[2]}"|"${em_abs[0]}"|"${em_abs[1]}"|"${em_abs[2]}"' b5mcode_others_em_type,
+decode(b.idnomestacion,null,null,'EM_A'||b.idnomestacion) b5mcode_others_em,
+b.estazio_megal b5mcode_others_em_name_eu,
+b.estacion_megal b5mcode_others_em_name_es
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.monu3 b
+where a.url_2d like 'GK_A%'
+and a.id_nombre1=to_char(b.tag)
+order by to_number(replace(a.url_2d,'GK_A',''))"
+
+gk_sql_03="select
+a.*,
+b.more_info_eu,
+b.more_info_es,
+b.more_info_en
+from ${gk_gpk} a
+left join ${gk_gpk}_more_info b
+on a.b5mcode = b.b5mcode"
+
 # ================= #
 #                   #
 # 16. cv_speleology #
