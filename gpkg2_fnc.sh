@@ -271,6 +271,12 @@ function sql_more_info2 {
 		}
 		print $1, a11 "}]", a21 "}]", a31 "}]\""
 	}
+	' | gawk \
+	'
+	{
+		gsub("\\]}}\\]", "]}]")
+		print $0
+	}
 	' > "$1"
 	set serveroutput on
 	set feedback off
