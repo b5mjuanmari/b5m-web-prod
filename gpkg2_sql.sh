@@ -130,6 +130,9 @@ url_map="https://b5m.gipuzkoa.eus/map-2022"
 url_map_eu="${url_map}/eu/"
 url_map_es="${url_map}/es/"
 url_map_en="${url_map}/en/"
+url_cat="https://www.aranzadi.eus"
+url_cat_eu="${url_cat}/eu/espelelogia-katalogoa/ficha/"
+url_cat_es="${url_cat}/es/catalogo-espeleologico/ficha/"
 
 # =================== #
 #                     #
@@ -1361,19 +1364,54 @@ a.nombre_c name_es,
 a.tipo_e type_eu,
 a.tipo_c type_es,
 a.tipo_i type_en,
-'"$url_map_eu"'||a.url_2d map_link_eu,
-'"$url_map_es"'||a.url_2d map_link_es,
-'"$url_map_en"'||a.url_2d map_link_en,
-b.web_e catalog_link,
+'"$url_cat_eu"'||replace(a.id_nombre1,'CE','') catalog_link_eu,
+'"$url_cat_es"'||replace(a.id_nombre1,'CE','') catalog_link_es,
 b.origen_e source_eu,
 b.origen_c source_es,
 b.origen_c source_en,
+b.desnivel gradient_metres,
+b.desarrollo growth_metres,
+b.macizo mountain_range,
+b.zona zone,
+b.z altitude_metres,
+decode(b.sima,null,0,1) chasm,
+decode(b.cueva,null,0,1) cave,
+decode(b.sumidero,null,0,1) drain,
+decode(b.surgencia,null,0,1) spring,
+'"$url_map_eu"'||a.url_2d map_link_eu,
+'"$url_map_es"'||a.url_2d map_link_es,
+'"$url_map_en"'||a.url_2d map_link_en,
 '"$updd"' update_date,
 '1' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.cuevas b
 where a.id_nombre1=b.tag
 order by a.id_nombre1"
+
+cv_sql_02="select
+distinct a.url_2d b5mcode,
+'"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_m_type,
+decode(a.codmunis,null,null,'M_'||replace(a.codmunis,',','|M_')) b5mcode_others_m,
+replace(a.muni_e,',','|') b5mcode_others_m_name_eu,
+replace(a.muni_c,',','|') b5mcode_others_m_name_es,
+'"$s_gpk"|"${s_des[0]}"|"${s_des[1]}"|"${s_des[2]}"|"${s_abs[0]}"|"${s_abs[1]}"|"${s_abs[2]}"' b5mcode_others_s_type,
+decode(b.idnomcomarca,null,null,'S_'||b.idnomcomarca) b5mcode_others_s,
+c.nombre_e b5mcode_others_s_name_eu,
+c.nombre_c b5mcode_others_s_name_es
+from b5mweb_nombres.solr_gen_toponimia_2d a,(select distinct codmuni,idnomcomarca from b5mweb_25830.giputz) b,b5mweb_nombres.solr_gen_toponimia_2d c
+where a.url_2d like 'CV_%'
+and a.codmunis=b.codmuni(+)
+and 'S_'||b.idnomcomarca=c.url_2d(+)
+order by to_number(replace(a.url_2d,'CV_CE',''))"
+
+cv_sql_03="select
+a.*,
+b.more_info_eu,
+b.more_info_es,
+b.more_info_en
+from ${cv_gpk} a
+left join ${cv_gpk}_more_info b
+on a.b5mcode = b.b5mcode"
 
 # ======= #
 #         #
