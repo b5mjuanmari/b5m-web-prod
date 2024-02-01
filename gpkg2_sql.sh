@@ -1319,17 +1319,23 @@ order by a.id_nombre1"
 
 gk_sql_02="select
 distinct a.url_2d b5mcode,
+'"$em_gpk"|"${em_des[0]}"|"${em_des[1]}"|"${em_des[2]}"|"${em_abs[0]}"|"${em_abs[1]}"|"${em_abs[2]}"' b5mcode_others_em_type,
+decode(b.idnomestacion,null,null,'EM_A'||b.idnomestacion) b5mcode_others_em,
+b.estazio_megal b5mcode_others_em_name_eu,
+b.estacion_megal b5mcode_others_em_name_es,
 '"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_m_type,
 decode(a.codmunis,null,null,'M_'||replace(a.codmunis,',','|M_')) b5mcode_others_m,
 replace(a.muni_e,',','|') b5mcode_others_m_name_eu,
 replace(a.muni_c,',','|') b5mcode_others_m_name_es,
-'"$em_gpk"|"${em_des[0]}"|"${em_des[1]}"|"${em_des[2]}"|"${em_abs[0]}"|"${em_abs[1]}"|"${em_abs[2]}"' b5mcode_others_em_type,
-decode(b.idnomestacion,null,null,'EM_A'||b.idnomestacion) b5mcode_others_em,
-b.estazio_megal b5mcode_others_em_name_eu,
-b.estacion_megal b5mcode_others_em_name_es
-from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.monu3 b
+'"$s_gpk"|"${s_des[0]}"|"${s_des[1]}"|"${s_des[2]}"|"${s_abs[0]}"|"${s_abs[1]}"|"${s_abs[2]}"' b5mcode_others_s_type,
+decode(c.idnomcomarca,null,null,'S_'||c.idnomcomarca) b5mcode_others_s,
+d.nombre_e b5mcode_others_s_name_eu,
+d.nombre_c b5mcode_others_s_name_es
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.monu3 b,(select distinct codmuni,idnomcomarca from b5mweb_25830.giputz) c,b5mweb_nombres.solr_gen_toponimia_2d d
 where a.url_2d like 'GK_A%'
 and a.id_nombre1=to_char(b.tag)
+and a.codmunis=c.codmuni(+)
+and 'S_'||c.idnomcomarca=d.url_2d(+)
 order by to_number(replace(a.url_2d,'GK_A',''))"
 
 gk_sql_03="select

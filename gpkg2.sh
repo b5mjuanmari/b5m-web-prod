@@ -778,7 +778,7 @@ fi
 #                                         #
 # ======================================= #
 
-# ??"
+# 8"
 
 # Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
 vconf=`grep "$gk_gpk" "$fconf"`
