@@ -214,7 +214,8 @@ function sql_more_info2 {
 				}
 				$i = substr($i, 2, length($i)-1)
 			}
-			print $1, $2, $3, $4, $5 "\""
+			gsub(",,", ",\"\","); gsub(",,", ",\"\","); gsub(",,", ",\"\","); gsub(",,", ",\"\","); gsub(",,", ",\"\","); gsub(",,", ",\"\","); gsub(",,", ",\"\","); gsub(",,", ",\"\",")
+			print $0 "\""
 		}
 	}
 	' | gawk \
@@ -252,7 +253,8 @@ function sql_more_info2 {
 				a1 = a1 "#name_es#:#"i4a[k]"#}"
 			}
 			a1 = a1 "]"
-			a1 = a1 "}"
+			if (i + 3 != NF)
+				a1 = a1 "}"
 			gsub("#", "\x27", a1)
 			if (i2c == 0)
 				a1 = ""
@@ -264,12 +266,10 @@ function sql_more_info2 {
 			a11 = a11 "" a1
 			a21 = a21 "" a2
 			a31 = a31 "" a3
+			gsub("\\[,", "[", a11); gsub("\\[,", "[", a21); gsub("\\[,", "[", a31)
 			j++
-			a11 = a11 "]"
-			a21 = a21 "]"
-			a31 = a31 "]"
-			print $1,a11,a21,a31"\""
 		}
+		print $1, a11 "}]", a21 "}]", a31 "}]\""
 	}
 	' > "$1"
 	set serveroutput on
