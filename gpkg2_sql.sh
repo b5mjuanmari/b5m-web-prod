@@ -1119,6 +1119,7 @@ sdo_aggr_union(sdoaggrtype(b.polyline,0.005)) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.vialesind b,b5mweb_nombres.v_rel_vial_tramo c
 where a.id_nombre1=to_char(c.idnombre)
 and b.idut=c.idut
+and a.id_nombre2 in ('0990','9000')
 group by (a.url_2d,a.tipo_e,a.tipo_c,a.tipo_i,a.nombre_e,a.nombre_c)
 order by a.url_2d"
 
