@@ -1109,7 +1109,7 @@ on a.b5mcode = b.b5mcode"
 #                      #
 # ==================== #
 
-t_sql_01="select
+t_sql_01_1="select
 a.url_2d b5mcode,
 tipo_e type_eu,
 tipo_c type_es,
@@ -1125,6 +1125,65 @@ and b.idut=c.idut
 and a.id_nombre2 in ('0990','9000')
 group by (a.url_2d,a.tipo_e,a.tipo_c,a.tipo_i,a.nombre_e,a.nombre_c)
 order by a.url_2d"
+
+t_sql_01="select
+b5mcode,
+type_eu,
+type_es,
+type_en,
+name_eu,
+name_es,
+update_date,
+official,
+sdo_aggr_union(sdoaggrtype(geom,0.005)) geom
+FROM
+(
+  select
+  b5mcode,
+  type_eu,
+  type_es,
+  type_en,
+  name_eu,
+  name_es,
+  update_date,
+  official,
+  sdo_aggr_union(sdoaggrtype(geom,0.005)) geom
+  FROM
+  (
+    select
+    b5mcode,
+    type_eu,
+    type_es,
+    type_en,
+    name_eu,
+    name_es,
+    update_date,
+    official,
+    sdo_aggr_union(sdoaggrtype(geom,0.005)) geom
+    FROM
+    (
+      select
+      a.url_2d b5mcode,
+      tipo_e type_eu,
+      tipo_c type_es,
+      tipo_i type_en,
+      a.nombre_e name_eu,
+      a.nombre_c name_es,
+      '"$updd"' update_date,
+      '1' official,
+      sdo_aggr_union(sdoaggrtype(b.polyline,0.005)) geom
+      from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.vialesind b,b5mweb_nombres.v_rel_vial_tramo c
+      where a.id_nombre1=to_char(c.idnombre)
+      and b.idut=c.idut
+      and a.id_nombre2 in ('0990','9000')
+      group by (a.url_2d,a.tipo_e,a.tipo_c,a.tipo_i,a.nombre_e,a.nombre_c,mod(rownum,1000))
+    )
+    group by (b5mcode,type_eu,type_es,type_en,name_eu,name_es,update_date,official,mod(rownum,100))
+  )
+  group by (b5mcode,type_eu,type_es,type_en,name_eu,name_es,update_date,official,mod(rownum,10))
+)
+group by (b5mcode,type_eu,type_es,type_en,name_eu,name_es,update_date,official)
+order by b5mcode"
 
 t_sql_02="select
 distinct url_2d b5mcode,
