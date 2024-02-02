@@ -97,7 +97,7 @@ cv_abs=("B5m CV kodea" "B5m código CV" "B5m Code CV")
 
 # 17. bi_biotopes
 bi_gpk="bi_biotopes"
-bi_des=("Biotopo" "Biotopo" "Biotope")
+bi_des=("Biotopoa" "Biotopo" "Biotope")
 bi_abs=("B5m BI kodea" "B5m código BI" "B5m Code BI")
 
 # 18. poi_pointsofinterest
@@ -1411,6 +1411,48 @@ b.more_info_es,
 b.more_info_en
 from ${cv_gpk} a
 left join ${cv_gpk}_more_info b
+on a.b5mcode = b.b5mcode"
+
+# =============== #
+#                 #
+# 17. bi_biotopes #
+#                 #
+# =============== #
+
+bi_sql_01="select
+a.url_2d b5mcode,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+upper(substr(a.tipo_e,1,1))||lower(substr(a.tipo_e,2)) type_eu,
+upper(substr(a.tipo_c,1,1))||lower(substr(a.tipo_c,2)) type_es,
+initcap(a.tipo_i) type_en,
+'"$url_map_eu"'||a.url_2d map_link_eu,
+'"$url_map_es"'||a.url_2d map_link_es,
+'"$url_map_en"'||a.url_2d map_link_en,
+'"$updd"' update_date,
+'1' official,
+b.geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.bi_biotopos b
+where a.id_nombre1=b.idnombre
+order by to_number(a.id_nombre1)"
+
+bi_sql_02="select
+distinct url_2d b5mcode,
+'"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_m_type,
+decode(codmunis,null,null,'M_'||replace(codmunis,',','|M_')) b5mcode_others_m,
+replace(muni_e,',','|') b5mcode_others_m_name_eu,
+replace(muni_c,',','|') b5mcode_others_m_name_es
+from b5mweb_nombres.solr_gen_toponimia_2d
+where url_2d like 'BI_%'
+order by to_number(replace(url_2d,'BI_',''))"
+
+bi_sql_03="select
+a.*,
+b.more_info_eu,
+b.more_info_es,
+b.more_info_en
+from ${bi_gpk} a
+left join ${bi_gpk}_more_info b
 on a.b5mcode = b.b5mcode"
 
 # ======= #
