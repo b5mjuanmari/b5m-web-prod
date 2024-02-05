@@ -916,7 +916,7 @@ fi
 #                                                           #
 # ========================================================= #
 
-# ?"
+# 13"
 
 # Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
 vconf=`grep "$poi_gpk" "$fconf"`

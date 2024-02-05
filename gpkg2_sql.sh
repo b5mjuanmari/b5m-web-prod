@@ -1136,7 +1136,7 @@ name_es,
 update_date,
 official,
 sdo_aggr_union(sdoaggrtype(geom,0.005)) geom
-FROM
+from
 (
   select
   b5mcode,
@@ -1148,7 +1148,7 @@ FROM
   update_date,
   official,
   sdo_aggr_union(sdoaggrtype(geom,0.005)) geom
-  FROM
+  from
   (
     select
     b5mcode,
@@ -1160,7 +1160,7 @@ FROM
     update_date,
     official,
     sdo_aggr_union(sdoaggrtype(geom,0.005)) geom
-    FROM
+    from
     (
       select
       a.url_2d b5mcode,
@@ -1545,18 +1545,16 @@ b.muni_e muni_eu,
 b.muni_c muni_es,
 b.codcalle codstreet,
 b.calle_e street_eu,
-b.calle_c street_es,
+decode(regexp_replace(b.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(b.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(b.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(b.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(b.calle_c,'[^,]+',1,1),b.calle_c) street_es,
 decode(substr(b.noportal,1,2),'00',substr(b.noportal,3,3),decode(substr(b.noportal,1,1),'0',substr(b.noportal,2,3),b.noportal)) door_number,
 b.bis bis,
 b.accesorio accessory,
 b.codpostal postal_code,
 '1' official,
-sdo_geom.sdo_centroid(c.polygon,m.diminfo) geom
-from b5mweb_nombres.n_actipuerta a,b5mweb_nombres.n_edifdirpos b,b5mweb_25830.a_edifind c,b5mweb_nombres.poi_categories d,b5mweb_nombres.poi_classes e,b5mweb_nombres.poi_cat_class f,b5mweb_nombres.poi_icons g,b5mweb_nombres.poi_icons h,b5mweb_nombres.poi_icons_url i,user_sdo_geom_metadata m
+c.point geom
+from b5mweb_nombres.n_actipuerta a,b5mweb_nombres.n_dir_postal b,b5mweb_25830.puertas c,b5mweb_nombres.poi_categories d,b5mweb_nombres.poi_classes e,b5mweb_nombres.poi_cat_class f,b5mweb_nombres.poi_icons g,b5mweb_nombres.poi_icons h,b5mweb_nombres.poi_icons_url i
 where a.id_postal=b.idnombre
-and a.idut=c.idut
-and m.table_name='A_EDIFIND'
-and m.column_name='POLYGON'
+and a.id_puerta=c.id_puerta
 and a.id_postal<>0
 and d.id=f.poi_category_id
 and e.id=f.poi_class_id
@@ -1568,30 +1566,27 @@ and d.enabled=1
 order by a.id_actividad"
 
 poi_sql_02="select
-'POI_' || a.id_actividad b5mcode,
+distinct 'D_A'||a.idnombre b5mcode_d,
 '"$k_gpk"|"${k_des[0]}"|"${k_des[1]}"|"${k_des[2]}"|"${k_abs[0]}"|"${k_abs[1]}"|"${k_abs[2]}"' b5mcode_others_k_type,
-rtrim(xmlagg(xmlelement(e,'K_'||b.codmuni||'_'||substr(b.codcalle,2),'|').extract('//text()') order by b.calle_e).getclobval(),'|') b5mcode_others_k,
-rtrim(xmlagg(xmlelement(e,replace(b.calle_e,',','|'),'|').extract('//text()') order by b.calle_e).getclobval(),'|') b5mcode_others_k_name_eu,
-rtrim(xmlagg(xmlelement(e,replace(decode(regexp_replace(b.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(b.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(b.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(b.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(b.calle_c,'[^,]+',1,1),b.calle_c),',','|'),'|').extract('//text()') order by b.calle_e).getclobval(),'|') b5mcode_others_k_name_es,
+'K_'||a.codmuni||'_'||substr(a.codcalle,2) b5mcode_others_k,
+a.calle_e b5mcode_others_k_name_eu,
+decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c) b5mcode_others_k_name_es,
 '"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_m_type,
-rtrim(xmlagg(xmlelement(e,'M_'||b.codmuni,'|').extract('//text()') order by b.muni_e).getclobval(),'|') b5mcode_others_m,
-rtrim(xmlagg(xmlelement(e,b.muni_e,'|').extract('//text()') order by b.muni_e).getclobval(),'|') b5mcode_others_m_name_eu,
-rtrim(xmlagg(xmlelement(e,b.muni_c,'|').extract('//text()') order by b.muni_e).getclobval(),'|') b5mcode_others_m_name_es,
+'M_'||a.codmuni b5mcode_others_m,
+a.muni_e b5mcode_others_m_name_eu,
+a.muni_c b5mcode_others_m_name_es,
 '"$s_gpk"|"${s_des[0]}"|"${s_des[1]}"|"${s_des[2]}"|"${s_abs[0]}"|"${s_abs[1]}"|"${s_abs[2]}"' b5mcode_others_s_type,
-rtrim(xmlagg(xmlelement(e,decode(c.idnomcomarca,null,null,'S_'||c.idnomcomarca),'|').extract('//text()') order by z.nombre_e).getclobval(),'|') b5mcode_others_s,
-rtrim(xmlagg(xmlelement(e,z.nombre_e,'|').extract('//text()') order by z.nombre_e).getclobval(),'|') b5mcode_others_s_name_eu,
-rtrim(xmlagg(xmlelement(e,z.nombre_c,'|').extract('//text()') order by z.nombre_e).getclobval(),'|') b5mcode_others_s_name_es
-from b5mweb_nombres.n_actipuerta a,(select distinct idnombre,codmuni,muni_e,muni_c,codcalle,calle_e,calle_c from b5mweb_nombres.n_edifdirpos) b,(select distinct codmuni,idnomcomarca from b5mweb_25830.giputz) c,b5mweb_nombres.solr_gen_toponimia_2d z,b5mweb_nombres.poi_categories d,b5mweb_nombres.poi_classes e,b5mweb_nombres.poi_cat_class f
-where a.id_postal<>0
-and a.id_postal=b.idnombre
-and b.codmuni=c.codmuni
-and z.url_2d='S_'||c.idnomcomarca
-and d.id=f.poi_category_id
-and e.id=f.poi_class_id
-and a.cla_santi=e.code
-and d.enabled=1
-group by (a.id_actividad)
-order by a.id_actividad"
+'S_'||f.idnomcomarca b5mcode_others_s,
+g.nombre_e b5mcode_others_s_name_eu,
+g.nombre_c b5mcode_others_s_name_es
+from b5mweb_nombres.n_edifdirpos a,b5mweb_nombres.n_actipuerta b,b5mweb_nombres.poi_classes c,b5mweb_nombres.poi_categories d,b5mweb_nombres.poi_cat_class e,b5mweb_25830.giputz f,b5mweb_nombres.solr_gen_toponimia_2d g
+where a.idnombre=b.id_postal
+and b.cla_santi=c.code
+and c.id=e.poi_class_id
+and d.id=e.poi_category_id
+and a.codmuni=f.codmuni
+and g.url_2d='S_'||f.idnomcomarca
+and d.enabled=1"
 
 poi_sql_03="select
 a.*,
@@ -1600,7 +1595,7 @@ b.more_info_es,
 b.more_info_en
 from ${poi_gpk} a
 left join ${poi_gpk}_more_info b
-on a.b5mcode = b.b5mcode"
+on a.b5mcode_d = b.b5mcode"
 
 # ======= #
 #         #

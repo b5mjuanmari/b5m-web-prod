@@ -1,3 +1,4 @@
 log/
 gpkg.dsv
 gpkg2.dsv
+test_sql.sh
