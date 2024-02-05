@@ -1550,6 +1550,10 @@ decode(substr(b.noportal,1,2),'00',substr(b.noportal,3,3),decode(substr(b.noport
 b.bis bis,
 b.accesorio accessory,
 b.codpostal postal_code,
+'"$url_map_eu"'||'POI_' || a.id_actividad map_link_eu,
+'"$url_map_es"'||'POI_' || a.id_actividad map_link_es,
+'"$url_map_en"'||'POI_' || a.id_actividad map_link_en,
+'"$updd"' update_date,
 '1' official,
 c.point geom
 from b5mweb_nombres.n_actipuerta a,b5mweb_nombres.n_dir_postal b,b5mweb_25830.puertas c,b5mweb_nombres.poi_categories d,b5mweb_nombres.poi_classes e,b5mweb_nombres.poi_cat_class f,b5mweb_nombres.poi_icons g,b5mweb_nombres.poi_icons h,b5mweb_nombres.poi_icons_url i
