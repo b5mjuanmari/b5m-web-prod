@@ -910,11 +910,11 @@ then
 	rm "$f02" 2> /dev/null
 fi
 
-# ========================================================= #
-#                                                           #
-# 18. poi_pointsofinterest (interesgunea / punto de interés #
-#                                                           #
-# ========================================================= #
+# ========================================================== #
+#                                                            #
+# 18. poi_pointsofinterest (interesgunea / punto de interés) #
+#                                                            #
+# ========================================================== #
 
 # 13"
 
@@ -954,6 +954,72 @@ then
 	cp_gpk "$typ01" "$poi_gpk"
 	msg " - ${typ01}"
 	rm "$f02" 2> /dev/null
+fi
+
+# ========================================================================= #
+#                                                                           #
+# 19. dm_distancemunicipalities (udalerrien arteko d. /d. entre municipios) #
+#                                                                           #
+# ========================================================================= #
+
+# 16'28"
+
+# Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
+vconf=`grep "$dm_gpk" "$fconf"`
+IFS='|' read -a aconf <<< "$vconf"
+typ01="${aconf[0]}"
+gpk01="${aconf[1]}"
+des01="${dm_des[0]} - ${dm_des[1]} - ${dm_des[2]}"
+if [ "$dm_gpk" = "$gpk01" ] && ([ $typ01 = "1" ] || [ "$typ01" = "2" ])
+then
+	let i1=$i1+1
+	msg "${i1}/${nf}: $(date '+%Y-%m-%d %H:%M:%S') - $gpk01 - ${dm_des[0]}\c"
+	f01="${tmpd}/${dm_gpk}.gpkg"
+
+	# Oinarrizko datuak / Datos básicos
+	rm "$f01" 2> /dev/null
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$dm_gpk" -lco DESCRIPTION="$des01" -sql "$dm_sql_01"
+
+	# Eremuak berrizendatu / Renombrar campos
+	rfl "$f01" "$dm_gpk"
+
+	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
+	cp_gpk "$typ01" "$dm_gpk"
+	msg " - ${typ01}"
+	rm "$f01" 2> /dev/null
+fi
+
+# ===================================== #
+#                                       #
+# 20. r_grid (lauki-sarea / cuadrícula) #
+#                                       #
+# ===================================== #
+
+# 8"
+
+# Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
+vconf=`grep "$r_gpk" "$fconf"`
+IFS='|' read -a aconf <<< "$vconf"
+typ01="${aconf[0]}"
+gpk01="${aconf[1]}"
+des01="${r_des[0]} - ${r_des[1]} - ${r_des[2]}"
+if [ "$r_gpk" = "$gpk01" ] && ([ $typ01 = "1" ] || [ "$typ01" = "2" ])
+then
+	let i1=$i1+1
+	msg "${i1}/${nf}: $(date '+%Y-%m-%d %H:%M:%S') - $gpk01 - ${r_des[0]}\c"
+	f01="${tmpd}/${r_gpk}.gpkg"
+
+	# Oinarrizko datuak / Datos básicos
+	rm "$f01" 2> /dev/null
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$r_gpk" -lco DESCRIPTION="$des01" -sql "$r_sql_01"
+
+	# Eremuak berrizendatu / Renombrar campos
+	rfl "$f01" "$r_gpk"
+
+	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
+	cp_gpk "$typ01" "$r_gpk"
+	msg " - ${typ01}"
+	rm "$f01" 2> /dev/null
 fi
 
 # ===================== #

@@ -1601,6 +1601,188 @@ from ${poi_gpk} a
 left join ${poi_gpk}_more_info b
 on a.b5mcode_d = b.b5mcode"
 
+# ============================= #
+#                               #
+# 19. dm_distancemunicipalities #
+#                               #
+# ============================= #
+
+dm_sql_01="select
+'DM_'||a.codmuni||'_'||b.codmuni b5mcode,
+a.muni_eu muni1_eu,
+a.muni_es muni1_es,
+decode(a.muni_fr,null,a.muni_eu,a.muni_fr) muni1_fr,
+a.ter_eu term1_eu,
+a.ter_es term1_es,
+decode(a.ter_fr,null,a.ter_eu,a.ter_fr) term1_fr,
+b.muni_eu muni2_eu,
+b.muni_es muni2_es,
+decode(b.muni_fr,null,b.muni_eu,b.muni_fr) muni2_fr,
+b.ter_eu term2_eu,
+b.ter_es term2_es,
+decode(b.ter_fr,null,b.ter_eu,b.ter_fr) term2_fr,
+c.dist_r distance_km,
+c.fecha dm_date,
+'"$url_map_eu"'||'DM_'||a.codmuni||'_'||b.codmuni map_link_eu,
+'"$url_map_es"'||'DM_'||a.codmuni||'_'||b.codmuni map_link_es,
+'"$url_map_en"'||'DM_'||a.codmuni||'_'||b.codmuni map_link_en,
+'"$updd"' update_date,
+'1' official,
+c.geom
+from mapas_otros.dist_ayunta2_muni a,mapas_otros.dist_ayunta2_muni b,mapas_otros.dist_ayunta2 c
+where a.codmuni=c.codmuni1
+and b.codmuni=c.codmuni2"
+
+# ========== #
+#            #
+# 20. r_grid #
+#            #
+# ========== #
+
+r_sql_01="select
+a.url_2d b5mcode,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+a.tipo_e type_eu,
+a.tipo_c type_es,
+a.tipo_i type_en,
+'"$url_map_eu"'||a.url_2d map_link_eu,
+'"$url_map_es"'||a.url_2d map_link_es,
+'"$url_map_en"'||a.url_2d map_link_en,
+'"$updd"' update_date,
+'1' official,
+b.geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec1 b
+where a.nombre_e=b.tag
+and a.tipo_e='1x1 km'
+and a.url_2d like 'R_%'
+union all
+select
+substr(a.url_2d,1,4)||lower(substr(a.url_2d,5,1)) b5mcode,
+substr(a.nombre_e,1,2)||lower(substr(a.nombre_e,3,1)) name_eu,
+substr(a.nombre_c,1,2)||lower(substr(a.nombre_c,3,1)) name_es,
+a.tipo_e type_eu,
+a.tipo_c type_es,
+a.tipo_i type_en,
+'"$url_map_eu"'||a.url_2d map_link_eu,
+'"$url_map_es"'||a.url_2d map_link_es,
+'"$url_map_en"'||a.url_2d map_link_en,
+'"$updd"' update_date,
+'1' official,
+b.geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec2 b
+where a.nombre_e=b.tag
+and a.tipo_e='2x2 km'
+and a.url_2d like 'R_%'
+union all
+select
+a.url_2d b5mcode,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+a.tipo_e type_eu,
+a.tipo_c type_es,
+a.tipo_i type_en,
+'"$url_map_eu"'||a.url_2d map_link_eu,
+'"$url_map_es"'||a.url_2d map_link_es,
+'"$url_map_en"'||a.url_2d map_link_en,
+'"$updd"' update_date,
+'1' official,
+b.geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec5 b
+where a.nombre_e=b.tag
+and a.tipo_e='5x5 km'
+and a.url_2d like 'R_%'
+union all
+select
+a.url_2d b5mcode,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+a.tipo_e type_eu,
+a.tipo_c type_es,
+a.tipo_i type_en,
+'"$url_map_eu"'||a.url_2d map_link_eu,
+'"$url_map_es"'||a.url_2d map_link_es,
+'"$url_map_en"'||a.url_2d map_link_en,
+'"$updd"' update_date,
+'1' official,
+b.geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec b
+where a.nombre_e=b.tag
+and a.tipo_e='10x10 km'
+and a.url_2d like 'R_%'
+union all
+select
+a.url_2d b5mcode,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+a.tipo_e type_eu,
+a.tipo_c type_es,
+a.tipo_i type_en,
+'"$url_map_eu"'||a.url_2d map_link_eu,
+'"$url_map_es"'||a.url_2d map_link_es,
+'"$url_map_en"'||a.url_2d map_link_en,
+'"$updd"' update_date,
+'1' official,
+b.geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.pauta5 b
+where a.nombre_e=b.tag
+and a.tipo_e='1:5000'
+and a.url_2d like 'R_%'
+union all
+select
+a.url_2d b5mcode,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+a.tipo_e type_eu,
+a.tipo_c type_es,
+a.tipo_i type_en,
+'"$url_map_eu"'||a.url_2d map_link_eu,
+'"$url_map_es"'||a.url_2d map_link_es,
+'"$url_map_en"'||a.url_2d map_link_en,
+'"$updd"' update_date,
+'1' official,
+b.geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.pauta10 b
+where a.nombre_e=b.tag
+and a.tipo_e='1:10000'
+and a.url_2d like 'R_%'
+union all
+select
+a.url_2d b5mcode,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+a.tipo_e type_eu,
+a.tipo_c type_es,
+a.tipo_i type_en,
+'"$url_map_eu"'||a.url_2d map_link_eu,
+'"$url_map_es"'||a.url_2d map_link_es,
+'"$url_map_en"'||a.url_2d map_link_en,
+'"$updd"' update_date,
+'1' official,
+b.geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.pauta25 b
+where a.nombre_e=b.tag
+and a.tipo_e='1:25000'
+and a.url_2d like 'R_%'
+union all
+select
+a.url_2d b5mcode,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+a.tipo_e type_eu,
+a.tipo_c type_es,
+a.tipo_i type_en,
+'"$url_map_eu"'||a.url_2d map_link_eu,
+'"$url_map_es"'||a.url_2d map_link_es,
+'"$url_map_en"'||a.url_2d map_link_en,
+'"$updd"' update_date,
+'1' official,
+b.geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.pauta50 b
+where a.nombre_e=b.tag
+and a.tipo_e='1:50000'
+and a.url_2d like 'R_%'"
+
 # ======= #
 #         #
 # 99. end #
