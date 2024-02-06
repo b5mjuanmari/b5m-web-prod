@@ -962,7 +962,7 @@ fi
 #                                                                           #
 # ========================================================================= #
 
-# 16'28"
+# 17'54"
 
 # Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
 vconf=`grep "$dm_gpk" "$fconf"`
@@ -978,7 +978,9 @@ then
 
 	# Oinarrizko datuak / Datos básicos
 	rm "$f01" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$dm_gpk" -lco DESCRIPTION="$des01" -sql "$dm_sql_01"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$dm_gpk" -lco DESCRIPTION="$des01" -lco SPATIAL_INDEX=NO -sql "$dm_sql_01"
+	ogrinfo "$f01" -sql "select CreateSpatialIndex('$dm_gpk', 'geom')" > /dev/null
+	ogrinfo -sql "create index \"${dm_gpk}_idx\" on \"$dm_gpk\" ('b5mcode')" "$f01" > /dev/null
 
 	# Eremuak berrizendatu / Renombrar campos
 	rfl "$f01" "$dm_gpk"
