@@ -133,6 +133,8 @@ url_map_en="${url_map}/en/"
 url_cat="https://www.aranzadi.eus"
 url_cat_eu="${url_cat}/eu/espelelogia-katalogoa/ficha/"
 url_cat_es="${url_cat}/es/catalogo-espeleologico/ficha/"
+ora_sch_01="b5mweb_nombres"
+dw_fs="dw_file_sizes"
 
 # =================== #
 #                     #
@@ -1782,6 +1784,127 @@ from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.pauta50 b
 where a.nombre_e=b.tag
 and a.tipo_e='1:50000'
 and a.url_2d like 'R_%'"
+
+# =============== #
+#                 #
+# 21. dw_download #
+#                 #
+# =============== #
+
+dw_sql_01_01="select
+a.url_2d b5mcode,
+a.nombre_e name_grid_eu,
+a.nombre_c name_grid_es,
+a.tipo_e type_grid_eu,
+a.tipo_c type_grid_es,
+a.tipo_i type_grid_en,
+'"$updd"' update_date,
+'1' official,
+b.geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec1 b
+where a.nombre_e=b.tag
+and a.tipo_e='1x1 km'
+and a.url_2d like 'R_%'"
+
+dw_sql_01_02="select
+a.url_2d b5mcode,
+a.nombre_e name_grid_eu,
+a.nombre_c name_grid_es,
+a.tipo_e type_grid_eu,
+a.tipo_c type_grid_es,
+a.tipo_i type_grid_en,
+'"$updd"' update_date,
+'1' official,
+b.geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec5 b
+where a.nombre_e=b.tag
+and a.tipo_e='5x5 km'
+and a.url_2d like 'R_%'"
+
+dw_sql_02a="create table ${ora_sch_01}.${dw_fs}(
+id_fs number primary key,
+id_dw number,
+name_grid varchar2(64),
+size_by number
+)"
+dw_sql_02b="begin
+  execute immediate 'create table ' || ${ora_sch_01}.${dw_fs} || '(
+  id_fs number primary key,
+  id_dw number,
+  name_grid varchar2(64),
+  size_by number
+  )';
+exception
+  when others then
+    if sqlcode != -942 then
+      raise;
+    end if;
+end"
+
+dw_sql_02="select
+a.id_dw,
+b.order_dw,
+b.code_dw,
+b.grid_dw,
+b.name_eu,
+b.name_es,
+b.name_en,
+a.year,
+decode(instr(listagg(c.format_dir,';') within group (order by c.format_dir),'year'),0,a.path_dw,replace(listagg(c.format_dir,';') within group (order by c.format_dir),'year',a.path_dw||'/'||a.year)) path_dw,
+a.template_dw,
+replace(listagg(c.format_dir,';') within group (order by c.format_dir),'year',a.year) url_dw,
+listagg(c.format_dw,';') within group (order by c.format_dw) format_dw,
+listagg(c.format_code,';') within group (order by c.format_dw) format_code,
+d.file_type_dw,
+a.url_metadata,
+a.owner_eu,
+a.owner_es,
+a.owner_en
+from b5mweb_nombres.dw_list a,b5mweb_nombres.dw_types b,b5mweb_nombres.dw_formats c,b5mweb_nombres.dw_file_types d,b5mweb_nombres.dw_rel_formats e
+where a.id_type=b.id_type
+and a.id_file_type=d.id_file_type
+and a.id_dw=e.id_dw
+and c.id_format=e.id_format
+and a.id_dw in (1,2,3,5)
+group by a.id_dw,b.order_dw,b.code_dw,b.grid_dw,b.name_eu,b.name_es,b.name_en,a.year,a.path_dw,a.template_dw,d.file_type_dw,a.url_metadata,a.owner_eu,a.owner_es,a.owner_en
+order by b.grid_dw desc,b.order_dw,a.year desc,b.code_dw desc"
+
+dw_sql_03="drop table ${ora_sch_01}.${dw_fs};
+create table ${ora_sch_01}.${dw_fs}(
+id_fs number primary key,
+id_dw number,
+name_grid varchar2(64),
+size_by number
+)"
+
+dw_sql_04="select column_name
+from all_tab_columns
+where lower(table_name)='${dw_fs}'
+order by column_id"
+
+dw_sql_05="create index ${dw_fs}_1_idx
+on ${ora_sch_01}.${dw_fs}(id_dw);
+create index ${dw_fs}_2_idx
+on ${ora_sch_01}.${dw_fs}(name_grid)"
+
+dw_sql_06="select
+a.name_grid,
+b.order_dw,
+b.name_eu,
+c.year,
+'DW_'||a.name_grid||'_'||b.code_dw||'_'||c.year b5mcode_dw,
+d.format_dw,
+replace('https://b5m.gipuzkoa.eus/'||d.format_dir||'/'||a.name_grid||c.template_dw,'*','') url_dw,
+f.file_type_dw,
+a.size_by file_size
+from b5mweb_nombres.dw_file_sizes a,b5mweb_nombres.dw_types b,b5mweb_nombres.dw_list c,b5mweb_nombres.dw_formats d,
+b5mweb_nombres.dw_rel_formats e,b5mweb_nombres.dw_file_types f
+where a.name_grid='JNII'
+and a.id_dw=c.id_dw
+and b.id_type=c.id_type
+and a.id_dw=e.id_dw
+and d.id_format=e.id_format
+and c.id_file_type=f.id_file_type"
 
 # ======= #
 #         #

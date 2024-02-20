@@ -105,7 +105,7 @@ function cp_gpk {
 
 function sql_more_info {
 	# more_info-a kudeatzeko SQL prozesua / Proceso SQL para gestionar el more_info
-	sqlplus -s ${con} <<-EOF1 | gawk \
+	sqlplus -s "$con" <<-EOF1 | gawk \
 	-v k_gpk="$k_gpk" \
 	-v k_des0="${k_des[0]}" \
 	-v k_abs0="${k_abs[0]}" \
@@ -191,7 +191,7 @@ function sql_more_info {
 function sql_more_info2 {
 	# more_info-a JSON moduan jartzeko SQL eta GAWK prozesua
 	# Proceso SQL y GAWK para poner el more_info en forma de JSON
-	sqlplus -s ${con} <<-EOF1 | gawk \
+	sqlplus -s "$con" <<-EOF1 | gawk \
 	'
 	BEGIN {
 		FS = "\",\""
@@ -297,7 +297,7 @@ function sql_more_info2 {
 
 function sql_poi {
 	# POIak kudeatzeko SQL prozesua / Proceso SQL para gestionar los POIs
-	sqlplus -s ${con} <<-EOF1 | gawk '
+	sqlplus -s "$con" <<-EOF1 | gawk '
 	{
 	gsub("poi_null","")
 	if (NR != 1) {
@@ -320,6 +320,122 @@ function sql_poi {
 	set mark csv on
 
 	${2};
+
+	exit;
+	EOF1
+}
+
+function dw_scan {
+	# Deskarga fitxategiak eskaneatu
+	csv01="/tmp/${dw_fs}.csv"
+	ctl01="/tmp/${dw_fs}.ctl"
+	log01="/tmp/${dw_fs}.log"
+	bad01="/tmp/${dw_fs}.bad"
+	rm "$csv01" 2> /dev/null
+	dw_list=`sqlplus -s "$con" <<-EOF1 | gawk '
+	{
+		if (NR > 1)
+			print $0
+	}
+	'
+	set serveroutput on
+	set feedback off
+	set linesize 32767
+	set long 20000000
+	set longchunksize 20000000
+	set trim on
+	set pages 0
+	set tab on
+	set spa 0
+	set mark csv on
+
+	${dw_sql_02};
+
+	exit;
+	EOF1`
+
+	i=1
+	j=1
+	while read a
+	do
+		b=`echo "$a" | gawk '{ gsub("\"", ""); print $0 }'`
+		IFS=',' read -a c <<< "$b"
+		if [ $i -gt 1 ]
+		then
+			dw_path="${c[8]}"
+			dw_template="${c[9]}"
+			while read d
+			do
+				IFS=' ' read -a e <<< "$d"
+				#dw_size_mb=`echo "${e[4]}" | gawk '{ printf "%.2f\n", $0 * 0.000001 }'`
+				#dw_size_mb=`echo "${e[4]}" | gawk '{ a=sprintf("%.2f\n", $0 * 0.000001); if (a == "0.00") { print "0.01" } else { print a } }'`
+				dw_grid=`echo "${e[8]} $dw_template" | gawk '{ gsub("*", ""); b = split($1, a, "/"); split(a[b], c, $2); print c[1] }'`
+				echo "${j},${c[0]},\"${dw_grid}\",${e[4]}" >> "$csv01"
+				let j=$j+1
+			done <<- EOF3
+			`ls -l ${dw_path}/$dw_template 2> /dev/null`
+			EOF3
+		fi
+		let i=$i+1
+	done <<- EOF1
+	"$dw_list"
+	EOF1
+
+	# Deskarga fitxategiak kargatu
+	sqlplus -s "$con" <<-EOF1 > /dev/null
+
+	${dw_sql_03};
+
+	exit;
+	EOF1
+	dw_fs_list=`sqlplus -s "$con" <<-EOF1 | gawk '
+	{
+		gsub("\"", "")
+		if (NR > 2) {
+			if (NR > 3)
+				printf(",")
+			printf("%s",tolower($0))
+		}
+	}
+	'
+	set serveroutput on
+	set feedback off
+	set linesize 32767
+	set long 20000000
+	set longchunksize 20000000
+	set trim on
+	set pages 0
+	set tab on
+	set spa 0
+	set mark csv on
+
+	${dw_sql_04};
+
+	exit;
+	EOF1`
+	rm "$ctl01" 2> /dev/null
+	echo "load data" > "$ctl01"
+	echo "infile '${csv01}'" >> "$ctl01"
+	echo "badfile '${bad01}'" >> "$ctl01"
+	echo "into table ${ora_sch_01}.$dw_fs" >> "$ctl01"
+	echo "fields terminated by \",\" optionally enclosed by '\"'" >> "$ctl01"
+	echo "( ${dw_fs_list} )" >> "$ctl01"
+	rm "$log01" 2> /dev/null
+	rm "$bad01" 2> /dev/null
+	sqlldr "$con" control="$ctl01" log="$log01" > "/dev/null" 2> "/dev/null"
+	if [ -f "$bad01" ]
+	then
+		msg " (err#1)\c"
+		bad02=`echo "$log" | gawk 'BEGIN { FS = "." }{print $1 ".bad" }'`
+		cp "$bad01" "$bad02"
+		rm "$bad01" 2> /dev/null
+	fi
+	rm "$ctl01" 2> /dev/null
+	#rm "$log01" 2> /dev/null
+	#rm "$csv01" 2> /dev/null
+	sqlplus -s "$con" <<-EOF1 > /dev/null
+
+	${dw_sql_05};
 
 	exit;
 	EOF1

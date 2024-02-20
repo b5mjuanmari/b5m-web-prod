@@ -40,8 +40,8 @@ i1=0
 logd="${dir}/log"
 crn="$(echo "$0" | gawk 'BEGIN{FS="/"}{print NF}')"
 scr="$(echo "$0" | gawk 'BEGIN{FS="/"}{print $NF}')"
-log="$(echo "$0" | gawk -v logd="$logd" -v dat="$(date '+%Y%m%d')" 'BEGIN{FS="/"}{split($NF,a,".");print logd"/"a[1]"_"dat".log"}')"
-err="$(echo "$0" | gawk -v logd="$logd" -v dat="$(date '+%Y%m%d')" 'BEGIN{FS="/"}{split($NF,a,".");print logd"/"a[1]"_"dat"_err.csv"}')"
+log="$(echo "$0" | gawk -v logd="$logd" -v dat="`date '+%Y%m%d'`" 'BEGIN{FS="/"}{split($NF,a,".");print logd"/"a[1]"_"dat".log"}')"
+err="$(echo "$0" | gawk -v logd="$logd" -v dat="`date '+%Y%m%d'`" 'BEGIN{FS="/"}{split($NF,a,".");print logd"/"a[1]"_"dat"_err.csv"}')"
 if [ ! -d "$logd" ]
 then
 	mkdir "$logd" 2> /dev/null
@@ -109,7 +109,7 @@ source "${dir}/gpkg2_fnc.sh"
 #                       #
 # ===================== #
 
-ini="Hasiera / Inicio: $scr - $(date '+%Y-%m-%d %H:%M:%S')"
+ini="Hasiera / Inicio: $scr - `date '+%Y-%m-%d %H:%M:%S'`"
 msg "$ini"
 cd "$dir"
 
@@ -1024,6 +1024,44 @@ then
 	rm "$f01" 2> /dev/null
 fi
 
+# ===================================== #
+#                                       #
+# 21. dw_download (deskarga / descarga) #
+#                                       #
+# ===================================== #
+
+# ?"
+
+# Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
+vconf=`grep "$dw_gpk" "$fconf"`
+IFS='|' read -a aconf <<< "$vconf"
+typ01="${aconf[0]}"
+gpk01="${aconf[1]}"
+des01="${dw_des[0]} - ${dw_des[1]} - ${dw_des[2]}"
+if [ "$dw_gpk" = "$gpk01" ] && ([ $typ01 = "1" ] || [ "$typ01" = "2" ])
+then
+	let i1=$i1+1
+	msg "${i1}/${nf}: `date '+%Y-%m-%d %H:%M:%S'` - $gpk01 - ${dw_des[0]}\c"
+	f01="${tmpd}/${dw_gpk}.gpkg"
+
+	# Oinarrizko datuak / Datos básicos
+	#rm "$f01" 2> /dev/null
+	#ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "${dw_gpk}_1" -lco DESCRIPTION="$des01 1" -sql "$dw_sql_01_01"
+	#ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "${dw_gpk}_5" -lco DESCRIPTION="$des01 5" -sql "$dw_sql_01_02"
+
+	# Fitxategiak eskaneatu
+	dw_scan "$dw_sql_03"
+
+	# Eremuak berrizendatu / Renombrar campos
+	#rfl "$f01" "${dw_gpk}_1"
+	#rfl "$f01" "${dw_gpk}_5"
+
+	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
+	#cp_gpk "$typ01" "$dw_gpk"
+	msg " - ${typ01}"
+	#rm "$f01" 2> /dev/null
+fi
+
 # ===================== #
 #                       #
 # 99.0. Bukaera / Final #
@@ -1031,7 +1069,7 @@ fi
 # ===================== #
 
 msg ""
-fin="Bukaera / Final:  $scr - $(date '+%Y-%m-%d %H:%M:%S')"
+fin="Bukaera / Final:  $scr - `date '+%Y-%m-%d %H:%M:%S'`"
 msg "$fin"
 
 exit 0
