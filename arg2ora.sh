@@ -79,8 +79,8 @@ j=1
 for a in `ls "/tmp/${f1}"`
 do
 	IFS='_' read -a b <<< "$a"
-	#IFS='os_' read -a c <<< "$a"
 	c=`echo "$a" | gawk 'BEGIN { FS = "_" }{ split($1, a, "fotos"); print a[2] }'`
+	IFS='.' read -a d <<< "${b[1]}"
 	if [ "$a" = "${b[0]}_pf${c}.EE" ]
 	then
 		# Puntuak
@@ -89,7 +89,10 @@ do
 			OFS = ","
 		}
 		{
-			b = substr($2, 2, length($2)-1)
+			if ( substr($2, 1, 1) == "p" )
+				b = substr($2, 2, length($2)-1)
+			else
+				b = $2
 			getline
 			print i, "\"" a "\"", "\"" b "\"", "\"POINT (" $1 " " $2 ")\""
 			i++
@@ -98,13 +101,12 @@ do
 		i=`tail -1 "$csv1" | gawk 'BEGIN { FS = "," }{ print $1 + 1 }'`
 	else
 		# Puntuak
-		gawk -v j=$j -v a="${b[0]}" '
+		gawk -v j=$j -v a="${b[0]}" -v b="${d[0]}" '
 		BEGIN {
 			OFS = ","
 		}
 		{
 			if ($1 == "1POINT" || $1 == "2POINT" ) {
-				b = substr($2, 2, length($2)-1)
 				getline
 				print j, "\"" a "\"", "\"" b "\"", "\"POINT (" $1 " " $2 ")\""
 				exit
@@ -113,7 +115,7 @@ do
 		' "/tmp/${f1}/${a}" >> "$csv2"
 
 		# Poligonoak
-		gawk -v j=$j -v a="${b[0]}" '
+		gawk -v j=$j -v a="${b[0]}" -v b="${d[0]}" '
 		BEGIN {
 			OFS = ","
 		}
@@ -154,7 +156,6 @@ do
 				}
 			}
 			if ($1 == "1POINT" || $1 == "2POINT" ) {
-					b = substr($2, 2, length($2)-1)
 					print j, "\"" a "\"", "\"" b "\"", "\"POLYGON ((" x1 " " y1 ", " x2 " " y2 ", " x3 " " y3 ", " x4 " " y4 ", " x1 " " y1 "))\""
 					exit
 				}
@@ -321,9 +322,7 @@ rm "$csv3" 2> /dev/null
 # tau
 tauu=`echo "$tau" | gawk '{ print toupper($0) }'`
 taupu=`echo "$taup" | gawk '{ print toupper($0) }'`
-echo "KK5"
-#sqlplus -s "$kon" <<-EOF > /dev/null
-sqlplus -s "$kon" <<-EOF
+sqlplus -s "$kon" <<-EOF > /dev/null
 set serveroutput on
 set feedback off
 set linesize 32767
