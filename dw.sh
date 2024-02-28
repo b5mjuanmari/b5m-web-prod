@@ -16,10 +16,11 @@ BEGIN {
 	if (NR > 2) {
 		a03 = $3
 		a06 = $3 "|" $6
-		a08 = "{#name_eu#:#" $3 "#,#name_es#:#" $4 "#,#name_en#:#" $5 "#,#series_dw#:[{#years#:" $6 ",#b5mcode_dw#:#" $7 "#,#format#:[{#format_dw#:#" $8 "#,#url_dw#:#" $9 "#,#file_type_dw#:#" $10 "#,#file_size_mb#:" fs "}"
+		a08 = "{@name_eu@:@" $3 "@,@name_es@:@" $4 "@,@name_en@:@" $5 "@,@series_dw@:[{@years@:" $6 ",@b5mcode_dw@:@" $7 "@,@format@:[{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
+		mdt = "@metadata@:{@url@:@" $12 "@,@owner_eu@:@" $13 "@,@owner_es@:@" $14 "@,@owner_en@:@" $15 "@}"
 		if (a01 != $1 && a01 != "") {
 			res = res "]}]"
-			gsub("#", "\047", res)
+			gsub("@", "\047", res)
 			print "\"" a01 "\",\"[" res "\""
 			res = ""
 		}
@@ -27,17 +28,17 @@ BEGIN {
 			if (res == "") {
 				res = a08
 			} else {
-				res = res "]}]}," a08
+				res = res "]," mdt "}]}," a08
 			}
 		} else {
 			if ($6 != c06) {
-				res = res ",{#years#:" $6 ",#b5mcode_dw#:#" $7 "#,#format#:["
+				res = res ",{@years@:" $6 ",@b5mcode_dw@:@" $7 "@,@format@:["
 				if ($8 != c08) {
-					res = res "{#format_dw#:#" $8 "#,#url_dw#:#" $9 "#,#file_type_dw#:#" $10 "#,#file_size_mb#:" fs "}"
+					res = res "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
 				}
 			} else {
 				if ($8 != c08) {
-					res = res ",{#format_dw#:#" $8 "#,#url_dw#:#" $9 "#,#file_type_dw#:#" $10 "#,#file_size_mb#:" fs "}]}"
+					res = res ",{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}]," mdt "}"
 				}
 			}
 		}
@@ -50,7 +51,7 @@ BEGIN {
 	}
 }
 END {
-	gsub("#", "\047", res)
+	gsub("@", "\047", res)
 	print "\"" a01 "\",\"[" res "]}]\""
 }
 ' "$f1" > "$f2"
