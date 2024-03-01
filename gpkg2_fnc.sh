@@ -326,7 +326,7 @@ function sql_poi {
 }
 
 function dw_scan {
-	# Deskarga fitxategiak eskaneatu
+	# Deskarga fitxategien tamainak eskaneatu
 	csv01="/tmp/${dw_fs}.csv"
 	ctl01="/tmp/${dw_fs}.ctl"
 	log01="/tmp/${dw_fs}.log"
@@ -360,22 +360,29 @@ function dw_scan {
 	do
 		b=`echo "$a" | gawk '{ gsub("\"", ""); print $0 }'`
 		IFS=',' read -a c <<< "$b"
-		if [ $i -gt 1 ]
-		then
-			dw_path="${c[8]}"
-			dw_template="${c[9]}"
-			while read d
-			do
-				IFS=' ' read -a e <<< "$d"
-				#dw_size_mb=`echo "${e[4]}" | gawk '{ printf "%.2f\n", $0 * 0.000001 }'`
-				#dw_size_mb=`echo "${e[4]}" | gawk '{ a=sprintf("%.2f\n", $0 * 0.000001); if (a == "0.00") { print "0.01" } else { print a } }'`
-				dw_grid=`echo "${e[8]} $dw_template" | gawk '{ gsub("*", ""); b = split($1, a, "/"); split(a[b], c, $2); print c[1] }'`
-				echo "${j},${c[0]},\"${dw_grid}\",${e[4]}" >> "$csv01"
-				let j=$j+1
-			done <<- EOF3
-			`ls -l ${dw_path}/$dw_template 2> /dev/null`
-			EOF3
-		fi
+		IFS=';' read -a d1 <<< "${c[8]}"
+		IFS=';' read -a d2 <<< "${c[11]}"
+		IFS=';' read -a d3 <<< "${c[12]}"
+		k=0
+		for e in "${d1[@]}"
+		do
+			if [ $i -gt 1 ]
+			then
+				while read f
+				do
+					IFS=' ' read -a g <<< "$f"
+					#dw_size_mb=`echo "${g[4]}" | gawk '{ printf "%.2f\n", $0 * 0.000001 }'`
+					#dw_size_mb=`echo "${g[4]}" | gawk '{ a=sprintf("%.2f\n", $0 * 0.000001); if (a == "0.00") { print "0.01" } else { print a } }'`
+					#dw_grid=`echo "${g[8]} ${c[9]}" | gawk '{ gsub("*", ""); b = split($1, a, "/"); split(a[b], c, $2); print c[1] }'`
+					dw_grid=`echo "${g[8]} ${d3}" | gawk '{ b = split($1, a , "/"); c = substr($2, 1, 1); d = substr($2, 2, 2); split(a[b], e, d); print e[c] }'`
+					echo "${j},${c[0]},\"${dw_grid}\",\"${d2[k]}\",${g[4]}" >> "$csv01"
+					let j=$j+1
+				done <<- EOF3
+				`ls -l ${e}/${c[9]} 2> /dev/null`
+				EOF3
+			fi
+			let k=$k+1
+		done
 		let i=$i+1
 	done <<- EOF1
 	"$dw_list"
@@ -431,11 +438,85 @@ function dw_scan {
 		rm "$bad01" 2> /dev/null
 	fi
 	rm "$ctl01" 2> /dev/null
-	#rm "$log01" 2> /dev/null
-	#rm "$csv01" 2> /dev/null
+	rm "$log01" 2> /dev/null
+	rm "$csv01" 2> /dev/null
 	sqlplus -s "$con" <<-EOF1 > /dev/null
 
 	${dw_sql_05};
+
+	exit;
+	EOF1
+}
+
+function dw_data {
+	# Datuen taula sortu
+
+	sqlplus -s "$con" <<-EOF1 | gawk '
+	BEGIN {
+		FS = ","
+		print "\"B5MCODE2\",\"TYPES_DW\""
+	}
+	{
+		fs = sprintf("%.2f", $11/1000000)
+		if (fs = "0.00")
+			fs = "0.01"
+		gsub("\"", "")
+		if (NR > 2) {
+			a03 = $3
+			a06 = $3 "|" $6
+			a08 = "{@name_eu@:@" $3 "@,@name_es@:@" $4 "@,@name_en@:@" $5 "@,@series_dw@:[{@years@:" $6 ",@b5mcode_dw@:@" $7 "@,@format@:[{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
+			mdt = "@metadata@:{@url@:@" $12 "@,@owner_eu@:@" $13 "@,@owner_es@:@" $14 "@,@owner_en@:@" $15 "@}"
+			if (a01 != $1 && a01 != "") {
+				res = res "]}]"
+				gsub("@", "\047", res)
+				print "\"" a01 "\",\"[" res "\""
+				res = ""
+			}
+			if (a03 != b03 ) {
+				if (res == "") {
+					#res = a08
+					#res =  a08 "]," mdt "}]},"
+					res =  a08 "]," mdt "}"
+				} else {
+					#res = res "]," mdt "}]}," a08
+					#res = res "]}]}," a08
+					res = res "]}," a08
+				}
+			} else {
+				if ($6 != c06) {
+					res = res ",{@years@:" $6 ",@b5mcode_dw@:@" $7 "@,@format@:["
+					if ($8 != c08)
+						res = res "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
+				} else {
+					if ($8 != c08)
+						res = res ",{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}]," mdt "}"
+				}
+			}
+			a01 = $1
+			b03 = a03
+			b06 = a06
+			b08 = a08
+			c06 = $6
+			c08 = $8
+		}
+	}
+	END {
+		gsub("@", "\047", res)
+		print "\"" a01 "\",\"[" res "]}]\""
+	}
+	' > "$c01"
+	set serveroutput on
+	set feedback off
+	set linesize 32767
+	set long 20000000
+	set longchunksize 20000000
+	set trim on
+	set pages 0
+	set tab on
+	set spa 0
+	set mark csv on
+
+	${dw_sql_06};
 
 	exit;
 	EOF1
