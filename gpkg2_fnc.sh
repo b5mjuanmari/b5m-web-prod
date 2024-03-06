@@ -25,8 +25,8 @@ function rfl {
     a=0
   }
   {
-    if (a == 1) print substr($1, 1, length($1)-1)
-    if ($1 == "Geometry") a=1
+    if (a == 1 && $1 != "Geometry") print substr($1, 1, length($1)-1)
+    if ($1 == "FID") a=1
   }
   ')"
   for fl in $flist
@@ -457,39 +457,57 @@ function dw_data {
 		print "\"B5MCODE2\",\"TYPES_DW\""
 	}
 	{
-		fs = sprintf("%.2f", $11/1000000)
-		if (fs = "0.00")
-			fs = "0.01"
-		gsub("\"", "")
 		if (NR > 2) {
+			gsub("\"", "")
+
+			# Fitxategiaren tamaina
+			fs = sprintf("%.2f", $11/1000000)
+			if (fs = "0.00")
+				fs = "0.01"
+
+			# Urteak
+			split($6, y1, "-")
+			y2 = ""
+			for (i in y1) {
+				if (i != 1)
+					y2 = y2 ","
+				if (length(y1[i]) == 2)
+					y1[i] = y3 "" y1[i]
+				y2 = y2 "" y1[i]
+				y3 = substr(y1[1], 1, 2)
+			}
+			yrs = "[" y2 "]"
+
 			a03 = $3
 			a06 = $3 "|" $6
-			a08 = "{@name_eu@:@" $3 "@,@name_es@:@" $4 "@,@name_en@:@" $5 "@,@series_dw@:[{@years@:" $6 ",@b5mcode_dw@:@" $7 "@,@format@:[{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
-			mdt = "@metadata@:{@url@:@" $12 "@,@owner_eu@:@" $13 "@,@owner_es@:@" $14 "@,@owner_en@:@" $15 "@}"
+			a08 = "{@name_eu@:@" $3 "@,@name_es@:@" $4 "@,@name_en@:@" $5 "@,@series_dw@:[{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@format@:[{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
+	    mdt = "@metadata@:{@url@:@" $12 "@,@owner_eu@:@" $13 "@,@owner_es@:@" $14 "@,@owner_en@:@" $15 "@}"
+			a08 = a08 "]," mdt
 			if (a01 != $1 && a01 != "") {
-				res = res "]}]"
+				res = res "}]"
+				gsub("}]}]}," ,"}}]},", res)
+				if (substr(res, length(res)-5, 5) != "}]}]}")
+					res = res "}]"
+				gsub("}}}]}]" ,"}}]}]", res)
+				gsub("@},{@years@", "@}},{@years@", res)
 				gsub("@", "\047", res)
 				print "\"" a01 "\",\"[" res "\""
 				res = ""
 			}
-			if (a03 != b03 ) {
-				if (res == "") {
-					#res = a08
-					#res =  a08 "]," mdt "}]},"
-					res =  a08 "]," mdt "}"
-				} else {
-					#res = res "]," mdt "}]}," a08
-					#res = res "]}]}," a08
-					res = res "]}," a08
-				}
+			if (a03 != b03 || a01 != $1) {
+				if (res == "")
+					res = a08
+				else
+					res = res "]}]}," a08
 			} else {
 				if ($6 != c06) {
-					res = res ",{@years@:" $6 ",@b5mcode_dw@:@" $7 "@,@format@:["
-					if ($8 != c08)
-						res = res "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
+					res = res ",{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@format@:["
+					res = res "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
 				} else {
-					if ($8 != c08)
+					if ($8 != c08) {
+	    			mdt = "@metadata@:{@url@:@" $12 "@,@owner_eu@:@" $13 "@,@owner_es@:@" $14 "@,@owner_en@:@" $15 "@}"
 						res = res ",{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}]," mdt "}"
+					}
 				}
 			}
 			a01 = $1
@@ -501,8 +519,35 @@ function dw_data {
 		}
 	}
 	END {
+		res = res "}]"
+		gsub("}]}]}," ,"}}]},", res)
+		if (substr(res, length(res)-5, 5) != "}]}]}")
+			res = res "}]"
+		gsub("}}}]}]" ,"}}]}]", res)
 		gsub("@", "\047", res)
-		print "\"" a01 "\",\"[" res "]}]\""
+		print "\"" a01 "\",\"[" res "\""
+	}
+	' | gawk '
+	# Ez behar den metadatua ezabatu
+	BEGIN {
+		FS = "\047"
+	}
+	{
+		for (i = 1; i <= NF; i++) {
+			if ($i == "format_dw") {
+				j = i-14
+				if (substr($j, 1, 4) == "http") {
+					j2 = i-12
+					j3 = i-10
+					j4 = i-8
+					j5 = i-6
+					j6 = i-4
+					j7 = i-2
+					gsub("],\047metadata\047:{\047url\047:\047" $j "\047,\047" $j2 "\047:\047" $j3 "\047,\047" $j4 "\047:\047" $j5 "\047,\047" $j6 "\047:\047" $j7 "\047},{\047format_dw\047", ",{\047format_dw\047")
+				}
+			}
+		}
+		print $0
 	}
 	' > "$c01"
 	set serveroutput on
