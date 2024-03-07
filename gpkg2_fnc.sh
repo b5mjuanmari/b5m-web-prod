@@ -448,6 +448,30 @@ function dw_scan {
 	EOF1
 }
 
+function dw_types_grid {
+	# Deskargen motak
+	dw_tp_grd=`sqlplus -s ${con} <<-EOF1 | gawk '
+	{
+		if (NR > 1)
+			printf(",")
+		printf("\"%s\"", $1)
+	}
+	END {
+		printf("\n")
+	}
+	'
+	set feedback off
+	set linesize 32767
+	set trim on
+	set pages 0
+
+	${dw_sql_06};
+
+	exit;
+	EOF1`
+	echo "$dw_tp_grd"
+}
+
 function dw_data {
 	# Datuen taula sortu
 
@@ -561,7 +585,7 @@ function dw_data {
 	set spa 0
 	set mark csv on
 
-	${dw_sql_06};
+	${dw_sql_07};
 
 	exit;
 	EOF1

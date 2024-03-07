@@ -1870,6 +1870,11 @@ create index ${dw_fs}_3_idx
 on ${ora_sch_01}.${dw_fs}(format_dw)"
 
 dw_sql_06="select
+unique grid_dw
+from b5mweb_nombres.dw_types
+where grid_dw=5"
+
+dw_sql_07="select
 'DW_' || a.name_grid name_grid,
 b.order_dw,
 b.name_eu,

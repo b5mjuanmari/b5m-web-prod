@@ -1053,21 +1053,29 @@ then
 	# Fitxategien tamainak eskaneatu
 	dw_scan
 
-	# Datuen taula sortu
-	rm "$c01" 2> /dev/null
-	dw_data
-	ogr2ogr -f "GPKG" -update "$f01" "$c01" -nln "${dw_gpk}_dat_5" -lco DESCRIPTION="${dw_gpk} 5"
+	# Deskarga moten begizta
+	dw_tp_grd=`dw_types_grid`
+	IFS=',' read -a dw_tp_grd_a <<< "$dw_tp_grd"
+	for dw_tp in "${dw_tp_grd_a[@]}"
+	do
+		grd=`echo "$dw_tp" | sed 's/"//g'`
 
-	# Eremuak berrizendatu / Renombrar campos
-	rfl "$f01" "${dw_gpk}_1"
-	rfl "$f01" "${dw_gpk}_5"
-	rfl "$f01" "${dw_gpk}_dat_5"
+		# Datuen taula sortu
+		rm "$c01" 2> /dev/null
+		dw_data
+		ogr2ogr -f "GPKG" -update "$f01" "$c01" -nln "${dw_gpk}_dat_${grd}" -lco DESCRIPTION="${dw_gpk} ${grd}"
 
-	# Spatial Views
-	# https://gdal.org/drivers/vector/gpkg.html
-	ogr2ogr -f "GPKG" -update "$f01" -sql "create view ${dw_gpk}_view_5 as select a.*,b.types_dw from ${dw_gpk}_5 a join ${dw_gpk}_dat_5 b on a.b5mcode = b.b5mcode2" "$f01"
-	ogr2ogr -f "GPKG" -update "$f01" -sql "insert into gpkg_contents (table_name, identifier, data_type, srs_id) values ('${dw_gpk}_view_5', '${dw_gpk}_view_5', 'features', 25830)" "$f01"
-	ogr2ogr -f "GPKG" -update "$f01" -sql "insert into gpkg_geometry_columns(table_name, column_name, geometry_type_name, srs_id, z, m) values('${dw_gpk}_view_5', 'geom', 'GEOMETRY', 25830, 0, 0)" "$f01"
+		# Eremuak berrizendatu / Renombrar campos
+		#rfl "$f01" "${dw_gpk}_1"
+		rfl "$f01" "${dw_gpk}_${grd}"
+		rfl "$f01" "${dw_gpk}_dat_${grd}"
+
+		# Spatial Views
+		# https://gdal.org/drivers/vector/gpkg.html
+		ogr2ogr -f "GPKG" -update "$f01" -sql "create view ${dw_gpk}_view_${grd} as select a.*,b.types_dw from ${dw_gpk}_${grd} a join ${dw_gpk}_dat_${grd} b on a.b5mcode = b.b5mcode2" "$f01"
+		ogr2ogr -f "GPKG" -update "$f01" -sql "insert into gpkg_contents (table_name, identifier, data_type, srs_id) values ('${dw_gpk}_view_${grd}', '${dw_gpk}_view_${grd}', 'features', 25830)" "$f01"
+		ogr2ogr -f "GPKG" -update "$f01" -sql "insert into gpkg_geometry_columns(table_name, column_name, geometry_type_name, srs_id, z, m) values('${dw_gpk}_view_${grd}', 'geom', 'GEOMETRY', 25830, 0, 0)" "$f01"
+	done
 
 	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
 	#cp_gpk "$typ01" "$dw_gpk"
