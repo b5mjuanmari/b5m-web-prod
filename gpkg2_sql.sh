@@ -1844,7 +1844,6 @@ where a.id_type=b.id_type
 and a.id_file_type=d.id_file_type
 and a.id_dw=e.id_dw
 and c.id_format=e.id_format
-and b.grid_dw=5
 group by a.id_dw,b.order_dw,b.code_dw,b.grid_dw,b.name_eu,b.name_es,b.name_en,a.year,a.path_dw,a.template_dw,d.file_type_dw,a.url_metadata,a.owner_eu,a.owner_es,a.owner_en
 order by b.grid_dw desc,b.order_dw,a.year desc,b.code_dw desc"
 
@@ -1871,8 +1870,7 @@ on ${ora_sch_01}.${dw_fs}(format_dw)"
 
 dw_sql_06="select
 unique grid_dw
-from b5mweb_nombres.dw_types
-where grid_dw=5"
+from b5mweb_nombres.dw_types"
 
 dw_sql_07="select
 'DW_' || a.name_grid name_grid,
@@ -1898,6 +1896,7 @@ and a.id_dw=e.id_dw
 and d.id_format=e.id_format
 and c.id_file_type=f.id_file_type
 and a.format_dw=d.format_dw
+and b.grid_dw='ZZ_GRID_DW'
 order by a.name_grid,b.order_dw,c.year desc,a.format_dw"
 
 # ======= #

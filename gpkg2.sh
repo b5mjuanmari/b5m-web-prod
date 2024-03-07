@@ -1062,11 +1062,10 @@ then
 
 		# Datuen taula sortu
 		rm "$c01" 2> /dev/null
-		dw_data
+		dw_data "$grd"
 		ogr2ogr -f "GPKG" -update "$f01" "$c01" -nln "${dw_gpk}_dat_${grd}" -lco DESCRIPTION="${dw_gpk} ${grd}"
 
 		# Eremuak berrizendatu / Renombrar campos
-		#rfl "$f01" "${dw_gpk}_1"
 		rfl "$f01" "${dw_gpk}_${grd}"
 		rfl "$f01" "${dw_gpk}_dat_${grd}"
 

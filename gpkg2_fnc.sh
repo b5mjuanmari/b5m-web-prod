@@ -434,7 +434,9 @@ function dw_scan {
 	then
 		msg " (err#1)\c"
 		bad02=`echo "$log" | gawk 'BEGIN { FS = "." }{print $1 ".bad" }'`
+		csv02=`echo "$log" | gawk 'BEGIN { FS = "." }{print $1 ".csv" }'`
 		cp "$bad01" "$bad02"
+		cp "$csv01" "$csv02"
 		rm "$bad01" 2> /dev/null
 	fi
 	rm "$ctl01" 2> /dev/null
@@ -474,7 +476,7 @@ function dw_types_grid {
 
 function dw_data {
 	# Datuen taula sortu
-
+	dw_sql_07_1=`echo "$dw_sql_07" | sed "s/ZZ_GRID_DW/$1/g"`
 	sqlplus -s "$con" <<-EOF1 | gawk '
 	BEGIN {
 		FS = ","
@@ -585,7 +587,7 @@ function dw_data {
 	set spa 0
 	set mark csv on
 
-	${dw_sql_07};
+	${dw_sql_07_1};
 
 	exit;
 	EOF1
