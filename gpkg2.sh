@@ -1064,6 +1064,7 @@ then
 		rm "$c01" 2> /dev/null
 		dw_data "$grd"
 		ogr2ogr -f "GPKG" -update "$f01" "$c01" -nln "${dw_gpk}_dat_${grd}" -lco DESCRIPTION="${dw_gpk} ${grd}"
+		rm "$c01" 2> /dev/null
 
 		# Eremuak berrizendatu / Renombrar campos
 		rfl "$f01" "${dw_gpk}_${grd}"
@@ -1077,9 +1078,9 @@ then
 	done
 
 	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
-	#cp_gpk "$typ01" "$dw_gpk"
+	cp_gpk "$typ01" "$dw_gpk"
 	msg " - ${typ01}"
-	#rm "$f01" 2> /dev/null
+	rm "$f01" 2> /dev/null
 fi
 
 # ===================== #

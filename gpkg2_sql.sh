@@ -1879,7 +1879,7 @@ b.name_eu,
 b.name_es,
 b.name_en,
 c.year,
-'DW_'||a.name_grid||'_'||b.code_dw||'_'||c.year b5mcode_dw,
+decode(c.subcode,null,'DW_'||a.name_grid||'_'||b.code_dw||'_'||c.year,'DW_'||a.name_grid||'_'||b.code_dw||'_'||c.year||'_'||c.subcode) b5mcode_dw,
 a.format_dw,
 replace(replace('https://b5m.gipuzkoa.eus/'||d.format_dir||'/'||a.name_grid||c.template_dw,'*',''), 'year', c.year) url_dw,
 f.file_type_dw,
@@ -1897,7 +1897,7 @@ and d.id_format=e.id_format
 and c.id_file_type=f.id_file_type
 and a.format_dw=d.format_dw
 and b.grid_dw='ZZ_GRID_DW'
-order by a.name_grid,b.order_dw,c.year desc,a.format_dw"
+order by a.name_grid,b.order_dw,c.year desc,c.subcode,a.format_dw"
 
 # ======= #
 #         #

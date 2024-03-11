@@ -529,6 +529,10 @@ function dw_data {
 				if ($6 != c06) {
 					res = res ",{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@format@:["
 					res = res "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
+				} else if ($7 != c07) {
+	    		mdt = "@metadata@:{@url@:@" $12 "@,@owner_eu@:@" $13 "@,@owner_es@:@" $14 "@,@owner_en@:@" $15 "@}"
+					res = res "},{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@format@:["
+					res = res "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}]," mdt "}"
 				} else {
 					if ($8 != c08) {
 	    			mdt = "@metadata@:{@url@:@" $12 "@,@owner_eu@:@" $13 "@,@owner_es@:@" $14 "@,@owner_en@:@" $15 "@}"
@@ -541,6 +545,7 @@ function dw_data {
 			b06 = a06
 			b08 = a08
 			c06 = $6
+			c07 = $7
 			c08 = $8
 		}
 	}
