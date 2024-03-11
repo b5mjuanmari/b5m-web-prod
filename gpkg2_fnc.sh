@@ -531,7 +531,9 @@ function dw_data {
 					res = res "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
 				} else if ($7 != c07) {
 	    		mdt = "@metadata@:{@url@:@" $12 "@,@owner_eu@:@" $13 "@,@owner_es@:@" $14 "@,@owner_en@:@" $15 "@}"
-					res = res "},{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@format@:["
+					if (substr(res, length(res)-1, 2) != "}}")
+					 res = res "}"
+					res = res ",{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@format@:["
 					res = res "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}]," mdt "}"
 				} else {
 					if ($8 != c08) {
@@ -559,7 +561,7 @@ function dw_data {
 		print "\"" a01 "\",\"[" res "\""
 	}
 	' | gawk '
-	# Ez behar den metadatua ezabatu
+	# Behar ez den metadatua ezabatu
 	BEGIN {
 		FS = "\047"
 	}
@@ -575,6 +577,7 @@ function dw_data {
 					j6 = i-4
 					j7 = i-2
 					gsub("],\047metadata\047:{\047url\047:\047" $j "\047,\047" $j2 "\047:\047" $j3 "\047,\047" $j4 "\047:\047" $j5 "\047,\047" $j6 "\047:\047" $j7 "\047},{\047format_dw\047", ",{\047format_dw\047")
+					gsub("],\047metadata\047:{\047url\047:\047" $j "\047,\047" $j2 "\047:\047" $j3 "\047,\047" $j4 "\047:\047" $j5 "\047,\047" $j6 "\047:\047" $j7 "\047}},{\047format_dw\047", ",{\047format_dw\047")
 				}
 			}
 		}
