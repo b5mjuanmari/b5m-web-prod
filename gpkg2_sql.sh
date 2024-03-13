@@ -1830,21 +1830,22 @@ b.name_eu,
 b.name_es,
 b.name_en,
 a.year,
-replace(decode(instr(listagg(c.format_dir,';') within group (order by c.format_dir),'year'),0,a.path_dw,replace(listagg(c.format_dir,';') within group (order by c.format_dir),'year',a.path_dw||'/'||a.year)),'2005_','05_') path_dw,
+replace(decode(instr(listagg(d.format_dir,';') within group (order by d.format_dir),'year'),0,a.path_dw,replace(listagg(d.format_dir,';') within group (order by d.format_dir),'year',a.path_dw||'/'||a.year)),'2005_','05_') path_dw,
 a.template_dw,
-replace(listagg(c.format_dir,';') within group (order by c.format_dir),'year',a.year) url_dw,
+replace(listagg(d.format_dir,';') within group (order by d.format_dir),'year',a.year) url_dw,
 listagg(c.format_dw,';') within group (order by c.format_dw) format_dw,
-listagg(c.format_code,';') within group (order by c.format_dw) format_code,
-d.file_type_dw,
+listagg(d.format_code,';') within group (order by c.format_dw) format_code,
+e.file_type_dw,
 a.url_metadata,
 a.owner_eu,
 a.owner_en
-from b5mweb_nombres.dw_list a,b5mweb_nombres.dw_types b,b5mweb_nombres.dw_formats c,b5mweb_nombres.dw_file_types d,b5mweb_nombres.dw_rel_formats e
+from b5mweb_nombres.dw_list a,b5mweb_nombres.dw_types b,b5mweb_nombres.dw_formats c,b5mweb_nombres.dw_formats_dir d,b5mweb_nombres.dw_file_types e,b5mweb_nombres.dw_rel_formats f
 where a.id_type=b.id_type
-and a.id_file_type=d.id_file_type
-and a.id_dw=e.id_dw
-and c.id_format=e.id_format
-group by a.id_dw,b.order_dw,b.code_dw,b.grid_dw,b.name_eu,b.name_es,b.name_en,a.year,a.path_dw,a.template_dw,d.file_type_dw,a.url_metadata,a.owner_eu,a.owner_es,a.owner_en,a.subcode
+and a.id_file_type=e.id_file_type
+and a.id_dw=f.id_dw
+and c.id_format=d.id_format
+and d.id_format_dir=f.id_format_dir
+group by a.id_dw,b.order_dw,b.code_dw,b.grid_dw,b.name_eu,b.name_es,b.name_en,a.year,a.path_dw,a.template_dw,e.file_type_dw,a.url_metadata,a.owner_eu,a.owner_es,a.owner_en,a.subcode
 order by b.grid_dw desc,b.order_dw,a.year desc,b.code_dw desc,a.subcode"
 
 dw_sql_03="drop table ${ora_sch_01}.${dw_fs};
@@ -1881,20 +1882,21 @@ b.name_en,
 c.year,
 decode(c.subcode,null,'DW_'||a.name_grid||'_'||b.code_dw||'_'||c.year,'DW_'||a.name_grid||'_'||b.code_dw||'_'||c.year||'_'||c.subcode) b5mcode_dw,
 a.format_dw,
-replace(replace('https://b5m.gipuzkoa.eus/'||d.format_dir||'/'||a.name_grid||c.template_dw,'*',''), 'year', c.year) url_dw,
-f.file_type_dw,
+replace(replace('https://b5m.gipuzkoa.eus/'||e.format_dir||'/'||a.name_grid||c.template_dw,'*',''), 'year', c.year) url_dw,
+g.file_type_dw,
 a.size_by file_size,
 decode(c.owner_eu,'Gipuzkoako Foru Aldundia',c.url_metadata||'.'||a.name_grid,c.url_metadata) url_metadata,
 c.owner_eu,
 c.owner_es,
 c.owner_en
-from b5mweb_nombres.dw_file_sizes a,b5mweb_nombres.dw_types b,b5mweb_nombres.dw_list c,b5mweb_nombres.dw_formats d,
-b5mweb_nombres.dw_rel_formats e,b5mweb_nombres.dw_file_types f
+from b5mweb_nombres.dw_file_sizes a,b5mweb_nombres.dw_types b,b5mweb_nombres.dw_list c,b5mweb_nombres.dw_formats d,b5mweb_nombres.dw_formats_dir e,
+b5mweb_nombres.dw_rel_formats f,b5mweb_nombres.dw_file_types g
 where a.id_dw=c.id_dw
 and b.id_type=c.id_type
-and a.id_dw=e.id_dw
+and a.id_dw=f.id_dw
+and e.id_format_dir=f.id_format_dir
 and d.id_format=e.id_format
-and c.id_file_type=f.id_file_type
+and c.id_file_type=g.id_file_type
 and a.format_dw=d.format_dw
 and b.grid_dw='ZZ_GRID_DW'
 order by a.name_grid,b.order_dw,c.year desc,c.subcode,a.format_dw"
