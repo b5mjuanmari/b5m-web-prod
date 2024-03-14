@@ -488,7 +488,7 @@ function dw_data {
 
 			# Fitxategiaren tamaina
 			fs = sprintf("%.2f", $11/1000000)
-			if (fs = "0.00")
+			if (fs == "0.00")
 				fs = "0.01"
 
 			# Urteak
