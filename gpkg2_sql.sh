@@ -1821,6 +1821,18 @@ where a.nombre_e=b.tag
 and a.tipo_e='5x5 km'
 and a.url_2d like 'R_%'"
 
+dw_sql_01_03="select
+'DW_'||substr(flight,6,length(flight)-5)||'_'||frame b5mcode,
+substr(flight,6,length(flight)-5)||'_'||frame name_grid_eu,
+substr(flight,6,length(flight)-5)||'_'||frame name_grid_es,
+'argazkia' type_grid_eu,
+'foto' type_grid_es,
+'photo' type_grid_en,
+'"$updd"' update_date,
+'1' official,
+polygon geom
+from b5mweb_25830.fotosaereas"
+
 dw_sql_02="select
 a.id_dw,
 b.order_dw,
@@ -1838,7 +1850,8 @@ listagg(d.format_code,';') within group (order by c.format_dw) format_code,
 e.file_type_dw,
 a.url_metadata,
 a.owner_eu,
-a.owner_en
+a.owner_en,
+a.subcode
 from b5mweb_nombres.dw_list a,b5mweb_nombres.dw_types b,b5mweb_nombres.dw_formats c,b5mweb_nombres.dw_formats_dir d,b5mweb_nombres.dw_file_types e,b5mweb_nombres.dw_rel_formats f
 where a.id_type=b.id_type
 and a.id_file_type=e.id_file_type
@@ -1880,12 +1893,12 @@ b.name_eu,
 b.name_es,
 b.name_en,
 c.year,
-decode(c.subcode,null,'DW_'||a.name_grid||'_'||b.code_dw||'_'||c.year,'DW_'||a.name_grid||'_'||b.code_dw||'_'||c.year||'_'||c.subcode) b5mcode_dw,
+decode(b.grid_dw,'foto','DW_'||a.name_grid||'_foto',decode(c.subcode,null,'DW_'||a.name_grid||'_'||b.code_dw||'_'||c.year,'DW_'||a.name_grid||'_'||b.code_dw||'_'||c.year||'_'||c.subcode)) b5mcode_dw,
 a.format_dw,
-replace(replace(replace(replace('https://b5m.gipuzkoa.eus/'||e.format_dir2||e.format_dir||'/'||a.name_grid||c.template_dw,'*',''),a.name_grid,e.format_file1||a.name_grid||e.format_file2),'year2',substr(c.year,3,2)),'year',c.year) url_dw,
+replace(replace(replace(replace('https://b5m.gipuzkoa.eus/'||e.format_dir2||e.format_dir||'/'||decode(b.grid_dw,'foto',replace(a.name_grid,c.year||c.subcode||'_',''),a.name_grid)||c.template_dw,'*',''),a.name_grid,e.format_file1||a.name_grid||e.format_file2),'year2',substr(c.year,3,2)),'year',c.year) url_dw,
 g.file_type_dw,
 a.size_by file_size,
-decode(c.owner_eu,'Gipuzkoako Foru Aldundia',c.url_metadata||'.'||a.name_grid,c.url_metadata) url_metadata,
+decode(c.owner_eu,'Gipuzkoako Foru Aldundia',c.url_metadata||'.'||decode(b.grid_dw,'foto',replace(a.name_grid,c.year||c.subcode||'_',''),a.name_grid),c.url_metadata) url_metadata,
 c.owner_eu,
 c.owner_es,
 c.owner_en

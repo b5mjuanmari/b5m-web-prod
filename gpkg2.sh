@@ -1049,6 +1049,7 @@ then
 	rm "$f01" 2> /dev/null
 	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "${dw_gpk}_1" -lco DESCRIPTION="$des01 1" -sql "$dw_sql_01_01"
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "${dw_gpk}_5" -lco DESCRIPTION="$des01 5" -sql "$dw_sql_01_02"
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "${dw_gpk}_foto" -lco DESCRIPTION="$des01 foto" -sql "$dw_sql_01_03"
 
 	# Fitxategien tamainak eskaneatu
 	dw_scan

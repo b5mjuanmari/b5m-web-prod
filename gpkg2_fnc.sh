@@ -371,10 +371,11 @@ function dw_scan {
 				while read f
 				do
 					IFS=' ' read -a g <<< "$f"
-					#dw_size_mb=`echo "${g[4]}" | gawk '{ printf "%.2f\n", $0 * 0.000001 }'`
-					#dw_size_mb=`echo "${g[4]}" | gawk '{ a=sprintf("%.2f\n", $0 * 0.000001); if (a == "0.00") { print "0.01" } else { print a } }'`
-					#dw_grid=`echo "${g[8]} ${c[9]}" | gawk '{ gsub("*", ""); b = split($1, a, "/"); split(a[b], c, $2); print c[1] }'`
 					dw_grid=`echo "${g[8]} ${d3}" | gawk '{ b = split($1, a , "/"); c = substr($2, 1, 1); d = substr($2, 2, 2); split(a[b], e, d); print e[c] }'`
+					if [ "${c[3]}" = "foto" ]
+					then
+						dw_grid="${c[7]}${c[17]}_${dw_grid}"
+					fi
 					echo "${j},${c[0]},\"${dw_grid}\",\"${d2[k]}\",${g[4]}" >> "$csv01"
 					let j=$j+1
 				done <<- EOF3
