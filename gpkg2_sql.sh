@@ -1833,14 +1833,26 @@ substr(flight,6,length(flight)-5)||'_'||frame name_grid_es,
 polygon geom
 from b5mweb_25830.fotosaereas"
 
+dw_sql_01_04="select
+replace(a.url_2d,'R_','DW_') b5mcode,
+a.nombre_e name_grid_eu,
+a.nombre_c name_grid_es,
+'1:5.000' type_grid_eu,
+'1:5.000' type_grid_es,
+'1:5,000' type_grid_en,
+'"$updd"' update_date,
+'1' official,
+b.geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.pauta5 b
+where a.nombre_e=b.tag
+and a.tipo_e='1:5000'
+and a.url_2d like 'R_%'"
+
 dw_sql_02="select
 a.id_dw,
 b.order_dw,
 b.code_dw,
 b.grid_dw,
-b.name_eu,
-b.name_es,
-b.name_en,
 a.year,
 decode(instr(listagg(d.format_dir,';') within group (order by d.format_dir),'year'),0,a.path_dw,replace(replace(listagg(a.path_dw||'/'||d.format_dir,';') within group (order by d.format_dir),'year2',substr(a.year,3,2)),'year',a.year)) path_dw,
 listagg(d.template_dir,';') within group (order by d.id_format_dir) template_dw,
@@ -1884,7 +1896,8 @@ on ${ora_sch_01}.${dw_fs}(format_dw)"
 
 dw_sql_06="select
 unique grid_dw
-from b5mweb_nombres.dw_types"
+from b5mweb_nombres.dw_types
+order by nlssort(grid_dw,'nls_sort=binary_ai')"
 
 dw_sql_07="select
 'DW_' || a.name_grid name_grid,
