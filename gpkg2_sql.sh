@@ -1843,8 +1843,8 @@ b.name_es,
 b.name_en,
 a.year,
 decode(instr(listagg(d.format_dir,';') within group (order by d.format_dir),'year'),0,a.path_dw,replace(replace(listagg(a.path_dw||'/'||d.format_dir,';') within group (order by d.format_dir),'year2',substr(a.year,3,2)),'year',a.year)) path_dw,
-a.template_dw,
-replace(listagg(d.format_dir,';') within group (order by d.format_dir),'year',a.year) url_dw,
+listagg(d.template_dir,';') within group (order by d.id_format_dir) template_dw,
+replace(replace(listagg(d.format_dir,';') within group (order by d.format_dir),'year2',substr(a.year,3,2)),'year',a.year) url_dw,
 listagg(c.format_dw,';') within group (order by c.format_dw) format_dw,
 listagg(d.format_code,';') within group (order by c.format_dw) format_code,
 e.file_type_dw,
@@ -1858,7 +1858,7 @@ and a.id_file_type=e.id_file_type
 and a.id_dw=f.id_dw
 and c.id_format=d.id_format
 and d.id_format_dir=f.id_format_dir
-group by a.id_dw,b.order_dw,b.code_dw,b.grid_dw,b.name_eu,b.name_es,b.name_en,a.year,a.path_dw,a.template_dw,e.file_type_dw,a.url_metadata,a.owner_eu,a.owner_es,a.owner_en,a.subcode
+group by a.id_dw,b.order_dw,b.code_dw,b.grid_dw,b.name_eu,b.name_es,b.name_en,a.year,a.path_dw,e.file_type_dw,a.url_metadata,a.owner_eu,a.owner_es,a.owner_en,a.subcode
 order by b.grid_dw desc,b.order_dw,a.year desc,b.code_dw desc,a.subcode"
 
 dw_sql_03="drop table ${ora_sch_01}.${dw_fs};
@@ -1895,7 +1895,7 @@ b.name_en,
 c.year,
 decode(b.grid_dw,'foto','DW_'||a.name_grid||'_foto',decode(c.subcode,null,'DW_'||a.name_grid||'_'||b.code_dw||'_'||c.year,'DW_'||a.name_grid||'_'||b.code_dw||'_'||c.year||'_'||c.subcode)) b5mcode_dw,
 a.format_dw,
-replace(replace(replace(replace('https://b5m.gipuzkoa.eus/'||e.format_dir2||e.format_dir||'/'||decode(b.grid_dw,'foto',replace(a.name_grid,c.year||c.subcode||'_',''),a.name_grid)||c.template_dw,'*',''),a.name_grid,e.format_file1||a.name_grid||e.format_file2),'year2',substr(c.year,3,2)),'year',c.year) url_dw,
+replace(replace(replace(replace('https://b5m.gipuzkoa.eus/'||e.format_dir2||e.format_dir||'/'||decode(b.grid_dw,'foto',replace(a.name_grid,c.year||c.subcode||'_',''),a.name_grid)||e.template_dir,'*',''),a.name_grid,e.format_file1||a.name_grid||e.format_file2),'year2',substr(c.year,3,2)),'year',c.year) url_dw,
 g.file_type_dw,
 a.size_by file_size,
 decode(c.owner_eu,'Gipuzkoako Foru Aldundia',c.url_metadata||'.'||decode(b.grid_dw,'foto',replace(a.name_grid,c.year||c.subcode||'_',''),a.name_grid),c.url_metadata) url_metadata,

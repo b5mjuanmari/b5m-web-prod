@@ -361,25 +361,32 @@ function dw_scan {
 		b=`echo "$a" | gawk '{ gsub("\"", ""); print $0 }'`
 		IFS=',' read -a c <<< "$b"
 		IFS=';' read -a d1 <<< "${c[8]}"
-		IFS=';' read -a d2 <<< "${c[11]}"
-		IFS=';' read -a d3 <<< "${c[12]}"
+		IFS=';' read -a d2 <<< "${c[9]}"
+		IFS=';' read -a d3 <<< "${c[11]}"
+		IFS=';' read -a d4 <<< "${c[12]}"
 		k=0
 		for e in "${d1[@]}"
 		do
 			if [ $i -gt 1 ]
 			then
+				if [ "${d2[$k]}" = "" ]
+				then
+					d2z="${d2[$k-1]}"
+				else
+					d2z="${d2[$k]}"
+				fi
 				while read f
 				do
 					IFS=' ' read -a g <<< "$f"
-					dw_grid=`echo "${g[8]} ${d3}" | gawk '{ b = split($1, a , "/"); c = substr($2, 1, 1); d = substr($2, 2, 2); split(a[b], e, d); print e[c] }'`
+					dw_grid=`echo "${g[8]} ${d4}" | gawk '{ b = split($1, a , "/"); c = substr($2, 1, 1); d = substr($2, 2, 2); split(a[b], e, d); print e[c] }'`
 					if [ "${c[3]}" = "foto" ]
 					then
 						dw_grid="${c[7]}${c[17]}_${dw_grid}"
 					fi
-					echo "${j},${c[0]},\"${dw_grid}\",\"${d2[k]}\",${g[4]}" >> "$csv01"
+					echo "${j},${c[0]},\"${dw_grid}\",\"${d3[$k]}\",${g[4]}" >> "$csv01"
 					let j=$j+1
 				done <<- EOF3
-				`ls -l ${e}/${c[9]} 2> /dev/null`
+				`ls -l ${e}/${d2z} 2> /dev/null`
 				EOF3
 			fi
 			let k=$k+1
