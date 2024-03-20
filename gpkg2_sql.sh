@@ -18,6 +18,7 @@
 # 1. m_municipalities
 m_gpk="m_municipalities"
 m_des=("Udalerria" "Municipio" "Municipality")
+m_des2=("Igarotzen diren udalerriak" "Municipios por los que discurre" "Municipalities through which it flows")
 m_abs=("B5m M kodea" "B5m código M" "B5m Code M")
 
 # 2. s_regions
@@ -1003,7 +1004,7 @@ a.url_2d b5mcode,
 decode(b.idnomcuenca,null,null,'C_A'||b.idnomcuenca) b5mcode_others_c,
 b.cuenca_e b5mcode_others_c_name_eu,
 b.cuenca_c b5mcode_others_c_name_es,
-'"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_m_type,
+'"$m_gpk"|"${m_des2[0]}"|"${m_des2[1]}"|"${m_des2[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_m_type,
 decode(a.codmunis,null,null,'M_'||replace(a.codmunis,',','|M_')) b5mcode_others_m,
 replace(a.muni_e,',','|') b5mcode_others_m_name_eu,
 replace(a.muni_c,',','|') b5mcode_others_m_name_es
