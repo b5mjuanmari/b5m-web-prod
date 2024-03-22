@@ -325,6 +325,54 @@ function sql_poi {
 	EOF1
 }
 
+function dw_types_list {
+	# Deskargen motak zerrendatu
+	x1=530000
+	y1=4740000
+	x2=610000
+	y2=4820000
+	dw_wkt="polygon ((${x1} ${y1}, ${x2} ${y1}, ${x2} ${y2}, ${x1} ${y2}, ${x1} ${y1}))"
+	csv01="/tmp/${dw_fs}_types.csv"
+	rm "$csv01" 2> /dev/null
+	sqlplus -s "$con" <<-EOF1 | gawk -v a="$dw_wkt" '
+	BEGIN {
+		FS = ","
+	}
+	{
+		if (NR == 1) {
+			getline
+			getline
+		}
+		gsub("\"","")
+		res = res "{@dw_type_id@:" $1 ",@dw_name_eu@:@" $2 "@,@dw_name_es@:@" $3 "@,@dw_name_en@:@" $4 "@},"
+	}
+	END {
+		res = substr(res, 1, length(res)-1)
+		res = "[" res "]"
+		gsub("@", "\047", res)
+		print "\"dw_types_id\",\"dw_types\",\"geom\""
+		print "1,\"" res "\",\"" a "\""
+	}
+	' > "$csv01"
+	set serveroutput on
+	set feedback off
+	set linesize 32767
+	set long 20000000
+	set longchunksize 20000000
+	set trim on
+	set pages 0
+	set tab on
+	set spa 0
+	set mark csv on
+
+	${dw_sql_01_05};
+
+	exit;
+	EOF1
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" "$csv01" -nln "${dw_gpk}_types" -lco DESCRIPTION="$des01 types" -oo GEOM_POSSIBLE_NAMES="geom" -oo KEEP_GEOM_COLUMNS="no"
+	rm "$csv01" 2> /dev/null
+}
+
 function dw_scan {
 	# Deskarga fitxategien tamainak eskaneatu
 	csv01="/tmp/${dw_fs}.csv"

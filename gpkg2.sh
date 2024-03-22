@@ -1051,7 +1051,9 @@ then
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "${dw_gpk}_5" -lco DESCRIPTION="$des01 5" -sql "$dw_sql_01_02"
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "${dw_gpk}_photo" -lco DESCRIPTION="$des01 photo" -sql "$dw_sql_01_03"
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "${dw_gpk}_map" -lco DESCRIPTION="$des01 map" -sql "$dw_sql_01_04"
-	ogr2ogr -f "GPKG" -update "$f01" OCI:${con}:${tpl} -nln "${dw_gpk}_types" -lco DESCRIPTION="$des01 types" -sql "$dw_sql_01_05"
+
+	# Deskargen motak zerrendatu
+	dw_types_list
 
 	# Fitxategien tamainak eskaneatu
 	dw_scan
