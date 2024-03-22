@@ -379,7 +379,7 @@ function dw_scan {
 				do
 					IFS=' ' read -a g <<< "$f"
 					dw_grid=`echo "${g[8]} ${d4}" | gawk '{ b = split($1, a , "/"); c = substr($2, 1, 1); d = substr($2, 2, 2); split(a[b], e, d); print e[c] }'`
-					if [ "${c[3]}" = "foto" ]
+					if [ "${c[3]}" = "photo" ]
 					then
 						dw_grid="${c[4]}${c[14]}_${dw_grid}"
 					fi

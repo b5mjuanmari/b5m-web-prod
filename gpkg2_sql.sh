@@ -1849,6 +1849,13 @@ where a.nombre_e=b.tag
 and a.tipo_e='1:5000'
 and a.url_2d like 'R_%'"
 
+dw_sql_01_05="select id_type dw_type_id,
+name_eu dw_name_eu,
+name_es dw_name_es,
+name_en dw_name_en
+from b5mweb_nombres.dw_types
+order by id_type"
+
 dw_sql_02="select
 a.id_dw,
 b.order_dw,
@@ -1907,12 +1914,12 @@ b.name_eu,
 b.name_es,
 b.name_en,
 c.year,
-decode(b.grid_dw,'foto','DW_'||a.name_grid||'_foto',decode(c.subcode,null,'DW_'||a.name_grid||'_'||b.code_dw||'_'||c.year,'DW_'||a.name_grid||'_'||b.code_dw||'_'||c.year||'_'||c.subcode)) b5mcode_dw,
+decode(b.grid_dw,'photo','DW_'||a.name_grid||'_photo',decode(c.subcode,null,'DW_'||a.name_grid||'_'||b.code_dw||'_'||c.year,'DW_'||a.name_grid||'_'||b.code_dw||'_'||c.year||'_'||c.subcode)) b5mcode_dw,
 a.format_dw,
-replace(replace(replace(replace('https://b5m.gipuzkoa.eus/'||e.format_dir2||e.format_dir||'/'||decode(b.grid_dw,'foto',replace(a.name_grid,c.year||c.subcode||'_',''),a.name_grid)||e.template_dir,'*',''),a.name_grid,e.format_file1||a.name_grid||e.format_file2),'year2',substr(c.year,3,2)),'year',c.year) url_dw,
+replace(replace(replace(replace('https://b5m.gipuzkoa.eus/'||e.format_dir2||e.format_dir||'/'||decode(b.grid_dw,'photo',replace(a.name_grid,c.year||c.subcode||'_',''),a.name_grid)||e.template_dir,'*',''),a.name_grid,e.format_file1||a.name_grid||e.format_file2),'year2',substr(c.year,3,2)),'year',c.year) url_dw,
 g.file_type_dw,
 a.size_by file_size,
-decode(c.owner_eu,'Gipuzkoako Foru Aldundia',c.url_metadata||'.'||decode(b.grid_dw,'foto',replace(a.name_grid,c.year||c.subcode||'_',''),a.name_grid),c.url_metadata) url_metadata,
+decode(c.owner_eu,'Gipuzkoako Foru Aldundia',c.url_metadata||'.'||decode(b.grid_dw,'photo',replace(a.name_grid,c.year||c.subcode||'_',''),a.name_grid),c.url_metadata) url_metadata,
 c.owner_eu,
 c.owner_es,
 c.owner_en
