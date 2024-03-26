@@ -536,7 +536,7 @@ function dw_data {
 	sqlplus -s "$con" <<-EOF1 | gawk '
 	BEGIN {
 		FS = ","
-		print "\"B5MCODE2\",\"ID_TYPES_DW\",\"TYPES_DW\""
+		print "\"B5MCODE2\",\"DW_TYPE_IDS\",\"TYPES_DW\""
 	}
 	{
 		if (NR > 2) {
