@@ -1858,6 +1858,7 @@ order by id_type"
 
 dw_sql_02="select
 a.id_dw,
+b.id_type,
 b.order_dw,
 b.code_dw,
 b.grid_dw,
@@ -1878,13 +1879,14 @@ and a.id_file_type=e.id_file_type
 and a.id_dw=f.id_dw
 and c.id_format=d.id_format
 and d.id_format_dir=f.id_format_dir
-group by a.id_dw,b.order_dw,b.code_dw,b.grid_dw,b.name_eu,b.name_es,b.name_en,a.year,a.path_dw,e.file_type_dw,a.url_metadata,a.owner_eu,a.owner_es,a.owner_en,a.subcode
+group by a.id_dw,b.id_type,b.order_dw,b.code_dw,b.grid_dw,b.name_eu,b.name_es,b.name_en,a.year,a.path_dw,e.file_type_dw,a.url_metadata,a.owner_eu,a.owner_es,a.owner_en,a.subcode
 order by b.grid_dw desc,b.order_dw,a.year desc,b.code_dw desc,a.subcode"
 
 dw_sql_03="drop table ${ora_sch_01}.${dw_fs};
 create table ${ora_sch_01}.${dw_fs}(
 id_fs number primary key,
 id_dw number,
+id_type number,
 name_grid varchar2(64),
 format_dw varchar2(16),
 size_by number
@@ -1922,7 +1924,8 @@ a.size_by file_size,
 decode(c.owner_eu,'Gipuzkoako Foru Aldundia',c.url_metadata||'.'||decode(b.grid_dw,'photo',replace(a.name_grid,c.year||c.subcode||'_',''),a.name_grid),c.url_metadata) url_metadata,
 c.owner_eu,
 c.owner_es,
-c.owner_en
+c.owner_en,
+b.id_type
 from b5mweb_nombres.dw_file_sizes a,b5mweb_nombres.dw_types b,b5mweb_nombres.dw_list c,b5mweb_nombres.dw_formats d,b5mweb_nombres.dw_formats_dir e,
 b5mweb_nombres.dw_rel_formats f,b5mweb_nombres.dw_file_types g
 where a.id_dw=c.id_dw
