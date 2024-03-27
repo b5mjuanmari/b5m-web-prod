@@ -1069,6 +1069,7 @@ then
 		rm "$c01" 2> /dev/null
 		dw_data "$grd"
 		ogr2ogr -f "GPKG" -update "$f01" "$c01" -nln "${dw_gpk}_dat_${grd}" -lco DESCRIPTION="${dw_gpk} ${grd}"
+		ogrinfo -sql "create index \"${dm_gpk}_dat_${grd}_idx\" on \"${dw_gpk}_dat_${grd}\" ('dw_type_ids')" "$f01" > /dev/null
 		rm "${c01}_${grd}" 2> /dev/null
 		rm "$c01" 2> /dev/null
 
