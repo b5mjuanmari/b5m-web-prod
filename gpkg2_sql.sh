@@ -19,6 +19,7 @@
 m_gpk="m_municipalities"
 m_des=("Udalerria" "Municipio" "Municipality")
 m_des2=("Igarotzen diren udalerriak" "Municipios por los que discurre" "Municipalities through which it flows")
+m_des3=("Zein udalerritatik igarotzen den" "Municipios por los que pasa" "Municipalities through which it passes")
 m_abs=("B5m M kodea" "B5m código M" "B5m Code M")
 
 # 2. s_regions
@@ -68,7 +69,9 @@ g_abs=("B5m G kodea" "B5m código G" "B5m Code G")
 
 # 11. t_roads_railways
 t_gpk="t_roads_railways"
+kp_gpk="kp_kilometre_points"
 t_des=("Errepidea eta trenbidea" "Carretera y ferrocarril" "Road and Railway")
+kp_des=("(kilometro puntua)" "(punto kilométrico)" "(Kilometre Point")
 t_abs=("B5m T kodea" "B5m código T" "B5m Code T")
 
 # 12. q_municipalcartography
@@ -1112,23 +1115,6 @@ on a.b5mcode = b.b5mcode"
 #                      #
 # ==================== #
 
-t_sql_01_1="select
-a.url_2d b5mcode,
-tipo_e type_eu,
-tipo_c type_es,
-tipo_i type_en,
-a.nombre_e name_eu,
-a.nombre_c name_es,
-'"$updd"' update_date,
-'1' official,
-sdo_aggr_union(sdoaggrtype(b.polyline,0.005)) geom
-from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.vialesind b,b5mweb_nombres.v_rel_vial_tramo c
-where a.id_nombre1=to_char(c.idnombre)
-and b.idut=c.idut
-and a.id_nombre2 in ('0990','9000')
-group by (a.url_2d,a.tipo_e,a.tipo_c,a.tipo_i,a.nombre_e,a.nombre_c)
-order by a.url_2d"
-
 t_sql_01="select
 b5mcode,
 type_eu,
@@ -1189,8 +1175,29 @@ group by (b5mcode,type_eu,type_es,type_en,name_eu,name_es,update_date,official)
 order by b5mcode"
 
 t_sql_02="select
+a.url_2d||'_'||decode(a.sentido_eu,'joan',1,2) kpcode,
+a.url_2d b5mcode,
+'kilometro puntua' type_eu,
+'punto kilométrico' type_es,
+'kilometre point' type_en,
+a.nombre name_eu,
+a.nombre name_es,
+a.pk kp,
+a.carre road_name_eu,
+a.carre road_name_es,
+a.sentido_eu way_eu,
+a.sentido_es way_es,
+a.sentido_en way_en,
+'"$updd"' update_date,
+'1' official,
+b.point geom
+from b5mweb_nombres.solr_pkil_2d a,b5mweb_25830.pkil b
+where a.idnombre=b.idnombre
+order by a.url_2d"
+
+t_sql_03="select
 distinct url_2d b5mcode,
-'"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_m_type,
+'"$m_gpk"|"${m_des3[0]}"|"${m_des3[1]}"|"${m_des3[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_m_type,
 decode(codmunis,null,null,'M_'||replace(codmunis,',','|M_')) b5mcode_others_m,
 replace(muni_e,',','|') b5mcode_others_m_name_eu,
 replace(muni_c,',','|') b5mcode_others_m_name_es
@@ -1198,7 +1205,17 @@ from b5mweb_nombres.solr_gen_toponimia_2d
 where url_2d like 'T_A%'
 order by to_number(replace(url_2d,'T_A',''))"
 
-t_sql_03="select
+t_sql_04="select
+url_2d||'_'||decode(sentido_eu,'joan',1,2) kpcode,
+'"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_m_type,
+decode(codmunis,null,'ZZKP','M_'||replace(codmunis,',','|M_')) b5mcode_others_m,
+decode(muni_e,null,'ZZKP',replace(muni_e,',','|')) b5mcode_others_m_name_eu,
+decode(muni_c,null,'ZZKP',replace(muni_c,',','|')) b5mcode_others_m_name_es
+from b5mweb_nombres.solr_pkil_2d
+--where url_2d in('T_A108003_0','T_A107998_3')
+order by url_2d"
+
+t_sql_05="select
 a.*,
 b.more_info_eu,
 b.more_info_es,
@@ -1206,6 +1223,15 @@ b.more_info_en
 from ${t_gpk} a
 left join ${t_gpk}_more_info b
 on a.b5mcode = b.b5mcode"
+
+t_sql_06="select
+a.*,
+b.more_info_eu,
+b.more_info_es,
+b.more_info_en
+from ${kp_gpk} a
+left join ${kp_gpk}_more_info b
+on a.kpcode = b.kpcode"
 
 # ========================== #
 #                            #

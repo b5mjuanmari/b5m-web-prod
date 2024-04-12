@@ -295,6 +295,22 @@ function sql_more_info2 {
 	EOF1
 }
 
+function sql_more_info_kp {
+	# Gipuzkoatik kanpo dauden KPen udalerri informazioa kudeatu
+	gawk '
+	{
+		gsub("B5MCODE", "KPCODE")
+		if (match($0, "ZZKP") != 0) {
+			gsub("\x27", "#")
+			gsub("#numberMatched#:1", "#numberMatched#:0")
+			gsub("\\[{#b5mcode#:#ZZKP#,#name_eu#:#ZZKP#,#name_es#:#ZZKP#}\\]", "[]")
+			gsub("#", "\x27")
+		}
+		print $0
+	}
+	' "$1" > "$2"
+}
+
 function sql_poi {
 	# POIak kudeatzeko SQL prozesua / Proceso SQL para gestionar los POIs
 	sqlplus -s "$con" <<-EOF1 | gawk '
@@ -560,7 +576,7 @@ function dw_data {
 			}
 			yrs = "[" y2 "]"
 
-			if (match(res2, "#" $16 "#" ) == 0 )
+			if (match(res2, "#" $16 "#" ) == 0)
 				res2 = res2 "#" $16 "#"
 			a03 = $3
 			a06 = $3 "|" $6

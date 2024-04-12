@@ -602,31 +602,42 @@ IFS='|' read -a aconf <<< "$vconf"
 typ01="${aconf[0]}"
 gpk01="${aconf[1]}"
 des01="${t_des[0]} - ${t_des[1]} - ${t_des[2]}"
+des02="${kp_des[0]} - ${kp_des[1]} - ${kp_des[2]}"
 if [ "$t_gpk" = "$gpk01" ] && ([ $typ01 = "1" ] || [ "$typ01" = "2" ])
 then
 	let i1=$i1+1
 	msg "${i1}/${nf}: $(date '+%Y-%m-%d %H:%M:%S') - $gpk01 - ${t_des[0]}\c"
 	f01="${tmpd}/${t_gpk}_01.gpkg"
 	c01="${tmpd}/${t_gpk}_01.csv"
+	c02="${tmpd}/${t_gpk}_02.csv"
 	f02="${tmpd}/${t_gpk}.gpkg"
 
 	# Oinarrizko datuak / Datos básicos
 	rm "$f01" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$t_gpk" -lco DESCRIPTION="$des01" -sql "$t_sql_01"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "$t_gpk" -lco DESCRIPTION="$des01" -sql "$t_sql_01" "$f01" OCI:${con}:${tpl}
+	ogr2ogr -update -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "$kp_gpk" -lco DESCRIPTION="$des01 $des02" -sql "$t_sql_02" "$f01" OCI:${con}:${tpl}
 
 	# more_info
 	rm "$c01" 2> /dev/null
-	sql_more_info2 "$c01" "$t_sql_02"
-	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${t_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
+	sql_more_info2 "$c01" "$t_sql_03"
+	ogr2ogr -update -f "GPKG" -nln "${t_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
 	rm "$c01" 2> /dev/null
+	sql_more_info2 "$c01" "$t_sql_04"
+	rm "$c02" 2> /dev/null
+	sql_more_info_kp "$c01" "$c02"
+	rm "$c01" 2> /dev/null
+	ogr2ogr -update -f "GPKG" -nln "${kp_gpk}_more_info" -lco DESCRIPTION="${des01} ${des02} more info" "$f01" "$c02"
+	rm "$c02" 2> /dev/null
 
 	# Behin betiko GPKGa / GPKG definitivo
 	rm "$f02" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "$t_gpk" -lco DESCRIPTION="$des01" -sql "$t_sql_03" "$f02" "$f01"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "$t_gpk" -lco DESCRIPTION="$des01" -sql "$t_sql_05" "$f02" "$f01"
+	ogr2ogr -update -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "$kp_gpk" -lco DESCRIPTION="$des01 $des02" -sql "$t_sql_06" "$f02" "$f01"
 	rm "$f01" 2> /dev/null
 
 	# Eremuak berrizendatu / Renombrar campos
 	rfl "$f02" "$t_gpk"
+	rfl "$f02" "$kp_gpk"
 
 	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
 	cp_gpk "$typ01" "$t_gpk"
