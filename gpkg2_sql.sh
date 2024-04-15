@@ -49,7 +49,7 @@ v_abs=("B5m V kodea" "B5m código V" "B5m Code V")
 
 # 7. c_basins
 c_gpk="c_basins"
-c_des=("Arroa" "Cuenca" "Basin")
+c_des=("Arro hidrografikoa" "Cuenca hidrográfica" "Hydrographic Basin")
 c_abs=("B5m C kodea" "B5m código C" "B5m Code C")
 
 # 8. i_hydrography
@@ -943,11 +943,15 @@ on a.b5mcode = b.b5mcode"
 #             #
 # =========== #
 
+c_des=("Arro hidrografikoa" "Cuenca hidrográfica" "Hydrographic Basin")
 c_sql_01="select
 a.url_2d b5mcode,
-upper(substr(a.tipo_e,1,1))||substr(a.tipo_e,2,length(a.tipo_e)-1) type_eu,
-upper(substr(a.tipo_c,1,1))||substr(a.tipo_c,2,length(a.tipo_c)-1) type_es,
-upper(substr(a.tipo_i,1,1))||substr(a.tipo_i,2,length(a.tipo_i)-1) type_en,
+--upper(substr(a.tipo_e,1,1))||substr(a.tipo_e,2,length(a.tipo_e)-1) type_eu,
+--upper(substr(a.tipo_c,1,1))||substr(a.tipo_c,2,length(a.tipo_c)-1) type_es,
+--upper(substr(a.tipo_i,1,1))||substr(a.tipo_i,2,length(a.tipo_i)-1) type_en,
+'Arro hidrografikoa' type_eu,
+'Cuenca hidrográfica' type_es,
+'Hydrographic Basin' type_en,
 a.nombre_e name_eu,
 a.nombre_c name_es,
 '"$updd"' update_date,
