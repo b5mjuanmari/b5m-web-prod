@@ -576,12 +576,19 @@ function dw_data {
 			}
 			yrs = "[" y2 "]"
 
+			# Metadatuak
+			murl_eu = $12
+			murl_es = $12
+			murl_en = $12
+			gsub("baq", "spa", murl_es)
+			gsub("baq", "eng", murl_en)
+
 			if (match(res2, "#" $16 "#" ) == 0)
 				res2 = res2 "#" $16 "#"
 			a03 = $3
 			a06 = $3 "|" $6
 			a08 = "{@dw_type_id@:@" $16 "@,@name_eu@:@" $3 "@,@name_es@:@" $4 "@,@name_en@:@" $5 "@,@series_dw@:[{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@format@:[{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
-	    mdt = "@metadata@:{@url@:@" $12 "@,@owner_eu@:@" $13 "@,@owner_es@:@" $14 "@,@owner_en@:@" $15 "@}"
+	    mdt = "@metadata@:{@url_eu@:@" $12 "@,@url_es@:@" murl_es "@,@url_en@:@" murl_en "@,@owner_eu@:@" $13 "@,@owner_es@:@" $14 "@,@owner_en@:@" $15 "@}"
 			a08 = a08 "]," mdt
 			if (a01 != $1 && a01 != "") {
 				res = res "}]"
@@ -607,14 +614,14 @@ function dw_data {
 					res = res ",{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@format@:["
 					res = res "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
 				} else if ($7 != c07) {
-	    		mdt = "@metadata@:{@url@:@" $12 "@,@owner_eu@:@" $13 "@,@owner_es@:@" $14 "@,@owner_en@:@" $15 "@}"
+	    		mdt = "@metadata@:{@url_eu@:@" $12 "@,@url_es@:@" murl_es "@,@url_en@:@" murl_en "@,@owner_eu@:@" $13 "@,@owner_es@:@" $14 "@,@owner_en@:@" $15 "@}"
 					if (substr(res, length(res)-1, 2) != "}}")
 					 res = res "}"
 					res = res ",{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@format@:["
 					res = res "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}]," mdt "}"
 				} else {
 					if ($8 != c08) {
-	    			mdt = "@metadata@:{@url@:@" $12 "@,@owner_eu@:@" $13 "@,@owner_es@:@" $14 "@,@owner_en@:@" $15 "@}"
+	    			mdt = "@metadata@:{@url_eu@:@" $12 "@,@url_es@:@" murl_es "@,@url_en@:@" murl_en "@,@owner_eu@:@" $13 "@,@owner_es@:@" $14 "@,@owner_en@:@" $15 "@}"
 						res = res ",{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}]," mdt "}"
 					}
 				}
@@ -646,17 +653,32 @@ function dw_data {
 	}
 	{
 		for (i = 1; i <= NF; i++) {
-			if ($i == "format_dw") {
-				j = i-14
-				if (substr($j, 1, 4) == "http") {
-					j2 = i-12
-					j3 = i-10
-					j4 = i-8
-					j5 = i-6
-					j6 = i-4
-					j7 = i-2
-					gsub("],\047metadata\047:{\047url\047:\047" $j "\047,\047" $j2 "\047:\047" $j3 "\047,\047" $j4 "\047:\047" $j5 "\047,\047" $j6 "\047:\047" $j7 "\047},{\047format_dw\047", ",{\047format_dw\047")
-					gsub("],\047metadata\047:{\047url\047:\047" $j "\047,\047" $j2 "\047:\047" $j3 "\047,\047" $j4 "\047:\047" $j5 "\047,\047" $j6 "\047:\047" $j7 "\047}},{\047format_dw\047", ",{\047format_dw\047")
+			if (($i == "format_dw" || $i == "file_type_dw") && i > 30) {
+				j1 = i-30
+				k1 = $j1
+				if (substr(k1, 1, 4) == "http") {
+					j2 = i-28
+					j3 = i-26
+					j4 = i-24
+					j5 = i-22
+					j6 = i-20
+					j7 = i-18
+					j8 = i-16
+					j9 = i-14
+					j10 = i-12
+					j11 = i-10
+					k2=$j2
+					k3=$j3
+					k4=$j4
+					k5=$j5
+					k6=$j6
+					k7=$j7
+					k8=$j8
+					k9=$j9
+					k10=$j10
+					k11=$j11
+					gsub("],\047metadata\047:{\047url_eu\047:\047" k1 "\047,\047" k2 "\047:\047" k3 "\047,\047" k4 "\047:\047" k5 "\047,\047" k6 "\047:\047" k7 "\047,\047" k8 "\047:\047" k9 "\047,\047" k10 "\047:\047" k11 "\047},{\047format_dw\047", ",{\047format_dw\047")
+					gsub("],\047metadata\047:{\047url_eu\047:\047" k1 "\047,\047" k2 "\047:\047" k3 "\047,\047" k4 "\047:\047" k5 "\047,\047" k6 "\047:\047" k7 "\047,\047" k8 "\047:\047" k9 "\047,\047" k10 "\047:\047" k11 "\047}},{\047format_dw\047", ",{\047format_dw\047")
 				}
 			}
 		}
