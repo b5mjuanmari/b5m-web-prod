@@ -445,7 +445,7 @@ function dw_scan {
 					dw_grid=`echo "${g[8]} ${d4}" | gawk '{ b = split($1, a , "/"); c = substr($2, 1, 1); d = substr($2, 2, 2); split(a[b], e, d); print e[c] }'`
 					if [ "${c[4]}" = "photo" ]
 					then
-						dw_grid="${c[5]}${c[15]}_${dw_grid}"
+						dw_grid="${c[5]}${c[16]}_${dw_grid}"
 					fi
 					echo "${j},${c[0]},${c[1]},\"${dw_grid}\",\"${d3[$k]}\",${g[4]}" >> "$csv01"
 					let j=$j+1
