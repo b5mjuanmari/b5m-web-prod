@@ -1893,7 +1893,7 @@ b.order_dw,
 b.code_dw,
 b.grid_dw,
 a.year,
-decode(instr(listagg(d.format_dir,';') within group (order by d.format_dir),'year'),0,a.path_dw,replace(replace(listagg(a.path_dw||'/'||d.format_dir,';') within group (order by d.format_dir),'year2',substr(a.year,3,2)),'year',a.year)) path_dw,
+decode(instr(listagg(d.format_dir,';') within group (order by d.format_dir),'year'),0,a.path_dw,replace(replace(listagg(a.path_dw||'/'||d.format_dir,';') within group (order by d.format_dir),'year2',substr(a.year,3,2)),'year',a.year||a.subcode)) path_dw,
 listagg(d.template_dir,';') within group (order by d.id_format_dir) template_dw,
 replace(replace(listagg(d.format_dir,';') within group (order by d.format_dir),'year2',substr(a.year,3,2)),'year',a.year) url_dw,
 listagg(c.format_dw,';') within group (order by c.format_dw) format_dw,
@@ -1901,6 +1901,7 @@ listagg(d.format_code,';') within group (order by c.format_dw) format_code,
 e.file_type_dw,
 a.url_metadata,
 a.owner_eu,
+a.owner_es,
 a.owner_en,
 a.subcode
 from b5mweb_nombres.dw_list a,b5mweb_nombres.dw_types b,b5mweb_nombres.dw_formats c,b5mweb_nombres.dw_formats_dir d,b5mweb_nombres.dw_file_types e,b5mweb_nombres.dw_rel_formats f
@@ -1909,8 +1910,9 @@ and a.id_file_type=e.id_file_type
 and a.id_dw=f.id_dw
 and c.id_format=d.id_format
 and d.id_format_dir=f.id_format_dir
+and a.active=1
 group by a.id_dw,b.id_type,b.order_dw,b.code_dw,b.grid_dw,b.name_eu,b.name_es,b.name_en,a.year,a.path_dw,e.file_type_dw,a.url_metadata,a.owner_eu,a.owner_es,a.owner_en,a.subcode
-order by b.grid_dw desc,b.order_dw,a.year desc,b.code_dw desc,a.subcode"
+order by b.grid_dw desc,b.order_dw,a.year desc,b.code_dw desc,a.subcode nulls first"
 
 dw_sql_03="drop table ${ora_sch_01}.${dw_fs};
 create table ${ora_sch_01}.${dw_fs}(
@@ -1965,8 +1967,9 @@ and e.id_format_dir=f.id_format_dir
 and d.id_format=e.id_format
 and c.id_file_type=g.id_file_type
 and a.format_dw=d.format_dw
+and c.active=1
 and b.grid_dw='ZZ_GRID_DW'
-order by a.name_grid,b.order_dw,c.year desc,c.subcode,a.format_dw"
+order by a.name_grid,b.order_dw,c.year desc,c.subcode nulls first,a.format_dw"
 
 # ======= #
 #         #
