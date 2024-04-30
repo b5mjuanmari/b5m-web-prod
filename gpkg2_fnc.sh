@@ -583,14 +583,17 @@ function dw_data {
 			gsub("baq", "spa", murl_es)
 			gsub("baq", "eng", murl_en)
 
+			# b5mcode_dw inguruko partea
+			if ($17 == "")
+				res_code_dw = "{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@format@:["
+			else
+				res_code_dw = "{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@lidar_features@:{@model_type@:{@code@:@" $17 "@,@description_eu@:@" $18 "@,@description_es@:@" $19 "@,@description_en@:@" $20 "@,@url_ref_eu@:@" $21 "@,@url_ref_es@:@" $22 "@,@url_ref_en@:@" $23 "@},@data_processing@:{@code@:@" $24 "@,@description_eu@:@" $25 "@,@description_es@:@" $26 "@,@description_en@:@" $27 "@}},@format@:["
+
 			if (match(res2, "#" $16 "#" ) == 0)
 				res2 = res2 "#" $16 "#"
 			a03 = $3
 			a06 = $3 "|" $6
-			if ($17 == "")
-				a08 = "{@dw_type_id@:@" $16 "@,@name_eu@:@" $3 "@,@name_es@:@" $4 "@,@name_en@:@" $5 "@,@series_dw@:[{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@format@:[{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
-			else
-				a08 = "{@dw_type_id@:@" $16 "@,@name_eu@:@" $3 "@,@name_es@:@" $4 "@,@name_en@:@" $5 "@,@series_dw@:[{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@lidar_features@:{@model_type@:{@code@:@" $17 "@,@description_eu@:@" $18 "@,@description_es@:@" $19 "@,@description_en@:@" $20 "@,@url_ref_eu@:@" $21 "@,@url_ref_es@:@" $22 "@,@url_ref_en@:@" $23 "@},@data_processing@:{@code@:@" $24 "@,@description_eu@:@" $25 "@,@description_es@:@" $26 "@,@description_en@:@" $27 "@}},@format@:[{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
+			a08 = "{@dw_type_id@:@" $16 "@,@name_eu@:@" $3 "@,@name_es@:@" $4 "@,@name_en@:@" $5 "@,@series_dw@:[" res_code_dw "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
 	    mdt = "@metadata@:{@url_eu@:@" $12 "@,@url_es@:@" murl_es "@,@url_en@:@" murl_en "@,@owner_eu@:@" $13 "@,@owner_es@:@" $14 "@,@owner_en@:@" $15 "@}"
 			a08 = a08 "]," mdt
 			if (a01 != $1 && a01 != "") {
@@ -614,20 +617,12 @@ function dw_data {
 					res = res "]}]}," a08
 			} else {
 				if ($6 != c06) {
-					if ($17 == "")
-						res = res ",{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@format@:["
-					else
-						res = res ",{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@lidar_features@:{@model_type@:{@code@:@" $17 "@,@description_eu@:@" $18 "@,@description_es@:@" $19 "@,@description_en@:@" $20 "@,@url_ref_eu@:@" $21 "@,@url_ref_es@:@" $22 "@,@url_ref_en@:@" $23 "@},@data_processing@:{@code@:@" $24 "@,@description_eu@:@" $25 "@,@description_es@:@" $26 "@,@description_en@:@" $27 "@}},@format@:["
-					res = res "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
+					res = res "," res_code_dw "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
 				} else if ($7 != c07) {
 	    		mdt = "@metadata@:{@url_eu@:@" $12 "@,@url_es@:@" murl_es "@,@url_en@:@" murl_en "@,@owner_eu@:@" $13 "@,@owner_es@:@" $14 "@,@owner_en@:@" $15 "@}"
 					if (substr(res, length(res)-1, 2) != "}}")
 					 res = res "}"
-					if ($17 == "")
-						res = res ",{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@format@:["
-					else
-						res = res ",{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@lidar_features@:{@model_type@:{@code@:@" $17 "@,@description_eu@:@" $18 "@,@description_es@:@" $19 "@,@description_en@:@" $20 "@,@url_ref_eu@:@" $21 "@,@url_ref_es@:@" $22 "@,@url_ref_en@:@" $23 "@},@data_processing@:{@code@:@" $24 "@,@description_eu@:@" $25 "@,@description_es@:@" $26 "@,@description_en@:@" $27 "@}},@format@:["
-					res = res "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}]," mdt "}"
+					res = res "," res_code_dw "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}]," mdt "}"
 				} else {
 					if ($8 != c08) {
 	    			mdt = "@metadata@:{@url_eu@:@" $12 "@,@url_es@:@" murl_es "@,@url_en@:@" murl_en "@,@owner_eu@:@" $13 "@,@owner_es@:@" $14 "@,@owner_en@:@" $15 "@}"
