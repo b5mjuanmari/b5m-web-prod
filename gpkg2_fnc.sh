@@ -616,7 +616,7 @@ function dw_data {
 				else
 					res = res "]}]}," a08
 			} else {
-				if ($6 != c06) {
+				if ($6 != c06 && $16 != "5") {
 					res = res "," res_code_dw "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
 				} else if ($7 != c07) {
 	    		mdt = "@metadata@:{@url_eu@:@" $12 "@,@url_es@:@" murl_es "@,@url_en@:@" murl_en "@,@owner_eu@:@" $13 "@,@owner_es@:@" $14 "@,@owner_en@:@" $15 "@}"
