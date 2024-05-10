@@ -587,7 +587,7 @@ function dw_data {
 			if ($17 == "")
 				res_code_dw = "{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@format@:["
 			else
-				res_code_dw = "{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@lidar_features@:{@model_type@:{@code@:@" $17 "@,@description_eu@:@" $18 "@,@description_es@:@" $19 "@,@description_en@:@" $20 "@,@url_ref_eu@:@" $21 "@,@url_ref_es@:@" $22 "@,@url_ref_en@:@" $23 "@},@data_processing@:{@code@:@" $24 "@,@description_eu@:@" $25 "@,@description_es@:@" $26 "@,@description_en@:@" $27 "@}},@format@:["
+				res_code_dw = "{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@lidar_features@:{@model_type@:{@code@:@" $17 "@,@description_eu@:@" $18 "@,@description_es@:@" $19 "@,@description_en@:@" $20 "@,@url_ref_eu@:@" $21 "@,@url_ref_es@:@" $22 "@,@url_ref_en@:@" $23 "@},@height_type@:{@code@:@" $24 "@,@description_eu@:@" $25 "@,@description_es@:@" $26 "@,@description_en@:@" $27 "@,@url_ref1_eu@:@" $28 "@,@url_ref1_es@:@" $29 "@,@url_ref1_en@:@" $30 "@,@url_ref2_eu@:@" $31 "@,@url_ref2_es@:@" $32 "@,@url_ref2_en@:@" $33 "@},@data_processing@:{@code@:@" $34 "@,@description_eu@:@" $35 "@,@description_es@:@" $36 "@,@description_en@:@" $37 "@}},@format@:["
 
 			if (match(res2, "#" $16 "#" ) == 0)
 				res2 = res2 "#" $16 "#"
