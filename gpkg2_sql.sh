@@ -1884,6 +1884,7 @@ name_eu dw_name_eu,
 name_es dw_name_es,
 name_en dw_name_en
 from b5mweb_nombres.dw_types
+where active=1
 order by id_type"
 
 dw_sql_02="select
@@ -1965,11 +1966,21 @@ h.model_type_en lidar_model_type_en,
 h.url_ref_eu lidar_model_type_url_ref_eu,
 h.url_ref_es lidar_model_type_url_ref_es,
 h.url_ref_en lidar_model_type_url_ref_en,
-i.code_dp lidar_data_processing_code,
-i.data_processing_eu lidar_data_processing_eu,
-i.data_processing_es lidar_data_processing_es,
-i.data_processing_en lidar_data_processing_en
-from b5mweb_nombres.dw_file_sizes a,b5mweb_nombres.dw_types b,b5mweb_nombres.dw_list c,b5mweb_nombres.dw_formats d,b5mweb_nombres.dw_formats_dir e,b5mweb_nombres.dw_rel_formats f,b5mweb_nombres.dw_file_types g,b5mweb_nombres.dw_lidar_model_type h,b5mweb_nombres.dw_lidar_data_processing i
+i.code_ht lidar_height_type_code,
+i.height_type_eu lidar_height_type_eu,
+i.height_type_es lidar_height_type_es,
+i.height_type_en lidar_height_type_en,
+i.url_ref1_eu lidar_height_type_url_ref1_eu,
+i.url_ref1_es lidar_height_type_url_ref1_es,
+i.url_ref1_en lidar_height_type_url_ref1_en,
+i.url_ref2_eu lidar_height_type_url_ref2_eu,
+i.url_ref2_es lidar_height_type_url_ref2_es,
+i.url_ref2_en lidar_height_type_url_ref2_en,
+j.code_dp lidar_data_processing_code,
+j.data_processing_eu lidar_data_processing_eu,
+j.data_processing_es lidar_data_processing_es,
+j.data_processing_en lidar_data_processing_en
+from b5mweb_nombres.dw_file_sizes a,b5mweb_nombres.dw_types b,b5mweb_nombres.dw_list c,b5mweb_nombres.dw_formats d,b5mweb_nombres.dw_formats_dir e,b5mweb_nombres.dw_rel_formats f,b5mweb_nombres.dw_file_types g,b5mweb_nombres.dw_lidar_model_type h,b5mweb_nombres.dw_lidar_height_type i,b5mweb_nombres.dw_lidar_data_processing j
 where a.id_dw=c.id_dw
 and b.id_type=c.id_type
 and a.id_dw=f.id_dw
@@ -1978,7 +1989,8 @@ and d.id_format=e.id_format
 and c.id_file_type=g.id_file_type
 and a.format_dw=d.format_dw
 and c.id_lidar_mt=h.id_lidar_mt(+)
-and c.id_lidar_dp=i.id_lidar_dp(+)
+and c.id_lidar_ht=i.id_lidar_ht(+)
+and c.id_lidar_dp=j.id_lidar_dp(+)
 and c.active=1
 and b.grid_dw='ZZ_GRID_DW'
 order by a.name_grid,b.order_dw,c.year desc,c.subcode nulls first,a.format_dw"
