@@ -1048,6 +1048,7 @@ vconf=`grep "$dw_gpk" "$fconf"`
 IFS='|' read -a aconf <<< "$vconf"
 typ01="${aconf[0]}"
 gpk01="${aconf[1]}"
+sca01="${aconf[3]}"
 des01="${dw_des[0]} - ${dw_des[1]} - ${dw_des[2]}"
 if [ "$dw_gpk" = "$gpk01" ] && ([ $typ01 = "1" ] || [ "$typ01" = "2" ])
 then
@@ -1067,7 +1068,10 @@ then
 	dw_types_list
 
 	# Fitxategien tamainak eskaneatu eta GPKGean kargatu
-	dw_scan
+	if [ "$sca01" != "1" ]
+	then
+		dw_scan
+	fi
 
 	# Deskarga moten begizta
 	dw_tp_grd=`dw_types_grid`
