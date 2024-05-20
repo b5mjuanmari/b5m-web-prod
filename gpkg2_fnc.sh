@@ -602,6 +602,7 @@ function dw_data {
 				if (substr(res, length(res)-5, 5) != "}]}]}")
 					res = res "}]"
 				gsub("}}}]}]" ,"}}]}]", res)
+				gsub("}}}" ,"}}", res)
 				gsub("@},{@years@", "@}},{@years@", res)
 				gsub("@", "\047", res)
 				gsub("##", "#", res2)
@@ -645,6 +646,7 @@ function dw_data {
 		if (substr(res, length(res)-5, 5) != "}]}]}")
 			res = res "}]"
 		gsub("}}}]}]" ,"}}]}]", res)
+		gsub("}}}" ,"}}", res)
 		gsub("@", "\047", res)
 		gsub("##", "#", res2)
 		gsub("#", "|", res2)
