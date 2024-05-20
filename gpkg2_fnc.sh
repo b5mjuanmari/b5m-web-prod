@@ -360,7 +360,7 @@ function dw_types_list {
 			getline
 		}
 		gsub("\"","")
-		res = res "{@dw_type_id@:" $1 ",@dw_name_eu@:@" $2 "@,@dw_name_es@:@" $3 "@,@dw_name_en@:@" $4 "@},"
+		res = res "{@dw_type_id@:" $1 ",@dw_name_eu@:@" $2 "@,@dw_name_es@:@" $3 "@,@dw_name_en@:@" $4 "@,@dw_grid@:@" $5 "@},"
 	}
 	END {
 		res = substr(res, 1, length(res)-1)
