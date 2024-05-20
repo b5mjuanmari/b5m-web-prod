@@ -1882,7 +1882,8 @@ and a.url_2d like 'R_%'"
 dw_sql_01_05="select id_type dw_type_id,
 name_eu dw_name_eu,
 name_es dw_name_es,
-name_en dw_name_en
+name_en dw_name_en,
+decode(grid_dw,'photo',0,1) dw_grid
 from b5mweb_nombres.dw_types
 where active=1
 order by id_type"
