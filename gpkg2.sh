@@ -113,9 +113,42 @@ ini="Hasiera / Inicio: $scr - `date '+%Y-%m-%d %H:%M:%S'`"
 msg "$ini"
 cd "$dir"
 
+# ======================================================================= #
+#                                                                         #
+# 1. h_historicalterritories (lurralde historikoa / territorio histórico) #
+#                                                                         #
+# ======================================================================= #
+
+# 6"
+
+# Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
+vconf=`grep "$h_gpk" "$fconf"`
+IFS='|' read -a aconf <<< "$vconf"
+typ01="${aconf[0]}"
+gpk01="${aconf[1]}"
+des01="${h_des[0]} - ${h_des[1]} - ${h_des[2]}"
+if [ "$h_gpk" = "$gpk01" ] && ([ $typ01 = "1" ] || [ "$typ01" = "2" ])
+then
+	let i1=$i1+1
+	msg "${i1}/${nf}: $(date '+%Y-%m-%d %H:%M:%S') - $gpk01 - ${h_des[0]}\c"
+	f01="${tmpd}/${h_gpk}.gpkg"
+
+	# Oinarrizko datuak / Datos básicos
+	rm "$f01" 2> /dev/null
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$h_gpk" -lco DESCRIPTION="$des01" -sql "$h_sql_01"
+
+	# Eremuak berrizendatu / Renombrar campos
+	rfl "$f01" "$h_gpk"
+
+	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
+	cp_gpk "$typ01" "$h_gpk"
+	msg " - ${typ01}"
+	rm "$f01" 2> /dev/null
+fi
+
 # =========================================== #
 #                                             #
-# 1. m_municipalities (udalerria / municipio) #
+# 2. m_municipalities (udalerria / municipio) #
 #                                             #
 # =========================================== #
 
@@ -161,7 +194,7 @@ fi
 
 # ================================== #
 #                                    #
-# 2. s_regions (eskualdea / comarca) #
+# 3. s_regions (eskualdea / comarca) #
 #                                    #
 # ================================== #
 
@@ -194,7 +227,7 @@ fi
 
 # ======================================================== #
 #                                                          #
-# 3. d_postaladdresses (posta helbidea / dirección postal) #
+# 4. d_postaladdresses (posta helbidea / dirección postal) #
 #                                                          #
 # ======================================================== #
 
@@ -248,7 +281,7 @@ fi
 
 # ==================================== #
 #                                      #
-# 4. e_buildings (eraikina / edificio) #
+# 5. e_buildings (eraikina / edificio) #
 #                                      #
 # ==================================== #
 
@@ -314,7 +347,7 @@ fi
 
 # ================================================================================ #
 #                                                                                  #
-# 5. k_streets_buildings (kalea [eraikin multzoa] / calle [conjunto de edificios]) #
+# 6. k_streets_buildings (kalea [eraikin multzoa] / calle [conjunto de edificios]) #
 #                                                                                  #
 # ================================================================================ #
 
@@ -360,7 +393,7 @@ fi
 
 # ================================================= #
 #                                                   #
-# 6. v_streets_axis (kalea [ardatza] / calle [eje]) #
+# 7. v_streets_axis (kalea [ardatza] / calle [eje]) #
 #                                                   #
 # ================================================= #
 
@@ -406,7 +439,7 @@ fi
 
 # =========================== #
 #                             #
-# 7. c_basins (arroa /cuenca) #
+# 8. c_basins (arroa /cuenca) #
 #                             #
 # =========================== #
 
@@ -452,7 +485,7 @@ fi
 
 # ============================================ #
 #                                              #
-# 8. i_hydrography (hidrografia / hidrografía) #
+# 9. i_hydrography (hidrografia / hidrografía) #
 #                                              #
 # ============================================ #
 
@@ -498,7 +531,7 @@ fi
 
 # =================================================================== #
 #                                                                     #
-# 9. z_districts (auzo eta/edo hiri izena / barrio y/o nombre urbano) #
+# 10. z_districts (auzo eta/edo hiri izena / barrio y/o nombre urbano) #
 #                                                                     #
 # =================================================================== #
 
@@ -544,7 +577,7 @@ fi
 
 # ==================================================================== #
 #                                                                      #
-# 10. g_orography (orografiaren toponimia / toponimia de la orografia) #
+# 11. g_orography (orografiaren toponimia / toponimia de la orografia) #
 #                                                                      #
 # ==================================================================== #
 
@@ -590,7 +623,7 @@ fi
 
 # ======================================================================== #
 #                                                                          #
-# 11. t_roads_railways (errepidea eta trenbidea / carretera y ferrocarril) #
+# 12. t_roads_railways (errepidea eta trenbidea / carretera y ferrocarril) #
 #                                                                          #
 # ======================================================================== #
 
@@ -647,7 +680,7 @@ fi
 
 # ================================================================================================== #
 #                                                                                                    #
-# 12. q_municipalcartography (Udal kartografiaren inbentarioa / Inventario de cartografía municipal) #
+# 13. q_municipalcartography (Udal kartografiaren inbentarioa / Inventario de cartografía municipal) #
 #                                                                                                    #
 # ================================================================================================== #
 
@@ -693,7 +726,7 @@ fi
 
 # =================================================================== #
 #                                                                     #
-# 13. sg_geodeticbechmarks (seinale geodesikoak / señales geodésicas) #
+# 14. sg_geodeticbechmarks (seinale geodesikoak / señales geodésicas) #
 #                                                                     #
 # =================================================================== #
 
@@ -739,7 +772,7 @@ fi
 
 # =================================================================== #
 #                                                                     #
-# 14. em_megalithicsites (estazio megalitikoa / estación megalítica ) #
+# 15. em_megalithicsites (estazio megalitikoa / estación megalítica ) #
 #                                                                     #
 # =================================================================== #
 
@@ -785,7 +818,7 @@ fi
 
 # ======================================= #
 #                                         #
-# 15. gk_megaliths (megalitoa / megalito) #
+# 16. gk_megaliths (megalitoa / megalito) #
 #                                         #
 # ======================================= #
 
@@ -831,7 +864,7 @@ fi
 
 # ================================================================== #
 #                                                                    #
-# 16. cv_speleology (leizea eta espeleologia / cueva y espeleología) #
+# 17. cv_speleology (leizea eta espeleologia / cueva y espeleología) #
 #                                                                    #
 # ================================================================== #
 
@@ -877,7 +910,7 @@ fi
 
 # ==================================== #
 #                                      #
-# 17. bi_biotopes (biotopoa / biotopo) #
+# 18. bi_biotopes (biotopoa / biotopo) #
 #                                      #
 # ==================================== #
 
@@ -923,7 +956,7 @@ fi
 
 # ========================================================== #
 #                                                            #
-# 18. poi_pointsofinterest (interesgunea / punto de interés) #
+# 19. poi_pointsofinterest (interesgunea / punto de interés) #
 #                                                            #
 # ========================================================== #
 
@@ -969,7 +1002,7 @@ fi
 
 # ========================================================================= #
 #                                                                           #
-# 19. dm_distancemunicipalities (udalerrien arteko d. /d. entre municipios) #
+# 20. dm_distancemunicipalities (udalerrien arteko d. /d. entre municipios) #
 #                                                                           #
 # ========================================================================= #
 
@@ -1004,7 +1037,7 @@ fi
 
 # ===================================== #
 #                                       #
-# 20. r_grid (lauki-sarea / cuadrícula) #
+# 21. r_grid (lauki-sarea / cuadrícula) #
 #                                       #
 # ===================================== #
 
@@ -1037,11 +1070,11 @@ fi
 
 # ===================================== #
 #                                       #
-# 21. dw_download (deskarga / descarga) #
+# 22. dw_download (deskarga / descarga) #
 #                                       #
 # ===================================== #
 
-# ?"
+# 12'25"
 
 # Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
 vconf=`grep "$dw_gpk" "$fconf"`

@@ -15,111 +15,116 @@
 #                             #
 # =========================== #
 
-# 1. m_municipalities
+# 1. h_historicalterritories
+h_gpk="h_historicalterritories"
+h_des=("Lurralde Historikoa" "Territorio Histórico" "Historical Territory")
+h_abs=("B5m H kodea" "B5m código H" "B5m Code H")
+
+# 2. m_municipalities
 m_gpk="m_municipalities"
 m_des=("Udalerria" "Municipio" "Municipality")
 m_des2=("Igarotzen diren udalerriak" "Municipios por los que discurre" "Municipalities through which it flows")
 m_des3=("Zein udalerritatik igarotzen den" "Municipios por los que pasa" "Municipalities through which it passes")
 m_abs=("B5m M kodea" "B5m código M" "B5m Code M")
 
-# 2. s_regions
+# 3. s_regions
 s_gpk="s_regions"
 s_des=("Eskualdea" "Comarca" "Region")
 s_abs=("B5m S kodea" "B5m código S" "B5m Code S")
 
-# 3. d_postaladdresses
+# 4. d_postaladdresses
 d_gpk="d_postaladdresses"
 d_des=("Posta helbidea" "Dirección postal" "Postal Address")
 d_abs=("B5m D kodea" "B5m código D" "B5m Code D")
 
-# 4. e_buildings
+# 5. e_buildings
 e_gpk="e_buildings"
 e_des=("Eraikina" "Edificio" "Building")
 e_abs=("B5m E kodea" "B5m código E" "B5m Code E")
 
-# 5. k_streets_buildings
+# 6. k_streets_buildings
 k_gpk="k_streets_buildings"
 k_des=("Kalea (eraikin multzoa)" "Calle (conjunto de edificios)" "Street (building set)")
 k_abs=("B5m K kodea" "B5m código K" "B5m Code K")
 
-# 6. v_streets_axis
+# 7. v_streets_axis
 v_gpk="v_streets_axis"
 v_des=("Kalea (ardatza)" "Calle (eje)" "Street (axis)")
 v_abs=("B5m V kodea" "B5m código V" "B5m Code V")
 
-# 7. c_basins
+# 8. c_basins
 c_gpk="c_basins"
 c_des=("Arro hidrografikoa" "Cuenca hidrográfica" "Hydrographic Basin")
 c_abs=("B5m C kodea" "B5m código C" "B5m Code C")
 
-# 8. i_hydrography
+# 9. i_hydrography
 i_gpk="i_hydrography"
 i_des=("Hidrografia" "Hidrografía" "Hydrography")
 i_abs=("B5m I kodea" "B5m código I" "B5m Code I")
 
-# 9. z_districts
+# 10. z_districts
 z_gpk="z_districts"
 z_des=("Auzo eta/edo hiri izena" "Barrio y/o nombre urbano" "District and/or urban name")
 z_abs=("B5m Z kodea" "B5m código Z" "B5m Code Z")
 
-# 10. g_orography
+# 11. g_orography
 g_gpk="g_orography"
 g_des=("Orografiaren toponimia" "Toponimia de la orografía" "Toponymy of the orography")
 g_abs=("B5m G kodea" "B5m código G" "B5m Code G")
 
-# 11. t_roads_railways
+# 12. t_roads_railways
 t_gpk="t_roads_railways"
 kp_gpk="kp_kilometre_points"
 t_des=("Errepidea eta trenbidea" "Carretera y ferrocarril" "Road and Railway")
 kp_des=("(kilometro puntua)" "(punto kilométrico)" "(Kilometre Point")
 t_abs=("B5m T kodea" "B5m código T" "B5m Code T")
 
-# 12. q_municipalcartography
+# 13. q_municipalcartography
 q_gpk="q_municipalcartography"
 q_des=("Udal kartografiaren inbentarioa" "Inventario de cartografía municipal" "Municipal Cartography Inventory")
 q_abs=("B5m Q kodea" "B5m código Q" "B5m Code Q")
 
-# 13. sg_geodeticbenchmarks
+# 14. sg_geodeticbenchmarks
 sg_gpk="sg_geodeticbenchmarks"
 sg_des=("Seinale geodesikoa" "Señal geodésica" "Geodetic Benchmark")
 sg_abs=("B5m SG kodea" "B5m código SG" "B5m Code SG")
 
-# 14. em_megalithicsites
+# 15. em_megalithicsites
 em_gpk="em_megalithicsites"
 em_des=("Estazio megalitikoa" "Estación megalítica" "Megalith Site")
 em_abs=("B5m EM kodea" "B5m código EM" "B5m Code EM")
 
-# 15. gk_megaliths
+# 16. gk_megaliths
 gk_gpk="gk_megaliths"
 gk_des=("Megalitoa" "Megalito" "Megalith")
 gk_abs=("B5m GK kodea" "B5m código GK" "B5m Code GK")
 
-# 16. cv_speleology
+# 17. cv_speleology
 cv_gpk="cv_speleology"
 cv_des=("Leizea eta espeleologia" "Cueva y espeleología" "Cave and speleology")
 cv_abs=("B5m CV kodea" "B5m código CV" "B5m Code CV")
 
-# 17. bi_biotopes
+# 18. bi_biotopes
 bi_gpk="bi_biotopes"
 bi_des=("Biotopoa" "Biotopo" "Biotope")
 bi_abs=("B5m BI kodea" "B5m código BI" "B5m Code BI")
 
-# 18. poi_pointsofinterest
+# 19. poi_pointsofinterest
 poi_gpk="poi_pointsofinterest"
 poi_des=("Interesgunea" "Punto de interés" "Point of Interest")
 poi_abs=("B5m POI kodea" "B5m código POI" "B5m Code POI")
 
-# 19. dm_distancemunicipalities
+# 20. dm_distancemunicipalities
 dm_gpk="dm_distancemunicipalities"
 dm_des=("Udalerrien arteko distantzia" "Distancia entre municipios" "Distance Between Municipalities")
 dm_abs=("B5m DM kodea" "B5m código DM" "B5m Code DM")
 
-# 20. r_grid
+# 21. r_grid
 r_gpk="r_grid"
 r_des=("Lauki-sarea" "Cuadrícula" "Grid")
 r_abs=("B5m R kodea" "B5m código R" "B5m Code R")
 
-# 21. dw_download
+# 22. dw_download
 dw_gpk="dw_download"
 dw_des=("Deskargak" "Descargas" "Downloads")
 dw_abs=("B5m DW kodea" "B5m código DW" "B5m Code DW")
@@ -140,9 +145,30 @@ url_cat_es="${url_cat}/es/catalogo-espeleologico/ficha/"
 ora_sch_01="b5mweb_nombres"
 dw_fs="dw_file_sizes"
 
+# ========================== #
+#                            #
+# 1. h_historicalterritories #
+#                            #
+# ========================== #
+
+h_sql_01="select
+a.url_2d b5mcode,
+upper(substr(a.tipo_e,1,1))||substr(a.tipo_e,2,length(a.tipo_e)-1) type_eu,
+upper(substr(a.tipo_c,1,1))||substr(a.tipo_c,2,length(a.tipo_c)-1) type_es,
+upper(substr(a.tipo_i,1,1))||substr(a.tipo_i,2,length(a.tipo_i)-1) type_en,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+'"$updd"' update_date,
+'1' official,
+sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.lurralint b
+where a.url_2d like 'H_%'
+group by (a.url_2d,a.nombre_e,a.nombre_c,a.tipo_e,a.tipo_c,a.tipo_i)
+order by a.url_2d"
+
 # =================== #
 #                     #
-# 1. m_municipalities #
+# 2. m_municipalities #
 #                     #
 # =================== #
 
@@ -218,7 +244,7 @@ type_en|Elementu geografikoaren mota ingelesez|Tipo del elemento geográfico en 
 
 # ============ #
 #              #
-# 2. s_regions #
+# 3. s_regions #
 #              #
 # ============ #
 
@@ -239,7 +265,7 @@ order by a.url_2d"
 
 # ==================== #
 #                      #
-# 3. d_postaladdresses #
+# 4. d_postaladdresses #
 #                      #
 # ==================== #
 
@@ -438,7 +464,7 @@ on a.b5mcode = b.b5mcode"
 
 # ============== #
 #                #
-# 4. e_buildings #
+# 5. e_buildings #
 #                #
 # ============== #
 
@@ -755,7 +781,7 @@ on a.b5mcode2 = b.b5mcode"
 
 # ====================== #
 #                        #
-# 5. k_streets_buildings #
+# 6. k_streets_buildings #
 #                        #
 # ====================== #
 
@@ -847,7 +873,7 @@ on a.b5mcode = b.b5mcode"
 
 # ================= #
 #                   #
-# 6. v_streets_axis #
+# 7. v_streets_axis #
 #                   #
 # ================= #
 
@@ -939,7 +965,7 @@ on a.b5mcode = b.b5mcode"
 
 # =========== #
 #             #
-# 7. c_basins #
+# 8. c_basins #
 #             #
 # =========== #
 
@@ -986,7 +1012,7 @@ on a.b5mcode = b.b5mcode"
 
 # ================ #
 #                  #
-# 8. i_hydrography #
+# 9. i_hydrography #
 #                  #
 # ================ #
 
@@ -1031,7 +1057,7 @@ on a.b5mcode = b.b5mcode"
 
 # ============== #
 #                #
-# 9. z_districts #
+# 10. z_districts #
 #                #
 # ============== #
 
@@ -1073,7 +1099,7 @@ on a.b5mcode = b.b5mcode"
 
 # =============== #
 #                 #
-# 10. g_orography #
+# 11. g_orography #
 #                 #
 # =============== #
 
@@ -1115,7 +1141,7 @@ on a.b5mcode = b.b5mcode"
 
 # ==================== #
 #                      #
-# 11. t_roads_railways #
+# 12. t_roads_railways #
 #                      #
 # ==================== #
 
@@ -1239,7 +1265,7 @@ on a.kpcode = b.kpcode"
 
 # ========================== #
 #                            #
-# 12. q_municipalcartography #
+# 13. q_municipalcartography #
 #                            #
 # ========================== #
 
@@ -1290,7 +1316,7 @@ on a.b5mcode = b.b5mcode"
 
 # ========================= #
 #                           #
-# 13. sg_geodeticbenchmarks #
+# 14. sg_geodeticbenchmarks #
 #                           #
 # ========================= #
 
@@ -1347,7 +1373,7 @@ on a.b5mcode = b.b5mcode"
 
 # ====================== #
 #                        #
-# 14. em_megalithicsites #
+# 15. em_megalithicsites #
 #                        #
 # ====================== #
 
@@ -1391,7 +1417,7 @@ on a.b5mcode = b.b5mcode"
 
 # ================ #
 #                  #
-# 15. gk_megaliths #
+# 16. gk_megaliths #
 #                  #
 # ================ #
 
@@ -1445,7 +1471,7 @@ on a.b5mcode = b.b5mcode"
 
 # ================= #
 #                   #
-# 16. cv_speleology #
+# 17. cv_speleology #
 #                   #
 # ================= #
 
@@ -1507,7 +1533,7 @@ on a.b5mcode = b.b5mcode"
 
 # =============== #
 #                 #
-# 17. bi_biotopes #
+# 18. bi_biotopes #
 #                 #
 # =============== #
 
@@ -1549,7 +1575,7 @@ on a.b5mcode = b.b5mcode"
 
 # ======================== #
 #                          #
-# 18. poi_pointsofinterest #
+# 19. poi_pointsofinterest #
 #                          #
 # ======================== #
 
@@ -1636,7 +1662,7 @@ on a.b5mcode_d = b.b5mcode"
 
 # ============================= #
 #                               #
-# 19. dm_distancemunicipalities #
+# 20. dm_distancemunicipalities #
 #                               #
 # ============================= #
 
@@ -1668,7 +1694,7 @@ and b.codmuni=c.codmuni2"
 
 # ========== #
 #            #
-# 20. r_grid #
+# 21. r_grid #
 #            #
 # ========== #
 
@@ -1818,7 +1844,7 @@ and a.url_2d like 'R_%'"
 
 # =============== #
 #                 #
-# 21. dw_download #
+# 22. dw_download #
 #                 #
 # =============== #
 
