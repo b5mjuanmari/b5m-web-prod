@@ -1927,7 +1927,9 @@ replace(replace(listagg(d.format_dir,';') within group (order by d.format_dir),'
 listagg(c.format_dw,';') within group (order by c.format_dw) format_dw,
 listagg(d.format_code,';') within group (order by c.format_dw) format_code,
 e.file_type_dw,
-a.url_metadata,
+a.url_metadata_eu,
+a.url_metadata_es,
+a.url_metadata_en,
 a.owner_eu,
 a.owner_es,
 a.owner_en,
@@ -1939,7 +1941,7 @@ and a.id_dw=f.id_dw
 and c.id_format=d.id_format
 and d.id_format_dir=f.id_format_dir
 and a.active=1
-group by a.id_dw,b.id_type,b.order_dw,b.code_dw,b.grid_dw,b.name_eu,b.name_es,b.name_en,a.year,a.path_dw,e.file_type_dw,a.url_metadata,a.owner_eu,a.owner_es,a.owner_en,a.subcode
+group by a.id_dw,b.id_type,b.order_dw,b.code_dw,b.grid_dw,b.name_eu,b.name_es,b.name_en,a.year,a.path_dw,e.file_type_dw,a.url_metadata_eu,a.url_metadata_es,a.url_metadata_en,a.owner_eu,a.owner_es,a.owner_en,a.subcode
 order by b.grid_dw desc,b.order_dw,a.year desc,b.code_dw desc,a.subcode nulls first"
 
 dw_sql_03="drop table ${ora_sch_01}.${dw_fs};
@@ -1981,7 +1983,9 @@ a.format_dw,
 replace(replace(replace(replace('https://b5m.gipuzkoa.eus/'||e.format_dir2||e.format_dir||'/'||decode(b.grid_dw,'photo',replace(a.name_grid,c.year||c.subcode||'_',''),a.name_grid)||e.template_dir,'*',''),a.name_grid,e.format_file1||a.name_grid||e.format_file2),'year2',substr(c.year,3,2)),'year',c.year) url_dw,
 g.file_type_dw,
 a.size_by file_size,
-decode(c.owner_eu,'Gipuzkoako Foru Aldundia',c.url_metadata||'.'||decode(b.grid_dw,'photo',replace(a.name_grid,c.year||c.subcode||'_',''),a.name_grid),c.url_metadata) url_metadata,
+decode(c.owner_eu,'Gipuzkoako Foru Aldundia',c.url_metadata_eu||'.'||decode(b.grid_dw,'photo',replace(a.name_grid,c.year||c.subcode||'_',''),a.name_grid),c.url_metadata_eu) url_metadata_eu,
+decode(c.owner_eu,'Gipuzkoako Foru Aldundia',c.url_metadata_es||'.'||decode(b.grid_dw,'photo',replace(a.name_grid,c.year||c.subcode||'_',''),a.name_grid),c.url_metadata_es) url_metadata_es,
+decode(c.owner_eu,'Gipuzkoako Foru Aldundia',c.url_metadata_en||'.'||decode(b.grid_dw,'photo',replace(a.name_grid,c.year||c.subcode||'_',''),a.name_grid),c.url_metadata_en) url_metadata_en,
 c.owner_eu,
 c.owner_es,
 c.owner_en,

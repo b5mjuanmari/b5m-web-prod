@@ -445,7 +445,7 @@ function dw_scan {
 					dw_grid=`echo "${g[8]} ${d4}" | gawk '{ b = split($1, a , "/"); c = substr($2, 1, 1); d = substr($2, 2, 2); split(a[b], e, d); print e[c] }'`
 					if [ "${c[4]}" = "photo" ]
 					then
-						dw_grid="${c[5]}${c[16]}_${dw_grid}"
+						dw_grid="${c[5]}${c[18]}_${dw_grid}"
 					fi
 					echo "${j},${c[0]},${c[1]},\"${dw_grid}\",\"${d3[$k]}\",${g[4]}" >> "$csv01"
 					let j=$j+1
@@ -584,17 +584,17 @@ function dw_data {
 			gsub("baq", "eng", murl_en)
 
 			# b5mcode_dw inguruko partea
-			if ($17 == "")
+			if ($19 == "")
 				res_code_dw = "{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@format@:["
 			else
-				res_code_dw = "{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@lidar_features@:{@model_type@:{@code@:@" $17 "@,@description_eu@:@" $18 "@,@description_es@:@" $19 "@,@description_en@:@" $20 "@,@url_ref_eu@:@" $21 "@,@url_ref_es@:@" $22 "@,@url_ref_en@:@" $23 "@},@height_type@:{@code@:@" $24 "@,@description_eu@:@" $25 "@,@description_es@:@" $26 "@,@description_en@:@" $27 "@,@url_ref1_eu@:@" $28 "@,@url_ref1_es@:@" $29 "@,@url_ref1_en@:@" $30 "@,@url_ref2_eu@:@" $31 "@,@url_ref2_es@:@" $32 "@,@url_ref2_en@:@" $33 "@},@data_processing@:{@code@:@" $34 "@,@description_eu@:@" $35 "@,@description_es@:@" $36 "@,@description_en@:@" $37 "@}},@format@:["
+				res_code_dw = "{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@lidar_features@:{@model_type@:{@code@:@" $19 "@,@description_eu@:@" $20 "@,@description_es@:@" $21 "@,@description_en@:@" $22 "@,@url_ref_eu@:@" $23 "@,@url_ref_es@:@" $24 "@,@url_ref_en@:@" $25 "@},@height_type@:{@code@:@" $26 "@,@description_eu@:@" $27 "@,@description_es@:@" $28 "@,@description_en@:@" $29 "@,@url_ref1_eu@:@" $30 "@,@url_ref1_es@:@" $31 "@,@url_ref1_en@:@" $32 "@,@url_ref2_eu@:@" $33 "@,@url_ref2_es@:@" $34 "@,@url_ref2_en@:@" $35 "@},@data_processing@:{@code@:@" $36 "@,@description_eu@:@" $37 "@,@description_es@:@" $38 "@,@description_en@:@" $39 "@}},@format@:["
 
-			if (match(res2, "#" $16 "#" ) == 0)
-				res2 = res2 "#" $16 "#"
+			if (match(res2, "#" $18 "#" ) == 0)
+				res2 = res2 "#" $18 "#"
 			a03 = $3
 			a06 = $3 "|" $6
-			a08 = "{@dw_type_id@:@" $16 "@,@name_eu@:@" $3 "@,@name_es@:@" $4 "@,@name_en@:@" $5 "@,@series_dw@:[" res_code_dw "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
-	    mdt = "@metadata@:{@url_eu@:@" $12 "@,@url_es@:@" murl_es "@,@url_en@:@" murl_en "@,@owner_eu@:@" $13 "@,@owner_es@:@" $14 "@,@owner_en@:@" $15 "@}"
+			a08 = "{@dw_type_id@:@" $18 "@,@name_eu@:@" $3 "@,@name_es@:@" $4 "@,@name_en@:@" $5 "@,@series_dw@:[" res_code_dw "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
+	    mdt = "@metadata@:{@url_eu@:@" $12 "@,@url_es@:@" $13 "@,@url_en@:@" $14 "@,@owner_eu@:@" $15 "@,@owner_es@:@" $16 "@,@owner_en@:@" $17 "@}"
 			a08 = a08 "]," mdt
 			if (a01 != $1 && a01 != "") {
 				res = res "}]"
@@ -617,16 +617,16 @@ function dw_data {
 				else
 					res = res "]}]}," a08
 			} else {
-				if ($6 != c06 && $16 != "5" && $16 != "6") {
+				if ($6 != c06 && $18 != "5" && $18 != "6") {
 					res = res "," res_code_dw "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
 				} else if ($7 != c07) {
-	    		mdt = "@metadata@:{@url_eu@:@" $12 "@,@url_es@:@" murl_es "@,@url_en@:@" murl_en "@,@owner_eu@:@" $13 "@,@owner_es@:@" $14 "@,@owner_en@:@" $15 "@}"
+	    		mdt = "@metadata@:{@url_eu@:@" $12 "@,@url_es@:@" $13 "@,@url_en@:@" $14 "@,@owner_eu@:@" $15 "@,@owner_es@:@" $16 "@,@owner_en@:@" $17 "@}"
 					if (substr(res, length(res)-1, 2) != "}}")
 					 res = res "}"
 					res = res "," res_code_dw "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}]," mdt "}"
 				} else {
 					if ($8 != c08) {
-	    			mdt = "@metadata@:{@url_eu@:@" $12 "@,@url_es@:@" murl_es "@,@url_en@:@" murl_en "@,@owner_eu@:@" $13 "@,@owner_es@:@" $14 "@,@owner_en@:@" $15 "@}"
+	    			mdt = "@metadata@:{@url_eu@:@" $12 "@,@url_es@:@" $13 "@,@url_en@:@" $14 "@,@owner_eu@:@" $15 "@,@owner_es@:@" $16 "@,@owner_en@:@" $17 "@}"
 						res = res ",{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}]," mdt "}"
 					}
 				}
