@@ -260,13 +260,13 @@ then
 
 	# poi
 	rm "$c02" 2> /dev/null
-	sql_poi "$c02" "$d_sql_03"
+	sql_json "$c02" "$d_sql_03"
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${d_gpk}_poi" -lco DESCRIPTION="${des01} poi" "$f01" "$c02"
 	rm "$c02" 2> /dev/null
 
 	# Eraikinen argazkiak / Fotos de los edificios
 	rm "$c02" 2> /dev/null
-	sql_poi "$c02" "$d_sql_04"
+	sql_json "$c02" "$d_sql_04"
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${d_gpk}_photo" -lco DESCRIPTION="${des01} photo" "$f01" "$c02"
 	rm "$c02" 2> /dev/null
 
@@ -327,7 +327,7 @@ then
 
 	# poi
 	rm "$c03" 2> /dev/null
-	sql_poi "$c03" "$e_sql_05"
+	sql_json "$c03" "$e_sql_05"
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}_poi" -lco DESCRIPTION="${des01} poi" "$f01" "$c03"
 	rm "$c03" 2> /dev/null
 

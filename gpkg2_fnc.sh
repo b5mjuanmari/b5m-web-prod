@@ -311,11 +311,11 @@ function sql_more_info_kp {
 	' "$1" > "$2"
 }
 
-function sql_poi {
-	# POIak kudeatzeko SQL prozesua / Proceso SQL para gestionar los POIs
+function sql_json {
+	# JSON datuak kudeatzeko SQL prozesua / Proceso SQL para gestionar los datos JSON
 	sqlplus -s "$con" <<-EOF1 | gawk '
 	{
-	gsub("poi_null","")
+	gsub("json_null","")
 	if (NR != 1) {
 		if (NR == 2)
 			print tolower($0)
