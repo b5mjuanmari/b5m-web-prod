@@ -445,6 +445,15 @@ group by (b5mcode_d)
 order by b5mcode_d"
 
 d_sql_04="select
+decode(a.idpostal, 0, null, 'D_A'||a.idpostal) b5mcode,
+replace(replace('['||replace(xmlagg(xmlelement(e,'{''codphoto'':''PH_'||replace(b.nombre,'.jpg','')||''',''url_photo'':''https://b5m.gipuzkoa.eus/web5000/img/build/'||b.nombre||''',''year'':'''||b.f_foto||'''},').extract('//text()') order by b.nombre).getclobval(),chr(38)||'apos;','''')||']',',]',']'),'[]','poi_null') photographs
+from b5mweb_nombres.n_edifgen a,b5mweb_nombres.n_edifoto2 b
+where a.idut=b.idut
+and a.idpostal<>0
+group by (a.idpostal)
+order by a.idpostal"
+
+d_sql_05="select
 a.*,
 b.more_info_eu,
 b.more_info_es,
@@ -453,13 +462,20 @@ from ${d_gpk} a
 left join ${d_gpk}_more_info b
 on a.b5mcode = b.b5mcode"
 
-d_sql_05="select
+d_sql_06="select
 a.*,
 b.poi_eu,
 b.poi_es,
 b.poi_en
 from ${d_gpk}_2 a
 left join ${d_gpk}_poi b
+on a.b5mcode = b.b5mcode"
+
+d_sql_07="select
+a.*,
+b.photographs
+from ${d_gpk}_3 a
+left join ${d_gpk}_photo b
 on a.b5mcode = b.b5mcode"
 
 # ============== #
