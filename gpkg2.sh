@@ -272,7 +272,7 @@ then
 
 	# Behin betiko GPKGa / GPKG definitivo
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${d_gpk}_2" -lco DESCRIPTION="${des01} 2" -sql "${d_sql_05}" "$f01" "$f01"
-	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${d_gpk}_3" -lco DESCRIPTION="$des01" -sql "$d_sql_06" "$f01" "$f01"
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${d_gpk}_3" -lco DESCRIPTION="$des01 3" -sql "$d_sql_06" "$f01" "$f01"
 	rm "$f02" 2> /dev/null
 	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "$d_gpk" -lco DESCRIPTION="$des01" -sql "$d_sql_07" "$f02" "$f01"
 	rm "$f01" 2> /dev/null
@@ -331,16 +331,23 @@ then
 	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}_poi" -lco DESCRIPTION="${des01} poi" "$f01" "$c03"
 	rm "$c03" 2> /dev/null
 
+	# Eraikinen argazkiak / Fotos de los edificios
+	rm "$c03" 2> /dev/null
+	sql_json "$c03" "$e_sql_06"
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}_photo" -lco DESCRIPTION="${des01} photo" "$f01" "$c03"
+	rm "$c03" 2> /dev/null
+
 	# Joins
-	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}_3" -lco DESCRIPTION="${des01} 3" -sql "${e_sql_06}" "$f01" "$f01"
-	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}_4" -lco DESCRIPTION="${des01} 4" -sql "${e_sql_07}" "$f01" "$f01"
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}_3" -lco DESCRIPTION="${des01} 3" -sql "${e_sql_07}" "$f01" "$f01"
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}_4" -lco DESCRIPTION="${des01} 4" -sql "${e_sql_08}" "$f01" "$f01"
 	fidm=`ogrinfo -ro -sql "select max(fid) from ${e_gpk}_3" "$f01" | tail -2 | gawk '{ print $NF }'`
 	ogr2ogr -f "GPKG" -update -sql "update ${e_gpk}_4 set fid=fid+${fidm}" "$f01" "$f01"
-	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}_5" -lco DESCRIPTION="${des01} 5" -sql "${e_sql_08}" "$f01" "$f01"
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}_5" -lco DESCRIPTION="${des01} 5" -sql "${e_sql_09}" "$f01" "$f01"
 
 	# Behin betiko GPKGa / GPKG definitivo
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}_6" -lco DESCRIPTION="$des01 6" -sql "$e_sql_10" "$f01" "$f01"
 	rm "$f02" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}" -lco DESCRIPTION="$des01" -sql "$e_sql_09" "$f02" "$f01"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${e_gpk}" -lco DESCRIPTION="$des01" -sql "$e_sql_11" "$f02" "$f01"
 	rm "$f01" 2> /dev/null
 
 	# Eremuak berrizendatu / Renombrar campos

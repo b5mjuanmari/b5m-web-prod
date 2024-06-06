@@ -761,6 +761,14 @@ group by (a.idut)"
 e_sql_05="$d_sql_03"
 
 e_sql_06="select
+'E_A'||a.idut b5mcode,
+replace(replace('['||replace(xmlagg(xmlelement(e,'{''codphoto'':''PH_'||replace(b.nombre,'.jpg','')||''',''url_photo'':''https://b5m.gipuzkoa.eus/web5000/img/build/'||b.nombre||''',''year'':'''||b.f_foto||'''},').extract('//text()') order by b.nombre).getclobval(),chr(38)||'apos;','''')||']',',]',']'),'[]','json_null') photographs
+from (select distinct idut from b5mweb_nombres.n_edifgen) a,b5mweb_nombres.n_edifoto2 b
+where a.idut=b.idut
+group by (a.idut)
+order by a.idut"
+
+e_sql_07="select
 a.*,
 b.more_info_eu,
 b.more_info_es,
@@ -769,7 +777,7 @@ from ${e_gpk}_1 a
 left join ${e_gpk}_more_info_1 b
 on a.b5mcode2 = b.b5mcode"
 
-e_sql_07="select
+e_sql_08="select
 a.*,
 b.more_info_eu,
 b.more_info_es,
@@ -778,7 +786,7 @@ from ${e_gpk}_2 a
 left join ${e_gpk}_more_info_2 b
 on a.b5mcode = b.b5mcode"
 
-e_sql_08="select
+e_sql_09="select
 *
 from ${e_gpk}_3
 union
@@ -786,7 +794,7 @@ select
 *
 from ${e_gpk}_4"
 
-e_sql_09="select
+e_sql_10="select
 a.*,
 b.poi_eu,
 b.poi_es,
@@ -794,6 +802,13 @@ b.poi_en
 from ${e_gpk}_5 a
 left join ${e_gpk}_poi b
 on a.b5mcode2 = b.b5mcode"
+
+e_sql_11="select
+a.*,
+b.photographs
+from ${e_gpk}_6 a
+left join ${e_gpk}_photo b
+on a.b5mcode = b.b5mcode"
 
 # ====================== #
 #                        #
