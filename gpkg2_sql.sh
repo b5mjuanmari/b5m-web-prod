@@ -145,6 +145,19 @@ url_cat_es="${url_cat}/es/catalogo-espeleologico/ficha/"
 ora_sch_01="b5mweb_nombres"
 dw_fs="dw_file_sizes"
 
+# ======== #
+#          #
+# Official #
+#          #
+# ======== #
+
+oft0eu="Elementu honen muga ez dago legez araututa."
+oft0es="El límite de este elemento no está regulado de forma legal."
+oft0en="The limit of this element is not regulated by law."
+oft1eu=""
+oft1es=""
+oft1en=""
+
 # ========================== #
 #                            #
 # 1. h_historicalterritories #
@@ -159,7 +172,7 @@ upper(substr(a.tipo_i,1,1))||substr(a.tipo_i,2,length(a.tipo_i)-1) type_en,
 a.nombre_e name_eu,
 a.nombre_c name_es,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.lurralint b
 where a.url_2d like 'H_%'
@@ -180,7 +193,7 @@ upper(substr(a.tipo_i,1,1))||substr(a.tipo_i,2,length(a.tipo_i)-1) type_en,
 a.nombre_e name_eu,
 a.nombre_c name_es,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.giputz b
 where a.url_2d='M_'||b.codmuni
@@ -256,7 +269,7 @@ upper(substr(a.tipo_c,1,1))||substr(a.tipo_c,2,length(a.tipo_c)-1) type_es,
 a.nombre_e name_eu,
 a.nombre_c name_es,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.giputz b
 where a.url_2d='S_'||b.idnomcomarca
@@ -291,7 +304,7 @@ a.seccion codsec,
 a.nomedif_e name_building_eu,
 a.nomedif_e name_building_es,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.n_edifgen a,b5mweb_25830.a_edifind b
 where a.idut=b.idut
@@ -320,7 +333,7 @@ a.seccion codsec,
 a.nomedif_e name_building_eu,
 a.nomedif_e name_building_es,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.n_edifgen a,b5mweb_25830.o_edifind b
 where a.idut=b.idut
@@ -349,7 +362,7 @@ a.seccion codsec,
 a.nomedif_e name_building_eu,
 a.nomedif_e name_building_es,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.n_edifgen a,b5mweb_25830.s_edifind b
 where a.idut=b.idut
@@ -507,7 +520,7 @@ a.seccion codsec,
 a.nomedif_e name_building_eu,
 a.nomedif_e name_building_es,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.n_edifgen a,b5mweb_25830.a_edifind b
 where a.idut(+)=b.idut
@@ -536,7 +549,7 @@ a.seccion codsec,
 a.nomedif_e name_building_eu,
 a.nomedif_e name_building_es,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.n_edifgen a,b5mweb_25830.o_edifind b
 where a.idut(+)=b.idut
@@ -565,7 +578,7 @@ a.seccion codsec,
 a.nomedif_e name_building_eu,
 a.nomedif_e name_building_es,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.n_edifgen a,b5mweb_25830.s_edifind b
 where a.idut(+)=b.idut
@@ -727,7 +740,7 @@ a.url_2d b5mcode,
 a.nombre_e name_eu,
 decode(regexp_replace(a.nombre_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.nombre_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.nombre_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.nombre_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.nombre_c,'[^,]+',1,1),a.nombre_c) name_es,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.a_edifind b,b5mweb_nombres.n_edifgen c
 where a.id_nombre1=c.codmuni
@@ -819,7 +832,7 @@ replace(a.url_2d,'K_','V_') b5mcode,
 a.nombre_e name_eu,
 decode(regexp_replace(a.nombre_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.nombre_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.nombre_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.nombre_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.nombre_c,'[^,]+',1,1),a.nombre_c) name_es,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 sdo_aggr_union(sdoaggrtype(b.polyline,0.005)) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.vialesind b,b5mweb_nombres.v_rel_vial_tramo c,b5mweb_nombres.n_calles d
 where a.idnombre=d.idnombre
@@ -915,7 +928,7 @@ a.url_2d b5mcode,
 a.nombre_e name_eu,
 a.nombre_c name_es,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 b.polygon geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.cuencap b
 where a.url_2d='C_A'||b.idnombre
@@ -958,7 +971,7 @@ upper(substr(a.tipo_i,1,1))||substr(a.tipo_i,2,length(a.tipo_i)-1) type_en,
 a.nombre_e name_eu,
 a.nombre_c name_es,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 sdo_aggr_concat_lines(b.polyline) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.ibaiak b
 where a.id_nombre1=to_char(b.idnombre)
@@ -1003,7 +1016,7 @@ upper(substr(a.tipo_i,1,1))||substr(a.tipo_i,2,length(a.tipo_i)-1) type_en,
 a.nombre_e name_eu,
 a.nombre_c name_es,
 '"$updd"' update_date,
-'0' official,
+'{\"official_id\":\"0\",\"official_text_eu\":\"${oft0eu}\",\"official_text_es\":\"${oft0es}\",\"official_text_en\":\"${oft0en}\"}' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.barrioind b,b5mweb_nombres.b_barrios c
 where a.id_nombre1=c.idnombre
@@ -1045,7 +1058,7 @@ upper(substr(a.tipo_i,1,1))||substr(a.tipo_i,2,length(a.tipo_i)-1) type_en,
 a.nombre_e name_eu,
 a.nombre_c name_es,
 '"$updd"' update_date,
-'0' official,
+'{\"official_id\":\"0\",\"official_text_eu\":\"${oft0eu}\",\"official_text_es\":\"${oft0es}\",\"official_text_en\":\"${oft0en}\"}' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.montesind b,b5mweb_nombres.o_orograf c
 where a.id_nombre1=c.idnombre
@@ -1123,7 +1136,7 @@ from
       a.nombre_e name_eu,
       a.nombre_c name_es,
       '"$updd"' update_date,
-      '1' official,
+      '{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
       sdo_aggr_union(sdoaggrtype(b.polyline,0.005)) geom
       from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.vialesind b,b5mweb_nombres.v_rel_vial_tramo c
       where a.id_nombre1=to_char(c.idnombre)
@@ -1153,7 +1166,7 @@ a.sentido_eu way_eu,
 a.sentido_es way_es,
 a.sentido_en way_en,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 b.point geom
 from b5mweb_nombres.solr_pkil_2d a,b5mweb_25830.pkil b
 where a.idnombre=b.idnombre
@@ -1218,7 +1231,7 @@ to_char(a.f_ultactua,'YYYY-MM-DD') last_update_date,
 '"$url_map_es"Q_'||a.id_levan map_link_es,
 '"$url_map_en"Q_'||a.id_levan map_link_en,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 c.geom
 from b5mweb_nombres.g_levantamiento a, b5mweb_nombres.g_empresas b,b5mweb_25830.cartoaggr c
 where a.id_levan=c.id_levan
@@ -1273,7 +1286,7 @@ decode(ajuste,1,'${sg_aju_en}','${sg_sen_en}') type_en,
 file_type,
 size_kb,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 geom
 from o_mw_bta.puntogeodesicobta
 where visible_web=1
@@ -1322,7 +1335,7 @@ tipo_c type_en,
 '"$url_map_es"' || 'EM_A'||idnombre map_link_es,
 '"$url_map_en"' || 'EM_A'||idnombre map_link_en,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 polygon
 from b5mweb_25830.monuestmegal
 order by idnombre"
@@ -1366,8 +1379,8 @@ a.tipo_i type_en,
 '"$url_map_es"'||a.url_2d map_link_es,
 '"$url_map_en"'||a.url_2d map_link_en,
 b.bopv official_gazette_link,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 '"$updd"' update_date,
-'1' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.monu3 b
 where a.id_nombre1=to_char(b.tag)
@@ -1434,7 +1447,7 @@ decode(b.surgencia,null,0,1) spring,
 '"$url_map_es"'||a.url_2d map_link_es,
 '"$url_map_en"'||a.url_2d map_link_en,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.cuevas b
 where a.id_nombre1=b.tag
@@ -1482,7 +1495,7 @@ initcap(a.tipo_i) type_en,
 '"$url_map_es"'||a.url_2d map_link_es,
 '"$url_map_en"'||a.url_2d map_link_en,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.bi_biotopos b
 where a.id_nombre1=b.idnombre
@@ -1547,7 +1560,7 @@ b.codpostal postal_code,
 '"$url_map_es"'||'POI_' || a.id_actividad map_link_es,
 '"$url_map_en"'||'POI_' || a.id_actividad map_link_en,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 c.point geom
 from b5mweb_nombres.n_actipuerta a,b5mweb_nombres.n_dir_postal b,b5mweb_25830.puertas c,b5mweb_nombres.poi_categories d,b5mweb_nombres.poi_classes e,b5mweb_nombres.poi_cat_class f,b5mweb_nombres.poi_icons g,b5mweb_nombres.poi_icons h,b5mweb_nombres.poi_icons_url i
 where a.id_postal=b.idnombre
@@ -1620,7 +1633,7 @@ c.fecha dm_date,
 '"$url_map_es"'||'DM_'||a.codmuni||'_'||b.codmuni map_link_es,
 '"$url_map_en"'||'DM_'||a.codmuni||'_'||b.codmuni map_link_en,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 c.geom
 from mapas_otros.dist_ayunta2_muni a,mapas_otros.dist_ayunta2_muni b,mapas_otros.dist_ayunta2 c
 where a.codmuni=c.codmuni1
@@ -1643,7 +1656,7 @@ a.tipo_i type_en,
 '"$url_map_es"'||a.url_2d map_link_es,
 '"$url_map_en"'||a.url_2d map_link_en,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec1 b
 where a.nombre_e=b.tag
@@ -1661,7 +1674,7 @@ a.tipo_i type_en,
 '"$url_map_es"'||a.url_2d map_link_es,
 '"$url_map_en"'||a.url_2d map_link_en,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec2 b
 where a.nombre_e=b.tag
@@ -1679,7 +1692,7 @@ a.tipo_i type_en,
 '"$url_map_es"'||a.url_2d map_link_es,
 '"$url_map_en"'||a.url_2d map_link_en,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec5 b
 where a.nombre_e=b.tag
@@ -1697,7 +1710,7 @@ a.tipo_i type_en,
 '"$url_map_es"'||a.url_2d map_link_es,
 '"$url_map_en"'||a.url_2d map_link_en,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec b
 where a.nombre_e=b.tag
@@ -1715,7 +1728,7 @@ a.tipo_i type_en,
 '"$url_map_es"'||a.url_2d map_link_es,
 '"$url_map_en"'||a.url_2d map_link_en,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.pauta5 b
 where a.nombre_e=b.tag
@@ -1733,7 +1746,7 @@ a.tipo_i type_en,
 '"$url_map_es"'||a.url_2d map_link_es,
 '"$url_map_en"'||a.url_2d map_link_en,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.pauta10 b
 where a.nombre_e=b.tag
@@ -1751,7 +1764,7 @@ a.tipo_i type_en,
 '"$url_map_es"'||a.url_2d map_link_es,
 '"$url_map_en"'||a.url_2d map_link_en,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.pauta25 b
 where a.nombre_e=b.tag
@@ -1769,7 +1782,7 @@ a.tipo_i type_en,
 '"$url_map_es"'||a.url_2d map_link_es,
 '"$url_map_en"'||a.url_2d map_link_en,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.pauta50 b
 where a.nombre_e=b.tag
@@ -1790,7 +1803,7 @@ a.tipo_e type_grid_eu,
 a.tipo_c type_grid_es,
 a.tipo_i type_grid_en,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec1 b
 where a.nombre_e=b.tag
@@ -1805,7 +1818,7 @@ a.tipo_e type_grid_eu,
 a.tipo_c type_grid_es,
 a.tipo_i type_grid_en,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipurec5 b
 where a.nombre_e=b.tag
@@ -1820,7 +1833,7 @@ substr(flight,6,length(flight)-5)||'_'||frame name_grid_es,
 'foto' type_grid_es,
 'photo' type_grid_en,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 polygon geom
 from b5mweb_25830.fotosaereas"
 
@@ -1832,7 +1845,7 @@ a.nombre_c name_grid_es,
 '1:5.000' type_grid_es,
 '1:5,000' type_grid_en,
 '"$updd"' update_date,
-'1' official,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.pauta5 b
 where a.nombre_e=b.tag
