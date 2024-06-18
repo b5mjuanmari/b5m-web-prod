@@ -588,9 +588,10 @@ function dw_data {
 				res_code_dw = "{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@format@:["
 			else
 				res_code_dw = "{@years@:" yrs ",@b5mcode_dw@:@" $7 "@,@lidar_features@:{@model_type@:{@code@:@" $19 "@,@description_eu@:@" $20 "@,@description_es@:@" $21 "@,@description_en@:@" $22 "@,@url_ref_eu@:@" $23 "@,@url_ref_es@:@" $24 "@,@url_ref_en@:@" $25 "@},@height_type@:{@code@:@" $26 "@,@description_eu@:@" $27 "@,@description_es@:@" $28 "@,@description_en@:@" $29 "@,@url_ref1_eu@:@" $30 "@,@url_ref1_es@:@" $31 "@,@url_ref1_en@:@" $32 "@,@url_ref2_eu@:@" $33 "@,@url_ref2_es@:@" $34 "@,@url_ref2_en@:@" $35 "@},@data_processing@:{@code@:@" $36 "@,@description_eu@:@" $37 "@,@description_es@:@" $38 "@,@description_en@:@" $39 "@}},@format@:["
-
-			if (match(res2, "#" $18 "#" ) == 0)
-				res2 = res2 "#" $18 "#"
+			if (a01 == $1 || a01 == "") {
+				if (match(res2, "#" $18 "#" ) == 0)
+					res2 = res2 "#" $18 "#"
+			}
 			a03 = $3
 			a06 = $3 "|" $6
 			a08 = "{@dw_type_id@:@" $18 "@,@name_eu@:@" $3 "@,@name_es@:@" $4 "@,@name_en@:@" $5 "@,@series_dw@:[" res_code_dw "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
@@ -609,7 +610,7 @@ function dw_data {
 				gsub("#", "|", res2)
 				print "\"" a01 "\",\"" res2 "\",\"[" res "\""
 				res = ""
-				res2 = ""
+				res2 = "#" $18 "#"
 			}
 			if (a03 != b03 || a01 != $1) {
 				if (res == "")

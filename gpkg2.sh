@@ -1082,7 +1082,7 @@ fi
 #                                       #
 # ===================================== #
 
-# 15'49"
+# 19'51"
 
 # Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
 vconf=`grep "$dw_gpk" "$fconf"`
