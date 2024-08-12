@@ -1605,12 +1605,12 @@ decode(b.muni_fr,null,b.muni_eu,b.muni_fr) muni2_fr,
 b.ter_eu term2_eu,
 b.ter_es term2_es,
 decode(b.ter_fr,null,b.ter_eu,b.ter_fr) term2_fr,
-c.dist_r distance_km,
+c.dist distance_km,
 c.fecha dm_date,
 '"$updd"' update_date,
 '{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 c.geom
-from mapas_otros.dist_ayunta2_muni a,mapas_otros.dist_ayunta2_muni b,mapas_otros.dist_ayunta2 c
+from mapas_otros.dist_ayunta3_muni a,mapas_otros.dist_ayunta3_muni b,b5mweb_25830.gi_wfs_dm c
 where a.codmuni=c.codmuni1
 and b.codmuni=c.codmuni2"
 
