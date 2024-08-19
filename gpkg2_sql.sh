@@ -129,6 +129,16 @@ dw_gpk="dw_download"
 dw_des=("Deskargak" "Descargas" "Downloads")
 dw_abs=("B5m DW kodea" "B5m código DW" "B5m Code DW")
 
+# 23. ac_municipal_boundaries
+ac_gpk="ac_municipal_boundaries"
+ac_des=("Udal muga" "Límite municipal" "Municipal Boundary")
+ac_abs=("B5m AC kodea" "B5m código AC" "B5m Code AC")
+
+# 24. ac_municipal_boundaries
+mg_gpk="mg_landmarks"
+mg_des=("Udal mugarria" "Mojón de límite municipal" "Municipal Boundary Landmark")
+mg_abs=("B5m MG kodea" "B5m código MG" "B5m Code MG")
+
 # ========= #
 #           #
 # Aldagaiak #
@@ -1923,6 +1933,70 @@ and c.id_lidar_dp=j.id_lidar_dp(+)
 and c.active=1
 and b.grid_dw='ZZ_GRID_DW'
 order by a.name_grid,b.order_dw,c.year desc,c.subcode nulls first,a.format_dw"
+
+# =========================== #
+#                             #
+# 23. ac_municipal_boundaries #
+#                             #
+# =========================== #
+
+ac_sql_01="select
+'AC_'||a.idut b5mcode,
+'${ac_des[0]}' type_eu,
+'${ac_des[1]}' type_es,
+'${ac_des[2]}' type_en,
+a.linea_e name_eu,
+a.linea_c name_es,
+to_char(a.f_validacion,'YYYY-MM-DD') validation_date,
+'"$updd"' update_date,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
+b.polyline geom
+from b5mweb_nombres.a_v_actas a,b5mweb_25830.gipu_l b
+where a.idut=substr(b.tag,1,6)
+and length(b.tag)<=13
+order by a.idut"
+
+# ================ #
+#                  #
+# 24. mg_landmarks #
+#                  #
+# ================ #
+
+mg_sql_01="select
+'MG_'||a.id_mojon b5mcode,
+'${mg_des[0]}' type_eu,
+'${mg_des[1]}' type_es,
+'${mg_des[2]}' type_en,
+a.localizacion name_eu,
+a.localizacion name_es,
+a.observacion_e comment_eu,
+a.observacion_c comment_es,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
+b.point geom
+from b5mweb_nombres.a_mojon a,b5mweb_25830.muga b
+where a.id_mojon=b.idut
+order by b.idut"
+
+mg_sql_02="select
+'MG_'||a.id_mojon b5mcode,
+'"$ac_gpk"|"${ac_des[0]}"|"${ac_des[1]}"|"${ac_des[2]}"|"${ac_abs[0]}"|"${ac_abs[1]}"|"${ac_abs[2]}"' b5mcode_others_ac_type,
+rtrim(xmlagg(xmlelement(e,'AC_'||b.idut,'|').extract('//text()') order by b.linea_e).getclobval(),'|') b5mcode_others_ac,
+rtrim(xmlagg(xmlelement(e,b.linea_e,'|').extract('//text()') order by b.linea_e).getclobval(),'|') b5mcode_others_ac_name_eu,
+rtrim(xmlagg(xmlelement(e,b.linea_c,'|').extract('//text()') order by b.linea_e).getclobval(),'|') b5mcode_others_ac_name_es
+from b5mweb_nombres.a_mojon a,b5mweb_nombres.a_v_actas b,b5mweb_nombres.a_mojacta c
+where a.id_mojon=c.id_mojon
+and b.id_acta=c.id_acta
+group by (a.id_mojon)
+order by a.id_mojon"
+
+mg_sql_03="select
+a.*,
+b.more_info_eu,
+b.more_info_es,
+b.more_info_en
+from ${mg_gpk} a
+left join ${mg_gpk}_more_info b
+on a.b5mcode = b.b5mcode"
 
 # ======= #
 #         #
