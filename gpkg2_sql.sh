@@ -1920,8 +1920,17 @@ i.url_ref2_en lidar_height_type_url_ref2_en,
 j.code_dp lidar_data_processing_code,
 j.data_processing_eu lidar_data_processing_eu,
 j.data_processing_es lidar_data_processing_es,
-j.data_processing_en lidar_data_processing_en
-from b5mweb_nombres.dw_file_sizes a,b5mweb_nombres.dw_types b,b5mweb_nombres.dw_list c,b5mweb_nombres.dw_formats d,b5mweb_nombres.dw_formats_dir e,b5mweb_nombres.dw_rel_formats f,b5mweb_nombres.dw_file_types g,b5mweb_nombres.dw_lidar_model_type h,b5mweb_nombres.dw_lidar_height_type i,b5mweb_nombres.dw_lidar_data_processing j
+j.data_processing_en lidar_data_processing_en,
+k.url_geocassini url_geocassini_eu,
+k.url_geocassini url_geocassini_es,
+k.url_geocassini url_geocassini_en,
+l.description_eu geocassini_description_eu,
+l.description_es geocassini_description_es,
+l.description_en geocassini_description_en,
+l.url_doc_eu geocassini_documentation_eu,
+l.url_doc_eu  geocassini_documentation_es,
+l.url_doc_eu  geocassini_documentation_en
+from b5mweb_nombres.dw_file_sizes a,b5mweb_nombres.dw_types b,b5mweb_nombres.dw_list c,b5mweb_nombres.dw_formats d,b5mweb_nombres.dw_formats_dir e,b5mweb_nombres.dw_rel_formats f,b5mweb_nombres.dw_file_types g,b5mweb_nombres.dw_lidar_model_type h,b5mweb_nombres.dw_lidar_height_type i,b5mweb_nombres.dw_lidar_data_processing j,b5mweb_nombres.dw_geocassini k,b5mweb_nombres.geocassini_doc l
 where a.id_dw=c.id_dw
 and b.id_type=c.id_type
 and a.id_dw=f.id_dw
@@ -1932,12 +1941,16 @@ and a.format_dw=d.format_dw
 and c.id_lidar_mt=h.id_lidar_mt(+)
 and c.id_lidar_ht=i.id_lidar_ht(+)
 and c.id_lidar_dp=j.id_lidar_dp(+)
+and a.id_fs=k.id_fs(+)
+and k.id_doc_geocassini=l.id_doc_geocassini(+)
 and c.active=1
 and b.grid_dw='ZZ_GRID_DW'
 order by a.name_grid,b.order_dw,c.year desc,c.subcode nulls first,a.format_dw"
 
 dw_sql_08="select
-a.${dw_id_fs},c.viewer url_geocassini
+a.${dw_id_fs},
+c.viewer url_geocassini,
+1 id_doc_geocassini
 from b5mweb_nombres.dw_file_sizes a
 join b5mweb_nombres.dw_list b on a.id_dw = b.id_dw
 join b5mweb_nombres.geocassini c on a.name_grid = substr(c.name, 1, 4)
