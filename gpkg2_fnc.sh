@@ -520,6 +520,20 @@ function dw_scan {
 
 	exit;
 	EOF1
+
+	# Geocassini
+	sqlplus -s "$con2" <<-EOF1 > /dev/null
+
+	drop table b5mweb_nombres.${dw_geoc};
+	create table b5mweb_nombres.${dw_geoc} as
+	${dw_sql_08};
+
+	alter table b5mweb_nombres.${dw_geoc}
+	add constraint ${dw_geoc}_pk
+	primary key (${dw_id_fs});
+
+	exit;
+	EOF1
 }
 
 function dw_types_grid {

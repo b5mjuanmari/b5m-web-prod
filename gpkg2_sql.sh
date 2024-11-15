@@ -150,6 +150,8 @@ url_cat_eu="${url_cat}/eu/espelelogia-katalogoa/ficha/"
 url_cat_es="${url_cat}/es/catalogo-espeleologico/ficha/"
 ora_sch_01="b5mweb_nombres"
 dw_fs="dw_file_sizes"
+dw_geoc="dw_geocassini"
+dw_id_fs="id_fs"
 
 # ======== #
 #          #
@@ -1933,6 +1935,16 @@ and c.id_lidar_dp=j.id_lidar_dp(+)
 and c.active=1
 and b.grid_dw='ZZ_GRID_DW'
 order by a.name_grid,b.order_dw,c.year desc,c.subcode nulls first,a.format_dw"
+
+dw_sql_08="select
+a.${dw_id_fs},c.viewer url_geocassini
+from b5mweb_nombres.dw_file_sizes a
+join b5mweb_nombres.dw_list b on a.id_dw = b.id_dw
+join b5mweb_nombres.geocassini c on a.name_grid = substr(c.name, 1, 4)
+and b.year = substr(c.parent, -4)
+and c.name like '%' || b.subcode || '%'
+where b.subcode like '%RedNAP08%'
+order by id_fs"
 
 # =========================== #
 #                             #
