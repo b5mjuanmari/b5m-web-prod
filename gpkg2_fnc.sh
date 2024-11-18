@@ -609,7 +609,7 @@ function dw_data {
 			a03 = $3
 			a06 = $3 "|" $6
 			a08 = "{@dw_type_id@:@" $18 "@,@name_eu@:@" $3 "@,@name_es@:@" $4 "@,@name_en@:@" $5 "@,@series_dw@:[" res_code_dw "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
-	    mdt = "@metadata@:{@url_eu@:@" $12 "@,@url_es@:@" $13 "@,@url_en@:@" $14 "@,@owner_eu@:@" $15 "@,@owner_es@:@" $16 "@,@owner_en@:@" $17 "@}"
+	    mdt = "@metadata@:{@url_eu@:@" $12 "@,@url_es@:@" $13 "@,@url_en@:@" $14 "@,@owner_eu@:@" $15 "@,@owner_es@:@" $16 "@,@owner_en@:@" $17 "@}ZZ_GEOC"
 			a08 = a08 "]," mdt
 			if (a01 != $1 && a01 != "") {
 				res = res "}]"
@@ -635,17 +635,24 @@ function dw_data {
 				if ($6 != c06 && $18 != "5" && $18 != "6") {
 					res = res "," res_code_dw "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
 				} else if ($7 != c07) {
-	    		mdt = "@metadata@:{@url_eu@:@" $12 "@,@url_es@:@" $13 "@,@url_en@:@" $14 "@,@owner_eu@:@" $15 "@,@owner_es@:@" $16 "@,@owner_en@:@" $17 "@}"
+	    		mdt = "@metadata@:{@url_eu@:@" $12 "@,@url_es@:@" $13 "@,@url_en@:@" $14 "@,@owner_eu@:@" $15 "@,@owner_es@:@" $16 "@,@owner_en@:@" $17 "@}ZZ_GEOC"
 					if (substr(res, length(res)-1, 2) != "}}")
 					 res = res "}"
 					res = res "," res_code_dw "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}]," mdt "}"
 				} else {
 					if ($8 != c08) {
-	    			mdt = "@metadata@:{@url_eu@:@" $12 "@,@url_es@:@" $13 "@,@url_en@:@" $14 "@,@owner_eu@:@" $15 "@,@owner_es@:@" $16 "@,@owner_en@:@" $17 "@}"
+	    			mdt = "@metadata@:{@url_eu@:@" $12 "@,@url_es@:@" $13 "@,@url_en@:@" $14 "@,@owner_eu@:@" $15 "@,@owner_es@:@" $16 "@,@owner_en@:@" $17 "@}ZZ_GEOC"
 						res = res ",{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}]," mdt "}"
 					}
 				}
 			}
+
+			# Geocassini
+			if ($40 == "")
+				gsub("ZZ_GEOC", "", res)
+			else
+				gsub("ZZ_GEOC", ",@viewer@:{@url_eu@:@" $40 "@,@url_es@:@" $41 "@,@url_en@:@" $42 "@,@description_eu@:@" $43 "@,@description_es@:@" $44 "@,@description_en@:@" $45 "@,@documentation_eu@:@" $46 "@,@documentation_es@:@" $47 "@,@documentation_en@:@" $48 "@}", res)
+
 			a01 = $1
 			b03 = a03
 			b06 = a06

@@ -1928,8 +1928,8 @@ l.description_eu geocassini_description_eu,
 l.description_es geocassini_description_es,
 l.description_en geocassini_description_en,
 l.url_doc_eu geocassini_documentation_eu,
-l.url_doc_eu  geocassini_documentation_es,
-l.url_doc_eu  geocassini_documentation_en
+l.url_doc_es  geocassini_documentation_es,
+l.url_doc_en  geocassini_documentation_en
 from b5mweb_nombres.dw_file_sizes a,b5mweb_nombres.dw_types b,b5mweb_nombres.dw_list c,b5mweb_nombres.dw_formats d,b5mweb_nombres.dw_formats_dir e,b5mweb_nombres.dw_rel_formats f,b5mweb_nombres.dw_file_types g,b5mweb_nombres.dw_lidar_model_type h,b5mweb_nombres.dw_lidar_height_type i,b5mweb_nombres.dw_lidar_data_processing j,b5mweb_nombres.dw_geocassini k,b5mweb_nombres.geocassini_doc l
 where a.id_dw=c.id_dw
 and b.id_type=c.id_type
