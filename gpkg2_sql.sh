@@ -1945,7 +1945,17 @@ and a.id_fs=k.id_fs(+)
 and k.id_doc_geocassini=l.id_doc_geocassini(+)
 and c.active=1
 and b.grid_dw='ZZ_GRID_DW'
-order by a.name_grid,b.order_dw,c.year desc,c.subcode nulls first,a.format_dw"
+order by
+  a.name_grid,
+  b.order_dw,
+  c.year desc,
+  regexp_substr(c.subcode, '^[^_]+') nulls first,
+    case
+        when regexp_substr(c.subcode, '_([^_]+)', 1, 1) = '_RedNAP08' then 0
+        else 1
+    end,
+    regexp_substr(c.subcode, '[^_]+$', 1, 1),
+  a.format_dw"
 
 dw_sql_08="select
 a.${dw_id_fs},
