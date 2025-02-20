@@ -206,7 +206,21 @@ sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.giputz b
 where a.url_2d='M_'||b.codmuni
 group by (a.url_2d,a.nombre_e,a.nombre_c,a.tipo_e,a.tipo_c,a.tipo_i)
-order by a.url_2d"
+union all
+select
+a.url_2d b5mcode,
+upper(substr(a.tipo_e,1,1))||substr(a.tipo_e,2,length(a.tipo_e)-1) type_eu,
+upper(substr(a.tipo_c,1,1))||substr(a.tipo_c,2,length(a.tipo_c)-1) type_es,
+upper(substr(a.tipo_i,1,1))||substr(a.tipo_i,2,length(a.tipo_i)-1) type_en,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+'"$updd"' update_date,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
+sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.gipu_a b
+where a.idnombre=b.idnombre
+and a.tipo_e='enklabea'
+group by (a.url_2d,a.nombre_e,a.nombre_c,a.tipo_e,a.tipo_c,a.tipo_i)"
 
 m_sql_02="select
 a.url_2d b5mcode,
