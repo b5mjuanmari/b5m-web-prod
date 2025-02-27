@@ -1024,11 +1024,11 @@ from ${i_gpk} a
 left join ${i_gpk}_more_info b
 on a.b5mcode = b.b5mcode"
 
-# ============== #
-#                #
+# =============== #
+#                 #
 # 10. z_districts #
-#                #
-# ============== #
+#                 #
+# =============== #
 
 z_sql_01="select
 a.url_2d b5mcode,
@@ -1045,7 +1045,23 @@ where a.id_nombre1=c.idnombre
 and b.idut=c.idut
 and a.url_2d like 'Z_A%'
 group by (a.url_2d,a.tipo_e,a.tipo_c,a.tipo_i,a.nombre_e,a.nombre_c,a.idnombre)
-order by a.idnombre"
+union all
+select
+a.url_2d b5mcode,
+'Auzo eta/edo hiri izena' type_eu,
+'Barrio y/o nombre urbano' type_es,
+'District and/or urban name' type_en,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+'"$updd"' update_date,
+'{\"official_id\":\"0\",\"official_text_eu\":\"${oft0eu}\",\"official_text_es\":\"${oft0es}\",\"official_text_en\":\"${oft0en}\"}' official,
+sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.barrioind b,b5mweb_nombres.b_barrios c
+where a.idnombre=c.idnombre
+and b.idut=c.idut
+and a.url_2d like 'K_%'
+group by (a.url_2d,a.tipo_e,a.tipo_c,a.tipo_i,a.nombre_e,a.nombre_c,a.idnombre)
+order by b5mcode"
 
 z_sql_02="select
 distinct url_2d b5mcode,
