@@ -526,7 +526,7 @@ upper(substr(b.tipo_eu,1,1))||substr(b.tipo_eu,2,length(b.tipo_eu)-1) type_eu,
 upper(substr(b.tipo_es,1,1))||substr(b.tipo_es,2,length(b.tipo_es)-1) type_es,
 upper(substr(b.tipo_es,1,1))||substr(b.tipo_es,2,length(b.tipo_es)-1) type_en,
 replace(replace(replace(decode(a.nomedif_e,null,a.calle_e||', '||a.noportal||a.bis||' '||a.muni_e,a.nomedif_e||' - '||a.calle_e||', '||a.noportal||a.bis||' '||a.muni_e),' - , ',','),',  ',''),'  ',' ') name_eu,
-replace(replace(replace(decode(a.nomedif_e,null,decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c)||', '||a.noportal||a.bis||' '||a.muni_c,a.nomedif_e||' - '||decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c)||', '||a.noportal||a.bis||' '||a.muni_c),' - , ',','),',  ',''),'  ',' ') name_es,
+replace(replace(replace(decode(a.nomedif_c,null,decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c)||', '||a.noportal||a.bis||' '||a.muni_c,a.nomedif_c||' - '||decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c)||', '||a.noportal||a.bis||' '||a.muni_c),' - , ',','),',  ',''),'  ',' ') name_es,
 a.codmuni codmuni,
 a.muni_e muni_eu,
 a.muni_c muni_es,
@@ -540,13 +540,13 @@ decode(a.codpostal,' ',null,to_number(a.codpostal)) postal_code,
 a.distrito coddistr,
 a.seccion codsec,
 a.nomedif_e name_building_eu,
-a.nomedif_e name_building_es,
+a.nomedif_c name_building_es,
 '"$updd"' update_date,
 '{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.n_edifgen a,b5mweb_25830.a_edifind b
 where a.idut(+)=b.idut
-group by (b.idut,b.tipo_eu,b.tipo_es,b.tipo_es,a.idpostal,a.nomedif_e,a.nomedif_e,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.accesorio,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c)
+group by (b.idut,b.tipo_eu,b.tipo_es,b.tipo_es,a.idpostal,a.nomedif_e,a.nomedif_c,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.accesorio,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c)
 union all
 select
 'E_A'||b.idut b5mcode,
@@ -555,7 +555,7 @@ upper(substr(b.tipo_eu,1,1))||substr(b.tipo_eu,2,length(b.tipo_eu)-1) type_eu,
 upper(substr(b.tipo_es,1,1))||substr(b.tipo_es,2,length(b.tipo_es)-1) type_es,
 upper(substr(b.tipo_es,1,1))||substr(b.tipo_es,2,length(b.tipo_es)-1) type_en,
 replace(replace(replace(decode(a.nomedif_e,null,a.calle_e||', '||a.noportal||a.bis||' '||a.muni_e,a.nomedif_e||' - '||a.calle_e||', '||a.noportal||a.bis||' '||a.muni_e),' - , ',','),',  ',''),'  ',' ') name_eu,
-replace(replace(replace(decode(a.nomedif_e,null,decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c)||', '||a.noportal||a.bis||' '||a.muni_c,a.nomedif_e||' - '||decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c)||', '||a.noportal||a.bis||' '||a.muni_c),' - , ',','),',  ',''),'  ',' ') name_es,
+replace(replace(replace(decode(a.nomedif_c,null,decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c)||', '||a.noportal||a.bis||' '||a.muni_c,a.nomedif_c||' - '||decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c)||', '||a.noportal||a.bis||' '||a.muni_c),' - , ',','),',  ',''),'  ',' ') name_es,
 a.codmuni codmuni,
 a.muni_e muni_eu,
 a.muni_c muni_es,
@@ -569,13 +569,13 @@ decode(a.codpostal,' ',null,to_number(a.codpostal)) postal_code,
 a.distrito coddistr,
 a.seccion codsec,
 a.nomedif_e name_building_eu,
-a.nomedif_e name_building_es,
+a.nomedif_c name_building_es,
 '"$updd"' update_date,
 '{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.n_edifgen a,b5mweb_25830.o_edifind b
 where a.idut(+)=b.idut
-group by (b.idut,b.tipo_eu,b.tipo_es,b.tipo_es,a.idpostal,a.nomedif_e,a.nomedif_e,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.accesorio,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c)
+group by (b.idut,b.tipo_eu,b.tipo_es,b.tipo_es,a.idpostal,a.nomedif_e,a.nomedif_c,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.accesorio,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c)
 union all
 select
 'E_A'||b.idut b5mcode,
@@ -584,7 +584,7 @@ upper(substr(b.tipo_eu,1,1))||substr(b.tipo_eu,2,length(b.tipo_eu)-1) type_eu,
 upper(substr(b.tipo_es,1,1))||substr(b.tipo_es,2,length(b.tipo_es)-1) type_es,
 upper(substr(b.tipo_es,1,1))||substr(b.tipo_es,2,length(b.tipo_es)-1) type_en,
 replace(replace(replace(decode(a.nomedif_e,null,a.calle_e||', '||a.noportal||a.bis||' '||a.muni_e,a.nomedif_e||' - '||a.calle_e||', '||a.noportal||a.bis||' '||a.muni_e),' - , ',','),',  ',''),'  ',' ') name_eu,
-replace(replace(replace(decode(a.nomedif_e,null,decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c)||', '||a.noportal||a.bis||' '||a.muni_c,a.nomedif_e||' - '||decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c)||', '||a.noportal||a.bis||' '||a.muni_c),' - , ',','),',  ',''),'  ',' ') name_es,
+replace(replace(replace(decode(a.nomedif_c,null,decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c)||', '||a.noportal||a.bis||' '||a.muni_c,a.nomedif_c||' - '||decode(regexp_replace(a.calle_c,'[^,]+'),',',upper(substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),1,1))||''||substr(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' '),2,length(ltrim(regexp_substr(a.calle_c,'[^,]+',1,2),' ')))||' '||regexp_substr(a.calle_c,'[^,]+',1,1),a.calle_c)||', '||a.noportal||a.bis||' '||a.muni_c),' - , ',','),',  ',''),'  ',' ') name_es,
 a.codmuni codmuni,
 a.muni_e muni_eu,
 a.muni_c muni_es,
@@ -598,13 +598,13 @@ decode(a.codpostal,' ',null,to_number(a.codpostal)) postal_code,
 a.distrito coddistr,
 a.seccion codsec,
 a.nomedif_e name_building_eu,
-a.nomedif_e name_building_es,
+a.nomedif_c name_building_es,
 '"$updd"' update_date,
 '{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 sdo_aggr_union(sdoaggrtype(b.polygon,0.005)) geom
 from b5mweb_nombres.n_edifgen a,b5mweb_25830.s_edifind b
 where a.idut(+)=b.idut
-group by (b.idut,b.tipo_eu,b.tipo_es,b.tipo_es,a.idpostal,a.nomedif_e,a.nomedif_e,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.accesorio,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c)"
+group by (b.idut,b.tipo_eu,b.tipo_es,b.tipo_es,a.idpostal,a.nomedif_e,a.nomedif_c,a.codmuni,a.muni_e,a.muni_c,a.codcalle,a.calle_e,a.calle_c,a.noportal,a.bis,a.accesorio,a.codpostal,a.distrito,a.seccion,a.nomedif_e,a.nomedif_c)"
 
 e_sql_02="$d_sql_02"
 
