@@ -1226,6 +1226,52 @@ then
 	rm "$f02" 2> /dev/null
 fi
 
+# ===================================================================================== #
+#                                                                                       #
+# 25. mu_public_utility_woodlands (onura publikoko mendia  / monte de utilidad pública) #
+#                                                                                       #
+# ===================================================================================== #
+
+# 4"
+
+# Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
+vconf=`grep "$mu_gpk" "$fconf"`
+IFS='|' read -a aconf <<< "$vconf"
+typ01="${aconf[0]}"
+gpk01="${aconf[1]}"
+des01="${mu_des[0]} - ${mu_des[1]} - ${mu_des[2]}"
+if [ "$mu_gpk" = "$gpk01" ] && ([ $typ01 = "1" ] || [ "$typ01" = "2" ])
+then
+	let i1=$i1+1
+	msg "${i1}/${nf}: $(date '+%Y-%m-%d %H:%M:%S') - $gpk01 - ${mu_des[0]}\c"
+	f01="${tmpd}/${mu_gpk}_01.gpkg"
+	c01="${tmpd}/${mu_gpk}_01.csv"
+	f02="${tmpd}/${mu_gpk}.gpkg"
+
+	# Oinarrizko datuak / Datos básicos
+	rm "$f01" 2> /dev/null
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$mu_gpk" -lco DESCRIPTION="$des01" -sql "$mu_sql_01"
+
+	# more_info
+	rm "$c01" 2> /dev/null
+	sql_more_info2 "$c01" "$mu_sql_02"
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${mu_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
+	rm "$c01" 2> /dev/null
+
+	# Behin betiko GPKGa / GPKG definitivo
+	rm "$f02" 2> /dev/null
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "$mu_gpk" -lco DESCRIPTION="$des01" -sql "$mu_sql_03" "$f02" "$f01"
+	rm "$f01" 2> /dev/null
+
+	# Eremuak berrizendatu / Renombrar campos
+	rfl "$f02" "$mu_gpk"
+
+	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
+	cp_gpk "$typ01" "$mu_gpk"
+	msg " - ${typ01}"
+	rm "$f02" 2> /dev/null
+fi
+
 # ===================== #
 #                       #
 # 99.0. Bukaera / Final #

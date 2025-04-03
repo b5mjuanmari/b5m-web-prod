@@ -139,6 +139,11 @@ mg_gpk="mg_landmarks"
 mg_des=("Udal mugarria" "Mojón de límite municipal" "Municipal Boundary Landmark")
 mg_abs=("B5m MG kodea" "B5m código MG" "B5m Code MG")
 
+# 25. mu_public_utility_woodlands
+mu_gpk="mu_public_utility_woodlands"
+mu_des=("Onura publikoko mendiak" "Montes de utilidad pública" "Public Utility Woodlands")
+mu_abs=("B5m MU kodea" "B5m código MU" "B5m Code MU")
+
 # ========= #
 #           #
 # Aldagaiak #
@@ -2262,6 +2267,45 @@ b.more_info_es,
 b.more_info_en
 from ${mg_gpk} a
 left join ${mg_gpk}_more_info b
+on a.b5mcode = b.b5mcode"
+
+# =============================== #
+#                                 #
+# 25. mu_public_utility_woodlands #
+#                                 #
+# =============================== #
+
+mu_sql_01="select
+a.url_2d b5mcode,
+a.nombre_e name_eu,
+a.nombre_c name_es,
+upper(substr(a.tipo_e,1,1))||lower(substr(a.tipo_e,2)) type_eu,
+upper(substr(a.tipo_c,1,1))||lower(substr(a.tipo_c,2)) type_es,
+initcap(a.tipo_i) type_en,
+'"$updd"' update_date,
+'{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
+b.geom
+from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.mu_mup b
+where a.id_nombre1=b.tag
+order by a.id_nombre1"
+
+mu_sql_02="select
+distinct url_2d b5mcode,
+'"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_m_type,
+decode(codmunis,null,null,'M_'||replace(codmunis,',','|M_')) b5mcode_others_m,
+replace(muni_e,',','|') b5mcode_others_m_name_eu,
+replace(muni_c,',','|') b5mcode_others_m_name_es
+from b5mweb_nombres.solr_gen_toponimia_2d
+where url_2d like 'MU_%'
+order by to_number(replace(url_2d,'MU_',''))"
+
+mu_sql_03="select
+a.*,
+b.more_info_eu,
+b.more_info_es,
+b.more_info_en
+from ${mu_gpk} a
+left join ${mu_gpk}_more_info b
 on a.b5mcode = b.b5mcode"
 
 # ======= #
