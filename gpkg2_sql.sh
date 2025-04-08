@@ -1524,16 +1524,28 @@ bi_sql_01="select
   initcap(a.tipo_i) as type_en,
   '"$updd"' as update_date,
   '{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' as official,
-  case
-    when a.tipo_e = 'zuhaitz apartekoa'
-    then sdo_geom.sdo_centroid(b.geom, 0.005)
-    else b.geom
-  end as geom
+  geom
 from b5mweb_nombres.solr_gen_toponimia_2d a
 join b5mweb_25830.bi_biotopos b on a.id_nombre1 = b.idnombre
+where a.tipo_e = 'biotopoa'
 order by to_number(a.id_nombre1)"
 
 bi_sql_02="select
+  a.url_2d as b5mcode,
+  a.nombre_e as name_eu,
+  a.nombre_c as name_es,
+  upper(substr(a.tipo_e,1,1))||lower(substr(a.tipo_e,2)) as type_eu,
+  upper(substr(a.tipo_c,1,1))||lower(substr(a.tipo_c,2)) as type_es,
+  initcap(a.tipo_i) as type_en,
+  '"$updd"' as update_date,
+  '{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' as official,
+  sdo_geom.sdo_centroid(b.geom, 0.005) as geom
+from b5mweb_nombres.solr_gen_toponimia_2d a
+join b5mweb_25830.bi_biotopos b on a.id_nombre1 = b.idnombre
+where a.tipo_e = 'zuhaitz apartekoa'
+order by to_number(a.id_nombre1)"
+
+bi_sql_03="select
 distinct url_2d b5mcode,
 '"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_m_type,
 decode(codmunis,null,null,'M_'||replace(codmunis,',','|M_')) b5mcode_others_m,
@@ -1541,15 +1553,36 @@ replace(muni_e,',','|') b5mcode_others_m_name_eu,
 replace(muni_c,',','|') b5mcode_others_m_name_es
 from b5mweb_nombres.solr_gen_toponimia_2d
 where url_2d like 'BI_%'
+and tipo_e = 'biotopoa'
 order by to_number(replace(url_2d,'BI_',''))"
 
-bi_sql_03="select
+bi_sql_04="select
+distinct url_2d b5mcode,
+'"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_m_type,
+decode(codmunis,null,null,'M_'||replace(codmunis,',','|M_')) b5mcode_others_m,
+replace(muni_e,',','|') b5mcode_others_m_name_eu,
+replace(muni_c,',','|') b5mcode_others_m_name_es
+from b5mweb_nombres.solr_gen_toponimia_2d
+where url_2d like 'BI_%'
+and tipo_e = 'zuhaitz apartekoa'
+order by to_number(replace(url_2d,'BI_',''))"
+
+bi_sql_05="select
 a.*,
 b.more_info_eu,
 b.more_info_es,
 b.more_info_en
-from ${bi_gpk} a
-left join ${bi_gpk}_more_info b
+from ${bi_gpk}_poly a
+left join ${bi_gpk}_poly_more_info b
+on a.b5mcode = b.b5mcode"
+
+bi_sql_06="select
+a.*,
+b.more_info_eu,
+b.more_info_es,
+b.more_info_en
+from ${bi_gpk}_point a
+left join ${bi_gpk}_point_more_info b
 on a.b5mcode = b.b5mcode"
 
 # ======================== #

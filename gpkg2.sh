@@ -941,21 +941,27 @@ then
 
 	# Oinarrizko datuak / Datos básicos
 	rm "$f01" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "$bi_gpk" -lco DESCRIPTION="$des01" -sql "$bi_sql_01"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "${bi_gpk}_poly" -lco DESCRIPTION="$des01 polygon" -sql "$bi_sql_01"
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" "$f01" OCI:${con}:${tpl} -nln "${bi_gpk}_point" -lco DESCRIPTION="$des01 point" -sql "$bi_sql_02"
 
 	# more_info
 	rm "$c01" 2> /dev/null
-	sql_more_info2 "$c01" "$bi_sql_02"
-	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${bi_gpk}_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
+	sql_more_info2 "$c01" "$bi_sql_03"
+	ogr2ogr -f "GPKG" -update -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${bi_gpk}_poly_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
+	rm "$c01" 2> /dev/null
+	sql_more_info2 "$c01" "$bi_sql_04"
+	ogr2ogr -update -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${bi_gpk}_point_more_info" -lco DESCRIPTION="${des01} more info" "$f01" "$c01"
 	rm "$c01" 2> /dev/null
 
 	# Behin betiko GPKGa / GPKG definitivo
 	rm "$f02" 2> /dev/null
-	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "$bi_gpk" -lco DESCRIPTION="$des01" -sql "$bi_sql_03" "$f02" "$f01"
+	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${bi_gpk}_poly" -lco DESCRIPTION="$des01 polygon" -sql "$bi_sql_05" "$f02" "$f01"
+	ogr2ogr -update -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "${bi_gpk}_point" -lco DESCRIPTION="$des01 point" -sql "$bi_sql_06" "$f02" "$f01"
 	rm "$f01" 2> /dev/null
 
 	# Eremuak berrizendatu / Renombrar campos
-	rfl "$f02" "$bi_gpk"
+	rfl "$f02" "${bi_gpk}_poly"
+	rfl "$f02" "${bi_gpk}_point"
 
 	# Garapenera edo ekoizpenera kopiatu / Copiar a desarrollo o a producción
 	cp_gpk "$typ01" "$bi_gpk"
