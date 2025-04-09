@@ -106,7 +106,9 @@ cv_abs=("B5m CV kodea" "B5m código CV" "B5m Code CV")
 
 # 18. bi_biotopes
 bi_gpk="bi_biotopes"
+vt_gpk="vt_veteran_trees"
 bi_des=("Biotopoa" "Biotopo" "Biotope")
+vt_des=("Zuhaitz apartekoa" "Árbol singular" "Veteran Tree")
 bi_abs=("B5m BI kodea" "B5m código BI" "B5m Code BI")
 
 # 19. poi_pointsofinterest
@@ -1552,8 +1554,7 @@ decode(codmunis,null,null,'M_'||replace(codmunis,',','|M_')) b5mcode_others_m,
 replace(muni_e,',','|') b5mcode_others_m_name_eu,
 replace(muni_c,',','|') b5mcode_others_m_name_es
 from b5mweb_nombres.solr_gen_toponimia_2d
-where url_2d like 'BI_%'
-and tipo_e = 'biotopoa'
+where tipo_e = 'biotopoa'
 order by to_number(replace(url_2d,'BI_',''))"
 
 bi_sql_04="select
@@ -1563,17 +1564,16 @@ decode(codmunis,null,null,'M_'||replace(codmunis,',','|M_')) b5mcode_others_m,
 replace(muni_e,',','|') b5mcode_others_m_name_eu,
 replace(muni_c,',','|') b5mcode_others_m_name_es
 from b5mweb_nombres.solr_gen_toponimia_2d
-where url_2d like 'BI_%'
-and tipo_e = 'zuhaitz apartekoa'
-order by to_number(replace(url_2d,'BI_',''))"
+where tipo_e = 'zuhaitz apartekoa'
+order by to_number(replace(url_2d,'VT_',''))"
 
 bi_sql_05="select
 a.*,
 b.more_info_eu,
 b.more_info_es,
 b.more_info_en
-from ${bi_gpk}_poly a
-left join ${bi_gpk}_poly_more_info b
+from ${bi_gpk} a
+left join ${bi_gpk}_more_info b
 on a.b5mcode = b.b5mcode"
 
 bi_sql_06="select
@@ -1581,8 +1581,8 @@ a.*,
 b.more_info_eu,
 b.more_info_es,
 b.more_info_en
-from ${bi_gpk}_point a
-left join ${bi_gpk}_point_more_info b
+from ${vt_gpk} a
+left join ${vt_gpk}_more_info b
 on a.b5mcode = b.b5mcode"
 
 # ======================== #
