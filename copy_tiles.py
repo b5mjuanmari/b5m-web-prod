@@ -65,6 +65,7 @@ if __name__ == "__main__":
     # Egiaztatu parametro kopurua
     if len(sys.argv) != 3:
         print("Erabilera: python3", os.path.basename(sys.argv[0]), "<jatorrizko_direktorioa> <helburu_direktorioa>")
+        print("Adibidea: python3 copy_tiles.py /home/data/datos_explotacion/CUR/shape/EPSG_25830/Tiles /home5/SHP")
         sys.exit(1)
 
     jatorrizkoa = sys.argv[1]
