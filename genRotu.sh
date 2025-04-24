@@ -338,7 +338,7 @@ exit;
 EOF
 
 # Para saber la longitud del tramo más largo
-l_lrs="$(sqlplus -s ${usu}/${pas}@${bd} <<-EOF | gawk '{print $1}'
+l_lrs=`sqlplus -s ${usu}/${pas}@${bd} <<-EOF | gawk '{print $1}'
 set serveroutput on
 set feedback off
 set linesize 32767
@@ -354,7 +354,7 @@ from $t01 a,user_sdo_geom_metadata m
 where lower(m.table_name)='${t01}';
 
 exit;
-EOF)"
+EOF`
 
 sqlplus -s ${usu}/${pas}@${bd} <<-EOF > /dev/null 2> /dev/null
 set lin 4000
