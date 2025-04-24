@@ -4,76 +4,90 @@ import sys
 from datetime import datetime
 import time
 
-def kopiatu_direktorioa(jatorrizkoa, helburua):
-    # Grabatu hasierako denbora
-    hasiera_denbora = time.time()
-    hasiera_data = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"\nProzesua hasten: {hasiera_data}")
+def konfiguratu_loga():
+    # Log direktorioaren bidea
+    log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "log")
+    os.makedirs(log_dir, exist_ok=True)
 
-    # Egiaztatu jatorrizko direktorioa existitzen dela
+    # Log fitxategiaren izena (script_izena_YYYYMMDD.log)
+    script_izena = os.path.splitext(os.path.basename(__file__))[0]
+    gaurko_data = datetime.now().strftime("%Y%m%d")
+    log_fitxategia = os.path.join(log_dir, f"{script_izena}_{gaurko_data}.log")
+
+    # Existitzen bada, ezabatu
+    if os.path.exists(log_fitxategia):
+        os.remove(log_fitxategia)
+
+    return log_fitxategia
+
+def idatzi_logera(mesedua, log_fitxategia):
+    with open(log_fitxategia, "a") as f:
+        f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {mesedua}\n")
+
+def kopiatu_direktorioa(jatorrizkoa, helburua, log_fitxategia):
+    hasiera_denbora = time.time()
+    idatzi_logera(f"Prozesua hasten.", log_fitxategia)
+
     if not os.path.isdir(jatorrizkoa):
-        print("Errorea: Jatorrizko direktorioa ez da existitzen.")
+        idatzi_logera("Errorea: Jatorrizko direktorioa ez da existitzen.", log_fitxategia)
         return False
 
-    # Sortu helburu direktorioaren izena data erantsiz
     data_str = datetime.now().strftime("%Y%m%d")
     helburu_izena = f"{os.path.basename(jatorrizkoa)}_{data_str}"
     helburu_osoa = os.path.join(helburua, helburu_izena)
 
-    # Egiaztatu helburu direktorioa existitzen bada eta ezabatu
     if os.path.exists(helburu_osoa):
         shutil.rmtree(helburu_osoa)
 
-    # Sortu helburu direktorioa
     os.makedirs(helburu_osoa, exist_ok=True)
 
-    # Kontagailua eta denbora
     fitxategi_zerrenda = []
     for root, _, files in os.walk(jatorrizkoa):
         for file in files:
             fitxategi_zerrenda.append(os.path.join(root, file))
 
     total = len(fitxategi_zerrenda)
-    print(f"Guztira kopiatu beharreko fitxategiak: {total}")
+    idatzi_logera(f"Guztira kopiatu beharreko fitxategiak: {total}", log_fitxategia)
 
     for i, fitxategia in enumerate(fitxategi_zerrenda, 1):
-        data_ordua = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f"[{i}/{total}] {data_ordua} - {os.path.basename(fitxategia)}")
-
-        # Kalkulatu helburuko bidea
+        idatzi_logera(
+            f"[{i}/{total}] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {os.path.basename(fitxategia)}",
+            log_fitxategia
+        )
         erlatiboa = os.path.relpath(fitxategia, jatorrizkoa)
         helburu_fitxategia = os.path.join(helburu_osoa, erlatiboa)
-
-        # Sortu azpidirektorioak behar badira
         os.makedirs(os.path.dirname(helburu_fitxategia), exist_ok=True)
-
-        # Kopiatu fitxategia
         shutil.copy2(fitxategia, helburu_fitxategia)
 
-    # Kalkulatu iraupena
-    bukaera_denbora = time.time()
-    iraupena = bukaera_denbora - hasiera_denbora
-    orduak, minutuak = divmod(iraupena, 3600)
-    minutuak, segundoak = divmod(minutuak, 60)
-
-    print(f"\nProzesua bukatuta: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"Prozesuaren iraupena: {int(orduak)}h {int(minutuak)}m {int(segundoak)}s")
-    print(f"{total} fitxategi kopiatu dira {helburu_osoa} helburura.")
+    iraupena = time.time() - hasiera_denbora
+    orduak, resto = divmod(iraupena, 3600)
+    minutuak, segundoak = divmod(resto, 60)
+    idatzi_logera(
+        f"Prozesua bukatuta."
+        f"Prozesuaren iraupena: {int(orduak)}h {int(minutuak)}m {int(segundoak)}s\n"
+        f"{total} fitxategi kopiatu dira {helburu_osoa} helburura.",
+        log_fitxategia
+    )
     return True
 
 if __name__ == "__main__":
-    # Egiaztatu parametro kopurua
+    log_fitxategia = konfiguratu_loga()
+
     if len(sys.argv) != 3:
-        print("Erabilera: python3", os.path.basename(sys.argv[0]), "<jatorrizko_direktorioa> <helburu_direktorioa>")
-        print("Adibidea: python3 copy_tiles.py /home/data/datos_explotacion/CUR/shape/EPSG_25830/Tiles /home5/SHP")
+        errorea = (
+            f"Erabilera: python3 {os.path.basename(sys.argv[0])} "
+            "<jatorrizko_direktorioa> <helburu_direktorioa>\n"
+            f"Adibidea: python3 {os.path.basename(sys.argv[0])} "
+            "/home/data/datos_explotacion/CUR/shape/EPSG_25830/Tiles /home5/SHP"
+        )
+        print(errorea)
         sys.exit(1)
 
     jatorrizkoa = sys.argv[1]
     helburua = sys.argv[2]
 
-    # Egiaztatu helburu direktorioa existitzen den
     if not os.path.isdir(helburua):
-        print("Errorea: Helburu direktorioa ez da existitzen.")
+        idatzi_logera("Errorea: Helburu direktorioa ez da existitzen.", log_fitxategia)
         sys.exit(1)
 
-    kopiatu_direktorioa(jatorrizkoa, helburua)
+    kopiatu_direktorioa(jatorrizkoa, helburua, log_fitxategia)
