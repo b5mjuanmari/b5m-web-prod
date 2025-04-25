@@ -60,8 +60,8 @@ dwm_c1="\"id_dw\",\"b5mcode\",\"b5mcode2\",\"name_es\",\"name_eu\",\"name_en\",\
 dwn_url1="https://b5m.gipuzkoa.eus"
 
 # Egiaztatu parametro kopurua
-if [ $# -ne 1 ]; then
-		echo "Erabilera: $scr <fitxategi_izena.dsv>"
+if [ $# -lt 1 ]; then
+		echo "Erabilera: $scr <fitxategi_izena.dsv> [1 -> ekoizpenera]"
     exit 1
 fi
 
@@ -1298,14 +1298,17 @@ fi
 #                                             #
 # =========================================== #
 
-echo "copy_remote.py b5mlive2 (hasiera): $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
-python3 copy_remote.py /home/data/gpkg juanmari@b5mdev live@b5mlive2.gipuzkoa.eus >> "$log"
-echo "copy_remote.py b5mlive2 (bukaera): $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
-echo >> "$log"
-echo "copy_remote.py b5mlive1 (hasiera): $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
-python3 copy_remote.py /home/data/gpkg juanmari@b5mdev live@b5mlive1.gipuzkoa.eus >> "$log"
-echo "copy_remote.py b5mlive1 (bukaera): $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
-echo >> "$log"
+if [ "$2" = "1" ]
+then
+	msg ""
+	echo "copy_remote.py b5mlive2 (hasiera): $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
+	python3 copy_remote.py /home/data/gpkg juanmari@b5mdev live@b5mlive2.gipuzkoa.eus >> "$log"
+	echo "copy_remote.py b5mlive2 (bukaera): $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
+	echo >> "$log"
+	echo "copy_remote.py b5mlive1 (hasiera): $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
+	python3 copy_remote.py /home/data/gpkg juanmari@b5mdev live@b5mlive1.gipuzkoa.eus >> "$log"
+	echo "copy_remote.py b5mlive1 (bukaera): $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
+fi
 
 # ===================== #
 #                       #
