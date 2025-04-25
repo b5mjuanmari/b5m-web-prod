@@ -7,8 +7,6 @@ import csv
 from tabulate import tabulate
 
 def konfiguratu_loga():
-    # Log direktorioaren bidea
-    log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "log")
     os.makedirs(log_dir, exist_ok=True)
 
     # Log fitxategiaren izena (script_izena_YYYYMMDD.log)
@@ -22,9 +20,12 @@ def konfiguratu_loga():
 
     return log_fitxategia
 
-def idatzi_logera(mesedua, log_fitxategia):
+def idatzi_logera(mezua, log_fitxategia, dataord):
     with open(log_fitxategia, "a") as f:
-        f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {mesedua}\n")
+        if dataord == 0:
+            f.write(f"{mezua}\n")
+        else:
+            f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {mezua}\n")
 
 def sortu_alderaketa_txostena(helburu_direktorioa, log_fitxategia):
     """Sortu alderaketa txostena helburuko direktorioaren eta aurreko bertsioaren artean"""
@@ -34,7 +35,7 @@ def sortu_alderaketa_txostena(helburu_direktorioa, log_fitxategia):
     aurreko_direktorioa = os.path.join(os.path.dirname(helburu_direktorioa), aurreko_izena)
 
     if not os.path.isdir(aurreko_direktorioa):
-        idatzi_logera(f"Oharra: Aurreko bertsiorik ez da aurkitu: {aurreko_direktorioa}", log_fitxategia)
+        idatzi_logera(f"Oharra: Aurreko bertsiorik ez da aurkitu: {aurreko_direktorioa}", log_fitxategia, 1)
         return
 
     # Bilatu fitxategi guztiak bi direktorioetan
@@ -51,14 +52,18 @@ def sortu_alderaketa_txostena(helburu_direktorioa, log_fitxategia):
             aurreko_fitxategiak[erlatiboa] = os.path.getsize(os.path.join(root, file))
 
     # Sortu CSV fitxategia
-    txosten_izena = os.path.join(os.path.dirname(helburu_direktorioa), f"Alderaketa_{os.path.basename(helburu_direktorioa)}.csv")
+    #txosten_izena = os.path.join(os.path.dirname(helburu_direktorioa), f"Alderaketa_{os.path.basename(helburu_direktorioa)}.csv")
+    txosten_izena = os.path.join(log_dir, f"Alderaketa_{os.path.basename(helburu_direktorioa)}.csv")
+
+    if os.path.exists(txosten_izena):
+        os.remove(txosten_izena)
 
     with open(txosten_izena, 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow([
-            "Fitxategi izena",
+            os.path.basename(helburu_direktorioa),
             "Tamaina (KB)",
-            "Aurreko bertsioaren izena",
+            os.path.basename(aurreko_direktorioa),
             "Aurreko tamaina (KB)",
             "Aldea (%)"
         ])
@@ -78,37 +83,44 @@ def sortu_alderaketa_txostena(helburu_direktorioa, log_fitxategia):
                 round(aldea, 2)
             ])
 
-    # 2. Taula: Fitxategi ezberdinak (terminalerako)
-    print("\n=== FITXATEGI EZBERDINAK ===")
+    # 2. Taula: Fitxategi ezberdinak (logerako)
+
+    # Ezberdinak
+    berriak = set(helburu_fitxategiak.keys()) - set(aurreko_fitxategiak.keys())
+    ezabatuak = set(aurreko_fitxategiak.keys()) - set(helburu_fitxategiak.keys())
+
+    if berriak or ezabatuak:
+        idatzi_logera("\n=== FITXATEGI EZBERDINAK ===", log_fitxategia, 0)
 
     # Helburuan bakarrik daudenak
-    berriak = set(helburu_fitxategiak.keys()) - set(aurreko_fitxategiak.keys())
     if berriak:
-        print("\nHELBURUAN BAKARRIK:\n")
-        print(tabulate(
+        idatzi_logera(f"\n{os.path.basename(helburu_direktorioa)}:\n", log_fitxategia, 0)
+        idatzi_logera(tabulate(
             [(f, round(helburu_fitxategiak[f] / 1024, 2)) for f in sorted(berriak)],
             headers=['Fitxategia', 'Tamaina (KB)'],
             tablefmt='grid'
-        ))
+        ), log_fitxategia, 0)
 
     # Aurrekoan bakarrik daudenak
-    ezabatuak = set(aurreko_fitxategiak.keys()) - set(helburu_fitxategiak.keys())
     if ezabatuak:
-        print("\nAURRENEAN BAKARRIK:\n")
-        print(tabulate(
+        idatzi_logera(f"\n{os.path.basename(aurreko_direktorioa)}:\n", log_fitxategia, 0)
+        idatzi_logera(tabulate(
             [(f, round(aurreko_fitxategiak[f] / 1024, 2)) for f in sorted(ezabatuak)],
             headers=['Fitxategia', 'Tamaina (KB)'],
             tablefmt='grid'
-        ))
+        ), log_fitxategia, 0)
 
-    idatzi_logera(f"Alderaketa txostena sortu da: {txosten_izena}", log_fitxategia)
+    if berriak or ezabatuak:
+        idatzi_logera("\n============================\n", log_fitxategia, 0)
+
+    idatzi_logera(f"Alderaketa txostena sortu da: {txosten_izena}", log_fitxategia, 1)
 
 def kopiatu_direktorioa(jatorrizkoa, helburua, log_fitxategia):
     hasiera_denbora = time.time()
-    idatzi_logera(f"Prozesua hasten.", log_fitxategia)
+    idatzi_logera(f"Prozesua hasten.", log_fitxategia, 1)
 
     if not os.path.isdir(jatorrizkoa):
-        idatzi_logera("Errorea: Jatorrizko direktorioa ez da existitzen.", log_fitxategia)
+        idatzi_logera("Errorea: Jatorrizko direktorioa ez da existitzen.", log_fitxategia, 1)
         return False
 
     data_str = datetime.now().strftime("%Y%m%d")
@@ -126,12 +138,13 @@ def kopiatu_direktorioa(jatorrizkoa, helburua, log_fitxategia):
             fitxategi_zerrenda.append(os.path.join(root, file))
 
     total = len(fitxategi_zerrenda)
-    idatzi_logera(f"Guztira kopiatu beharreko fitxategiak: {total}", log_fitxategia)
+    idatzi_logera(f"Guztira kopiatu beharreko fitxategiak: {total}", log_fitxategia, 1)
 
     for i, fitxategia in enumerate(fitxategi_zerrenda, 1):
         idatzi_logera(
             f"[{i}/{total}] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {os.path.basename(fitxategia)}",
-            log_fitxategia
+            log_fitxategia,
+            1
         )
         erlatiboa = os.path.relpath(fitxategia, jatorrizkoa)
         helburu_fitxategia = os.path.join(helburu_osoa, erlatiboa)
@@ -145,7 +158,8 @@ def kopiatu_direktorioa(jatorrizkoa, helburua, log_fitxategia):
         f"Prozesua bukatuta."
         f"Prozesuaren iraupena: {int(orduak)}h {int(minutuak)}m {int(segundoak)}s\n"
         f"{total} fitxategi kopiatu dira {helburu_osoa} helburura.",
-        log_fitxategia
+        log_fitxategia,
+        1
     )
 
     # Kopiatu ondoren, sortu alderaketa txostena
@@ -154,6 +168,8 @@ def kopiatu_direktorioa(jatorrizkoa, helburua, log_fitxategia):
     return True
 
 if __name__ == "__main__":
+    # Log direktorioaren bidea
+    log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "log")
     log_fitxategia = konfiguratu_loga()
 
     if len(sys.argv) != 3:
@@ -170,7 +186,7 @@ if __name__ == "__main__":
     helburua = sys.argv[2]
 
     if not os.path.isdir(helburua):
-        idatzi_logera("Errorea: Helburu direktorioa ez da existitzen.", log_fitxategia)
+        idatzi_logera("Errorea: Helburu direktorioa ez da existitzen.", log_fitxategia, 1)
         sys.exit(1)
 
     kopiatu_direktorioa(jatorrizkoa, helburua, log_fitxategia)
