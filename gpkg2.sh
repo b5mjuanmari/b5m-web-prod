@@ -17,11 +17,11 @@ export HOME="/home/lidar"
 
 # Tildeak eta eñeak / Tildes y eñes
 export NLS_LANG=.AL32UTF8
-set NLS_LANG=.UTF8
+#set NLS_LANG=.UTF8
 #export NLS_LANG=American_America.UTF8
 
 # Aldagaiak / Variables
-dir="${HOME}/SCRIPTS/GPKG"
+dir="${HOME}/SCRIPTS/WEB_PROD"
 gpkd="/home/data/gpkg"
 gpkp="$gpkd"
 con="b5mweb_25830/web+@//exploracle:1521/bdet"
@@ -59,8 +59,22 @@ des_c2="field descriptions"
 dwm_c1="\"id_dw\",\"b5mcode\",\"b5mcode2\",\"name_es\",\"name_eu\",\"name_en\",\"year\",\"path_dw\",\"type_dw\",\"type_file\",\"url_metadata\""
 dwn_url1="https://b5m.gipuzkoa.eus"
 
+# Egiaztatu parametro kopurua
+if [ $# -ne 1 ]; then
+		echo "Erabilera: $scr <fitxategi_izena.dsv>"
+    exit 1
+fi
+
 # Konfigurazio-fitxategia dagoen egiaztatu / Comprobar si hay un fichero de configuración
-fconf="$(echo $0 | gawk 'BEGIN{FS=".";i=1}{while(i<NF){printf("%s.",$i);i++}}END{printf("dsv\n")}')"
+# Egiaztatu fitxategia existitzen den
+cd "$dir"
+#fconf="$(echo $0 | gawk 'BEGIN{FS=".";i=1}{while(i<NF){printf("%s.",$i);i++}}END{printf("dsv\n")}')"
+fconf="$1"
+if [ ! -f "$fconf" ]; then
+    echo "Errorea: '$fconf' fitxategia ez da existitzen edo ez da fitxategi arrunta."
+    exit 1
+fi
+
 if [ ! -f "$fconf" ]
 then
 	echo "Ez dago $fconf konfigurazio-fitxategia"
@@ -113,7 +127,6 @@ source "${dir}/gpkg2_fnc.sh"
 
 ini="Hasiera / Inicio: $scr - `date '+%Y-%m-%d %H:%M:%S'`"
 msg "$ini"
-cd "$dir"
 
 # ======================================================================= #
 #                                                                         #
