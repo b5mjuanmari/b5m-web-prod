@@ -13,9 +13,9 @@ LD_LIBRARY_PATH=$ORACLE_HOME/lib:/lib:/usr/lib; export LD_LIBRARY_PATH
 CLASSPATH=$ORACLE_HOME/JRE:$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib; export CLASSPATH
 export PATH=.:$PATH
 
-export HOME="/home/juanmari/SCRIPTS/"
+export HOME="/home/juanmari"
 
-cd "${HOME}/TILES"
+cd "${HOME}/SCRIPTS/WEB_PROD"
 
 ./genAero.sh
 ./genRotu.sh
