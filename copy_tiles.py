@@ -3,6 +3,8 @@ import shutil
 import sys
 from datetime import datetime
 import time
+import csv
+from tabulate import tabulate
 
 def konfiguratu_loga():
     # Log direktorioaren bidea
@@ -23,6 +25,83 @@ def konfiguratu_loga():
 def idatzi_logera(mesedua, log_fitxategia):
     with open(log_fitxategia, "a") as f:
         f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {mesedua}\n")
+
+def sortu_alderaketa_txostena(helburu_direktorioa, log_fitxategia):
+    """Sortu alderaketa txostena helburuko direktorioaren eta aurreko bertsioaren artean"""
+    # Lortu aurreko bertsioaren direktorioa (YYYYMMDD data kenduta)
+    base_izena = os.path.basename(helburu_direktorioa)
+    aurreko_izena = base_izena.split('_')[0]
+    aurreko_direktorioa = os.path.join(os.path.dirname(helburu_direktorioa), aurreko_izena)
+
+    if not os.path.isdir(aurreko_direktorioa):
+        idatzi_logera(f"Oharra: Aurreko bertsiorik ez da aurkitu: {aurreko_direktorioa}", log_fitxategia)
+        return
+
+    # Bilatu fitxategi guztiak bi direktorioetan
+    helburu_fitxategiak = {}
+    for root, _, files in os.walk(helburu_direktorioa):
+        for file in files:
+            erlatiboa = os.path.relpath(os.path.join(root, file), helburu_direktorioa)
+            helburu_fitxategiak[erlatiboa] = os.path.getsize(os.path.join(root, file))
+
+    aurreko_fitxategiak = {}
+    for root, _, files in os.walk(aurreko_direktorioa):
+        for file in files:
+            erlatiboa = os.path.relpath(os.path.join(root, file), aurreko_direktorioa)
+            aurreko_fitxategiak[erlatiboa] = os.path.getsize(os.path.join(root, file))
+
+    # Sortu CSV fitxategia
+    txosten_izena = os.path.join(os.path.dirname(helburu_direktorioa), f"Alderaketa_{os.path.basename(helburu_direktorioa)}.csv")
+
+    with open(txosten_izena, 'w', newline='') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow([
+            "Fitxategi izena",
+            "Tamaina (KB)",
+            "Aurreko bertsioaren izena",
+            "Aurreko tamaina (KB)",
+            "Aldea (%)"
+        ])
+
+        # 1. Taula: Fitxategi komunak
+        komunak = set(helburu_fitxategiak.keys()) & set(aurreko_fitxategiak.keys())
+        for fitxategia in sorted(komunak):
+            tamaina_kb = helburu_fitxategiak[fitxategia] / 1024
+            aurreko_tamaina_kb = aurreko_fitxategiak[fitxategia] / 1024
+            aldea = ((tamaina_kb - aurreko_tamaina_kb) / aurreko_tamaina_kb) * 100 if aurreko_tamaina_kb != 0 else 0
+
+            csvwriter.writerow([
+                fitxategia,
+                round(tamaina_kb, 2),
+                fitxategia,
+                round(aurreko_tamaina_kb, 2),
+                round(aldea, 2)
+            ])
+
+    # 2. Taula: Fitxategi ezberdinak (terminalerako)
+    print("\n=== FITXATEGI EZBERDINAK ===")
+
+    # Helburuan bakarrik daudenak
+    berriak = set(helburu_fitxategiak.keys()) - set(aurreko_fitxategiak.keys())
+    if berriak:
+        print("\nHELBURUAN BAKARRIK:\n")
+        print(tabulate(
+            [(f, round(helburu_fitxategiak[f] / 1024, 2)) for f in sorted(berriak)],
+            headers=['Fitxategia', 'Tamaina (KB)'],
+            tablefmt='grid'
+        ))
+
+    # Aurrekoan bakarrik daudenak
+    ezabatuak = set(aurreko_fitxategiak.keys()) - set(helburu_fitxategiak.keys())
+    if ezabatuak:
+        print("\nAURRENEAN BAKARRIK:\n")
+        print(tabulate(
+            [(f, round(aurreko_fitxategiak[f] / 1024, 2)) for f in sorted(ezabatuak)],
+            headers=['Fitxategia', 'Tamaina (KB)'],
+            tablefmt='grid'
+        ))
+
+    idatzi_logera(f"Alderaketa txostena sortu da: {txosten_izena}", log_fitxategia)
 
 def kopiatu_direktorioa(jatorrizkoa, helburua, log_fitxategia):
     hasiera_denbora = time.time()
@@ -68,6 +147,10 @@ def kopiatu_direktorioa(jatorrizkoa, helburua, log_fitxategia):
         f"{total} fitxategi kopiatu dira {helburu_osoa} helburura.",
         log_fitxategia
     )
+
+    # Kopiatu ondoren, sortu alderaketa txostena
+    sortu_alderaketa_txostena(helburu_osoa, log_fitxategia)
+
     return True
 
 if __name__ == "__main__":
