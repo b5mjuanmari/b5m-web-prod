@@ -1292,9 +1292,24 @@ then
 	rm "$f02" 2> /dev/null
 fi
 
+# =========================================== #
+#                                             #
+# 99.0. Kopiatu helburura / Copiar al destino #
+#                                             #
+# =========================================== #
+
+echo "copy_remote.py b5mlive2 (hasiera): $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
+python3 copy_remote.py /home/data/gpkg juanmari@b5mdev live@b5mlive2.gipuzkoa.eus >> "$log"
+echo "copy_remote.py b5mlive2 (bukaera): $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
+echo >> "$log"
+echo "copy_remote.py b5mlive1 (hasiera): $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
+python3 copy_remote.py /home/data/gpkg juanmari@b5mdev live@b5mlive1.gipuzkoa.eus >> "$log"
+echo "copy_remote.py b5mlive1 (bukaera): $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
+echo >> "$log"
+
 # ===================== #
 #                       #
-# 99.0. Bukaera / Final #
+# 99.1. Bukaera / Final #
 #                       #
 # ===================== #
 
