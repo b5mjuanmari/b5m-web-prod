@@ -55,7 +55,8 @@ def main():
 
     # Helburuko direktorioaren izena sortu (jatorrizkoaren parent direktorio berean)
     dir_name = os.path.basename(source_dir)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    #timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now().strftime("%Y%m%d")
     remote_dir_name = f"{dir_name}_{timestamp}"
     remote_dir_path = os.path.join(os.path.dirname(source_dir), remote_dir_name)
 
