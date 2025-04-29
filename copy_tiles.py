@@ -5,6 +5,13 @@ from datetime import datetime
 import time
 import csv
 from tabulate import tabulate
+import glob
+
+# CSV direktorioa
+CSV_DIR = "/home9/web5000/doc/reports/csv"
+
+# Eguneko data
+data_str = datetime.now().strftime("%Y%m%d")
 
 def konfiguratu_loga():
     os.makedirs(log_dir, exist_ok=True)
@@ -51,13 +58,20 @@ def sortu_alderaketa_txostena(helburu_direktorioa, log_fitxategia):
             erlatiboa = os.path.relpath(os.path.join(root, file), aurreko_direktorioa)
             aurreko_fitxategiak[erlatiboa] = os.path.getsize(os.path.join(root, file))
 
+    # Sortu CSV direktorioa existitzen ez bada
+    if not os.path.exists(CSV_DIR):
+        os.makedirs(CSV_DIR)
+
+    # Ezabatu aurreko CSV fitxategiak
+    txosten_izena = f"{CSV_DIR}/{data_str}_tiles_files.csv"
+    ezab_csv = glob.glob(txosten_izena.replace(data_str, "*"))
+    for fitx_csv in ezab_csv:
+        try:
+            os.remove(fitx_csv)
+        except OSError as e:
+            print(f"Errorea '{fitx_csv}' ezabatzean: {e}")
+
     # Sortu CSV fitxategia
-    #txosten_izena = os.path.join(os.path.dirname(helburu_direktorioa), f"Alderaketa_{os.path.basename(helburu_direktorioa)}.csv")
-    txosten_izena = os.path.join(log_dir, f"Alderaketa_{os.path.basename(helburu_direktorioa)}.csv")
-
-    if os.path.exists(txosten_izena):
-        os.remove(txosten_izena)
-
     with open(txosten_izena, 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow([
@@ -123,7 +137,6 @@ def kopiatu_direktorioa(jatorrizkoa, helburua, log_fitxategia):
         idatzi_logera("Errorea: Jatorrizko direktorioa ez da existitzen.", log_fitxategia, 1)
         return False
 
-    data_str = datetime.now().strftime("%Y%m%d")
     helburu_izena = f"{os.path.basename(jatorrizkoa)}_{data_str}"
     helburu_osoa = os.path.join(helburua, helburu_izena)
 
