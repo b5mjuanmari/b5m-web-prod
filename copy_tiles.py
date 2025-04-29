@@ -108,21 +108,35 @@ def sortu_alderaketa_txostena(helburu_direktorioa, log_fitxategia):
 
     # Helburuan bakarrik daudenak
     if berriak:
+        berriak2 = [(f, round(helburu_fitxategiak[f] / 1024, 2)) for f in sorted(berriak)]
         idatzi_logera(f"\n{os.path.basename(helburu_direktorioa)}:\n", log_fitxategia, 0)
         idatzi_logera(tabulate(
-            [(f, round(helburu_fitxategiak[f] / 1024, 2)) for f in sorted(berriak)],
+            berriak2,
             headers=['Fitxategia', 'Tamaina (KB)'],
             tablefmt='grid'
         ), log_fitxategia, 0)
 
+        # CSVa
+        with open(txosten_izena, 'a', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            for berriak2_1, berriak2_2 in berriak2:
+                csvwriter.writerow([berriak2_1, berriak2_2, "-", "-", 100.0])
+
     # Aurrekoan bakarrik daudenak
     if ezabatuak:
+        ezabatuak2 = [(f, round(aurreko_fitxategiak[f] / 1024, 2)) for f in sorted(ezabatuak)]
         idatzi_logera(f"\n{os.path.basename(aurreko_direktorioa)}:\n", log_fitxategia, 0)
         idatzi_logera(tabulate(
-            [(f, round(aurreko_fitxategiak[f] / 1024, 2)) for f in sorted(ezabatuak)],
+            ezabatuak2,
             headers=['Fitxategia', 'Tamaina (KB)'],
             tablefmt='grid'
         ), log_fitxategia, 0)
+
+        # CSVa
+        with open(txosten_izena, 'a', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            for ezabatuak2_1, ezabatuak2_2 in ezabatuak2:
+                csvwriter.writerow(["-", "-", ezabatuak2_1, ezabatuak2_2, 100.0])
 
     if berriak or ezabatuak:
         idatzi_logera("\n============================\n", log_fitxategia, 0)
