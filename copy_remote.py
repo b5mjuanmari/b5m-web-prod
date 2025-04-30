@@ -41,35 +41,81 @@ def direktorioa_ezabatu(zerbitzaria, direktorioa):
 
 def sortu_alderaketa_txostena(zerbitzaria, helburu_direktorioa):
     data_str = datetime.now().strftime("%Y%m%d")
-    zerbitzari_izena = zerbitzaria.split("@")[1].split(".")[0]
+    zerbitzari_izena = zerbitzaria.split("@")[1].split(".")[0] if "@" in zerbitzaria else zerbitzaria.split(".")[0]
 
     base_izena = os.path.basename(helburu_direktorioa)
     aurreko_izena = base_izena.split('_')[0]
     aurreko_direktorioa = os.path.join(os.path.dirname(helburu_direktorioa), aurreko_izena)
 
     def lortu_fitxategiak(zerbitzaria, direktorioa):
-        cmd = f'ssh {zerbitzaria} "find {direktorioa} -type f"'
-        output = subprocess.check_output(cmd, shell=True, universal_newlines=True).splitlines()
-        fitxategiak = {}
-        for line in output:
-            tamaina_cmd = f'ssh {zerbitzaria} "stat -c %s {line}"'
-            tamaina = subprocess.check_output(tamaina_cmd, shell=True, universal_newlines=True).strip()
-            erlatiboa = os.path.relpath(line, direktorioa)
-            fitxategiak[erlatiboa] = int(tamaina)
-        return fitxategiak
+        try:
+            # SSH komandoa hobetu (erroreak eta timeout-ak kudeatzeko)
+            cmd = (
+                f'ssh -o ConnectTimeout=15 '          # 15 segundoko timeout
+                f'-o BatchMode=yes '                 # Ez eskatu pasahitzarik
+                f'-o StrictHostKeyChecking=no '      # Host key egiaztapena saltatu
+                f'-o LogLevel=ERROR '                # Log erreferentziak murriztu
+                f'{zerbitzaria} '
+                f'"test -d {direktorioa} && find {direktorioa} -type f 2>/dev/null || echo \'ERROR_DIR\'"'
+            )
 
-    try:
-        helburu_fitxategiak = lortu_fitxategiak(zerbitzaria, helburu_direktorioa)
-    except subprocess.CalledProcessError:
+            # Komandoa exekutatu timeout-ekin
+            output = subprocess.check_output(
+                cmd,
+                shell=True,
+                timeout=20,
+                universal_newlines=True,
+                stderr=subprocess.PIPE
+            )
+
+            if "ERROR_DIR" in output:
+                log(f"Errorea: direktorioa ez da existitzen {zerbitzaria}:{direktorioa}")
+                return {}
+
+            fitxategiak = {}
+            for line in output.splitlines():
+                if not line.strip() or line == "ERROR_DIR":
+                    continue
+
+                # Fitxategiaren tamaina lortu (errore-kudeaketa gehiagorekin)
+                tamaina_cmd = (
+                    f'ssh -o ConnectTimeout=10 {zerbitzaria} '
+                    f'"stat -c %s \'{line}\' 2>/dev/null || echo 0"'
+                )
+                tamaina = subprocess.check_output(
+                    tamaina_cmd,
+                    shell=True,
+                    timeout=10,
+                    universal_newlines=True
+                ).strip()
+
+                if tamaina.isdigit():
+                    erlatiboa = os.path.relpath(line, direktorioa)
+                    fitxategiak[erlatiboa] = int(tamaina)
+
+            return fitxategiak
+
+        except subprocess.TimeoutExpired:
+            log(f"SSH timeout {zerbitzaria}-rekin direktorioa irakurtzean: {direktorioa}")
+            return {}
+        except subprocess.CalledProcessError as e:
+            log(f"SSH errorea {zerbitzaria}-rekin. Stderr: {e.stderr}")
+            return {}
+        except Exception as e:
+            log(f"Errore esperogabea {zerbitzaria}-rekin: {str(e)}")
+            return {}
+
+    # Fitxategiak lortu (errore-kudeaketa gehiagorekin)
+    helburu_fitxategiak = lortu_fitxategiak(zerbitzaria, helburu_direktorioa)
+    if not helburu_fitxategiak:
         log(f"Errorea: ezin izan dira fitxategiak lortu {helburu_direktorioa}-n")
         return
 
-    try:
-        aurreko_fitxategiak = lortu_fitxategiak(zerbitzaria, aurreko_direktorioa)
-    except subprocess.CalledProcessError:
-        log(f"Oharra: Aurreko bertsiorik ez da aurkitu: {aurreko_direktorioa}")
-        aurreko_fitxategiak = {}
+    aurreko_fitxategiak = lortu_fitxategiak(zerbitzaria, aurreko_direktorioa)
+    if not aurreko_fitxategiak:
+        log(f"Oharra: aurreko bertsiorik ez da aurkitu {aurreko_direktorioa}-n")
 
+    # CSV fitxategia sortu
     if not os.path.exists(CSV_DIR):
         os.makedirs(CSV_DIR)
 
