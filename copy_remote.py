@@ -3,10 +3,15 @@ import os
 import sys
 import subprocess
 from datetime import datetime
+import csv
+import glob
 
-def log(mesedua):
-    """Mezuak data eta orduarekin inprimatzen ditu"""
-    print(f"{datetime.now().strftime('%Y%m%d %H:%M:%S')} - {mesedua}")
+# CSV fitxategiak gordetzeko direktorioa (copy_tiles.py-ren berdina)
+CSV_DIR = "/home9/web5000/doc/reports/csv"
+
+def log(mezua):
+    """Mezuak data eta orduarekin erakusten ditu"""
+    print(f"{datetime.now().strftime('%Y%m%d %H:%M:%S')} - {mezua}")
 
 def konexioa_egiaztatu(zerbitzaria):
     """SSH konexioa egiaztatzen du"""
@@ -39,6 +44,95 @@ def direktorioa_ezabatu(zerbitzaria, direktorioa):
         return True
     return False
 
+def sortu_alderaketa_txostena(zerbitzaria, helburu_direktorioa):
+    """Sortu CSV txostena helburuko eta aurreko direktorioen arteko alderaketarako"""
+    # Datuak prestatu
+    data_str = datetime.now().strftime("%Y%m%d")
+    zerbitzari_izena = zerbitzaria.split('.')[0]  # Lehenengo puntu aurretik hartu
+
+    # Aurreko bertsioaren direktorioa lortu (data gabeko izena)
+    base_izena = os.path.basename(helburu_direktorioa)
+    aurreko_izena = base_izena.split('_')[0]
+    aurreko_direktorioa = os.path.join(os.path.dirname(helburu_direktorioa), aurreko_izena)
+
+    # Fitxategiak eta tamainak lortu (urruneko zerbitzaritik SSH bidez)
+    def lortu_fitxategiak(zerbitzaria, direktorioa):
+        cmd = f'ssh {zerbitzaria} "find {direktorioa} -type f"'
+        output = subprocess.check_output(cmd, shell=True, universal_newlines=True).splitlines()
+        fitxategiak = {}
+        for line in output:
+            tamaina_cmd = f'ssh {zerbitzaria} "stat -c %s {line}"'
+            tamaina = subprocess.check_output(tamaina_cmd, shell=True, universal_newlines=True).strip()
+            erlatiboa = os.path.relpath(line, direktorioa)
+            fitxategiak[erlatiboa] = int(tamaina)
+        return fitxategiak
+
+    try:
+        helburu_fitxategiak = lortu_fitxategiak(zerbitzaria, helburu_direktorioa)
+    except subprocess.CalledProcessError:
+        log(f"Errorea: ezin izan dira fitxategiak lortu {helburu_direktorioa}-n")
+        return
+
+    try:
+        aurreko_fitxategiak = lortu_fitxategiak(zerbitzaria, aurreko_direktorioa)
+    except subprocess.CalledProcessError:
+        log(f"Oharra: Aurreko bertsiorik ez da aurkitu: {aurreko_direktorioa}")
+        aurreko_fitxategiak = {}
+
+    # CSV direktorioa prestatu
+    if not os.path.exists(CSV_DIR):
+        os.makedirs(CSV_DIR)
+
+    # CSV fitxategiaren izena (YYYYMMDD_gpkg_zerbitzaria_files.csv)
+    txosten_izena = f"{CSV_DIR}/{data_str}_gpkg_{zerbitzari_izena}_files.csv"
+
+    # Ezabatu aurreko CSV fitxategiak (eguneko data ezberdinekoak)
+    for fitx_csv in glob.glob(txosten_izena.replace(data_str, "*")):
+        try:
+            os.remove(fitx_csv)
+        except OSError as e:
+            log(f"Errorea '{fitx_csv}' ezabatzean: {e}")
+
+    # CSV fitxategia sortu
+    with open(txosten_izena, 'w', newline='') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow([
+            os.path.basename(helburu_direktorioa),
+            "Tamaina (KB)",
+            os.path.basename(aurreko_direktorioa),
+            "Aurreko tamaina (KB)",
+            "Aldea (%)"
+        ])
+
+        # 1. FITXATEGI KOMUNAK (tamainak alderatu)
+        komunak = set(helburu_fitxategiak.keys()) & set(aurreko_fitxategiak.keys())
+        for fitxategia in sorted(komunak):
+            tamaina_kb = helburu_fitxategiak[fitxategia] / 1024
+            aurreko_tamaina_kb = aurreko_fitxategiak[fitxategia] / 1024
+            aldea = ((tamaina_kb - aurreko_tamaina_kb) / aurreko_tamaina_kb) * 100 if aurreko_tamaina_kb != 0 else 0
+
+            csvwriter.writerow([
+                fitxategia,
+                round(tamaina_kb, 2),
+                fitxategia,
+                round(aurreko_tamaina_kb, 2),
+                round(aldea, 2)
+            ])
+
+        # 2. FITXATEGI BERRIAK (helburuan bakarrik daudenak)
+        berriak = set(helburu_fitxategiak.keys()) - set(aurreko_fitxategiak.keys())
+        for fitxategia in sorted(berriak):
+            tamaina_kb = helburu_fitxategiak[fitxategia] / 1024
+            csvwriter.writerow([fitxategia, round(tamaina_kb, 2), "-", "-", 100.0])
+
+        # 3. FITXATEGI EZABATUAK (aurrekoan bakarrik daudenak)
+        ezabatuak = set(aurreko_fitxategiak.keys()) - set(helburu_fitxategiak.keys())
+        for fitxategia in sorted(ezabatuak):
+            aurreko_tamaina_kb = aurreko_fitxategiak[fitxategia] / 1024
+            csvwriter.writerow(["-", "-", fitxategia, round(aurreko_tamaina_kb, 2), 100.0])
+
+    log(f"Alderaketa-txostena sortu da: {txosten_izena}")
+
 def main():
     # Parametroak egiaztatu
     if len(sys.argv) != 4:
@@ -53,43 +147,37 @@ def main():
     if not konexioa_egiaztatu(source_server) or not konexioa_egiaztatu(target_server):
         sys.exit(1)
 
-    # Helburuko direktorioaren izena sortu (jatorrizkoaren parent direktorio berean)
+    # Helburuko direktorioaren izena (data erantsiz)
     dir_name = os.path.basename(source_dir)
-    #timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     timestamp = datetime.now().strftime("%Y%m%d")
     remote_dir_name = f"{dir_name}_{timestamp}"
     remote_dir_path = os.path.join(os.path.dirname(source_dir), remote_dir_name)
 
-    # Helburuko direktorioa existitzen bada, ezabatu
+    # Existitzen bada, ezabatu
     direktorioa_ezabatu(target_server, remote_dir_path)
 
-    # Fitxategiak kopiatu TAR erabiliz
+    # Fitxategiak kopiatu (TAR erabiliz)
     log(f"Fitxategiak kopiatzen: {source_server}:{source_dir} -> {target_server}:{remote_dir_path}")
     hasiera = datetime.now()
 
     try:
-        # Komandoa: jatorritik TAR sortu eta helburuan deskonprimatu
         cmd = (
             f'ssh {source_server} "tar cf - -C {os.path.dirname(source_dir)} {os.path.basename(source_dir)}" | '
             f'ssh {target_server} "mkdir -p {remote_dir_path} && tar xf - -C {remote_dir_path}"'
         )
-
-        prozesua = subprocess.run(
-            cmd,
-            shell=True,
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
+        subprocess.run(cmd, shell=True, check=True)
     except subprocess.CalledProcessError as e:
         log(f"Errorea kopiatzean: {e.stderr.decode('utf-8')}")
         sys.exit(1)
 
-    # Denbora kalkulatu
+    # Denbora erakutsi
     denbora = (datetime.now() - hasiera).total_seconds()
     log(f"Kopia burututa! {denbora:.2f} segundu")
     log(f"Jatorrizkoa: {source_server}:{source_dir}")
     log(f"Helburua: {target_server}:{remote_dir_path}")
+
+    # Alderaketa-txostena sortu
+    sortu_alderaketa_txostena(target_server, remote_dir_path)
 
 if __name__ == "__main__":
     main()
