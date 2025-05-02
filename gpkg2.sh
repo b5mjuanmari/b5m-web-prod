@@ -1205,7 +1205,7 @@ fi
 #                                                              #
 # ============================================================ #
 
-# ?"
+# 1'17"
 
 # Konfigurazio-fitxategia irakurri / Leer el fichero de configuración
 vconf=`grep "$mg_gpk" "$fconf"`
@@ -1233,7 +1233,6 @@ then
 
 	# Behin betiko GPKGa / GPKG definitivo
 	rm "$f02" 2> /dev/null
-	echo
 	ogr2ogr -f "GPKG" -s_srs "EPSG:25830" -t_srs "EPSG:25830" -nln "$mg_gpk" -lco DESCRIPTION="$des01" -sql "$mg_sql_03" "$f02" "$f01"
 	rm "$f01" 2> /dev/null
 
