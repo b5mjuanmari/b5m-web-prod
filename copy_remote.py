@@ -5,8 +5,11 @@ import subprocess
 from datetime import datetime
 import csv
 import glob
+import tempfile
+import shutil
 
 CSV_DIR = "/home9/web5000/doc/reports/csv"
+TEMP_DIR = "/tmp/gpkg_alderaketa"  # Behin-behineko fitxategientzako direktorioa
 
 def log(mezua):
     print(f"{datetime.now().strftime('%Y%m%d %H:%M:%S')} - {mezua}")
@@ -39,6 +42,29 @@ def direktorioa_ezabatu(zerbitzaria, direktorioa):
         return True
     return False
 
+def kopiatu_zerbitzaritik_lokalera(zerbitzaria, jatorrizko_direktorioa, helburu_direktorioa):
+    """Fitxategiak kopiatu zerbitzari urrunetik lokalera"""
+    log(f"Kopiatzen {zerbitzaria}:{jatorrizko_direktorioa} -> {helburu_direktorioa}")
+
+    # Helburuko direktorioa sortu
+    os.makedirs(helburu_direktorioa, exist_ok=True)
+
+    try:
+        # Erabili rsync transferentzia fidagarriagoetarako
+        cmd = [
+            'rsync', '-az', '--timeout=300',
+            f'{zerbitzaria}:{jatorrizko_direktorioa}/',
+            helburu_direktorioa + '/'
+        ]
+        subprocess.run(cmd, check=True, timeout=600)
+        return True
+    except subprocess.TimeoutExpired:
+        log(f"Errorea: denbora-muga gainditu da {zerbitzaria}-tik kopiatzean")
+        return False
+    except subprocess.CalledProcessError as e:
+        log(f"Errorea kopiatzean {zerbitzaria}-tik: {e}")
+        return False
+
 def sortu_alderaketa_txostena(zerbitzaria, helburu_direktorioa):
     data_str = datetime.now().strftime("%Y%m%d")
     zerbitzari_izena = zerbitzaria.split("@")[1].split(".")[0] if "@" in zerbitzaria else zerbitzaria.split(".")[0]
@@ -47,75 +73,45 @@ def sortu_alderaketa_txostena(zerbitzaria, helburu_direktorioa):
     aurreko_izena = base_izena.split('_')[0]
     aurreko_direktorioa = os.path.join(os.path.dirname(helburu_direktorioa), aurreko_izena)
 
-    def lortu_fitxategiak(zerbitzaria, direktorioa):
-        try:
-            # SSH komandoa hobetu (erroreak eta timeout-ak kudeatzeko)
-            cmd = (
-                f'ssh -o ConnectTimeout=15 '          # 15 segundoko timeout
-                f'-o BatchMode=yes '                 # Ez eskatu pasahitzarik
-                f'-o StrictHostKeyChecking=no '      # Host key egiaztapena saltatu
-                f'-o LogLevel=ERROR '                # Log erreferentziak murriztu
-                f'{zerbitzaria} '
-                f'"test -d {direktorioa} && find {direktorioa} -type f 2>/dev/null || echo \'ERROR_DIR\'"'
-            )
+    # Sortu behin-behineko direktorioa kopietarako
+    temp_dir = os.path.join(TEMP_DIR, f"konparaketa_{data_str}_{zerbitzari_izena}")
+    os.makedirs(temp_dir, exist_ok=True)
 
-            # Komandoa exekutatu timeout-ekin
-            output = subprocess.check_output(
-                cmd,
-                shell=True,
-                timeout=20,
-                universal_newlines=True,
-                stderr=subprocess.PIPE
-            )
+    # Alderatzeko direktorioen bide lokalak
+    local_helburu = os.path.join(temp_dir, "orain")
+    local_aurreko = os.path.join(temp_dir, "aurreko")
 
-            if "ERROR_DIR" in output:
-                log(f"Errorea: direktorioa ez da existitzen {zerbitzaria}:{direktorioa}")
-                return {}
-
-            fitxategiak = {}
-            for line in output.splitlines():
-                if not line.strip() or line == "ERROR_DIR":
-                    continue
-
-                # Fitxategiaren tamaina lortu (errore-kudeaketa gehiagorekin)
-                tamaina_cmd = (
-                    f'ssh -o ConnectTimeout=10 {zerbitzaria} '
-                    f'"stat -c %s \'{line}\' 2>/dev/null || echo 0"'
-                )
-                tamaina = subprocess.check_output(
-                    tamaina_cmd,
-                    shell=True,
-                    timeout=10,
-                    universal_newlines=True
-                ).strip()
-
-                if tamaina.isdigit():
-                    erlatiboa = os.path.relpath(line, direktorioa)
-                    fitxategiak[erlatiboa] = int(tamaina)
-
-            return fitxategiak
-
-        except subprocess.TimeoutExpired:
-            log(f"SSH timeout {zerbitzaria}-rekin direktorioa irakurtzean: {direktorioa}")
-            return {}
-        except subprocess.CalledProcessError as e:
-            log(f"SSH errorea {zerbitzaria}-rekin. Stderr: {e.stderr}")
-            return {}
-        except Exception as e:
-            log(f"Errore esperogabea {zerbitzaria}-rekin: {str(e)}")
-            return {}
-
-    # Fitxategiak lortu (errore-kudeaketa gehiagorekin)
-    helburu_fitxategiak = lortu_fitxategiak(zerbitzaria, helburu_direktorioa)
-    if not helburu_fitxategiak:
-        log(f"Errorea: ezin izan dira fitxategiak lortu {helburu_direktorioa}-n")
+    # Kopiatu fitxategiak zerbitzaritik lokalera
+    if not kopiatu_zerbitzaritik_lokalera(zerbitzaria, helburu_direktorioa, local_helburu):
+        log("Errorea: ezin izan dira uneko fitxategiak kopiatu")
         return
 
-    aurreko_fitxategiak = lortu_fitxategiak(zerbitzaria, aurreko_direktorioa)
-    if not aurreko_fitxategiak:
-        log(f"Oharra: aurreko bertsiorik ez da aurkitu {aurreko_direktorioa}-n")
+    if not kopiatu_zerbitzaritik_lokalera(zerbitzaria, aurreko_direktorioa, local_aurreko):
+        log("Oharra: ezin izan dira aurreko fitxategiak kopiatu")
+        # Jarraitu konparazioarekin, baina aurreko fitxategiak hutsik egongo dira
 
-    # CSV fitxategia sortu
+    def lortu_fitxategiak_lokalean(direktorioa):
+        """Lortu fitxategi-tamainak direktorio lokaletik"""
+        fitxategiak = {}
+        if not os.path.exists(direktorioa):
+            return fitxategiak
+
+        for root, _, files in os.walk(direktorioa):
+            for file in files:
+                file_path = os.path.join(root, file)
+                try:
+                    tamaina = os.path.getsize(file_path)
+                    erlatiboa = os.path.relpath(file_path, direktorioa)
+                    fitxategiak[erlatiboa] = tamaina
+                except OSError as e:
+                    log(f"Errorea {file_path} fitxategiaren tamaina lortzean: {e}")
+        return fitxategiak
+
+    # Lortu fitxategiak lokalean (askoz azkarrago)
+    helburu_fitxategiak = lortu_fitxategiak_lokalean(local_helburu)
+    aurreko_fitxategiak = lortu_fitxategiak_lokalean(local_aurreko)
+
+    # Sortu CSV fitxategia
     if not os.path.exists(CSV_DIR):
         os.makedirs(CSV_DIR)
 
@@ -161,6 +157,13 @@ def sortu_alderaketa_txostena(zerbitzaria, helburu_direktorioa):
 
     log(f"Alderaketa-txostena sortu da: {txosten_izena}")
 
+    # Garbitu behin-behineko fitxategiak
+    try:
+        shutil.rmtree(TEMP_DIR)
+        log(f"Behin-behineko fitxategiak ezabatu dira: {TEMP_DIR}")
+    except OSError as e:
+        log(f"Errorea behin-behineko fitxategiak ezabatzean: {e}")
+
 def main():
     if len(sys.argv) != 4:
         log("Erabilera: ./copy_remote.py jatorrizko_direktorioa jatorrizko_zerbitzaria helburuko_zerbitzaria")
@@ -182,8 +185,7 @@ def main():
     # Existitzen bada, ezabatu
     direktorioa_ezabatu(target_server, remote_dir_path)
 
-    # KOPIA EGITEKO KOMANDO BERRI ZUZENDUA:
-    # Jatorrizko direktorioaren edukia zuzenean helburuko direktorioan kopiatu (azpidirektoriorik gabe)
+    # FITXATEGIAK KOPIATU
     log(f"Fitxategiak kopiatzen: {source_server}:{source_dir} -> {target_server}:{remote_dir_path}")
     hasiera = datetime.now()
 
@@ -194,7 +196,7 @@ def main():
         )
         subprocess.run(cmd, shell=True, check=True)
     except subprocess.CalledProcessError as e:
-        log(f"Errorea kopiatzean: {e.stderr.decode('utf-8')}")
+        log(f"Errorea kopiatzean: {e.stderr.decode('utf-8') if e.stderr else str(e)}")
         sys.exit(1)
 
     denbora = (datetime.now() - hasiera).total_seconds()
