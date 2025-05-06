@@ -6,6 +6,8 @@ import time
 import csv
 from tabulate import tabulate
 import glob
+import geopandas as gpd
+import fiona
 
 # CSV direktorioa
 CSV_DIR = "/home9/web5000/doc/reports/csv"
@@ -34,8 +36,37 @@ def idatzi_logera(mezua, log_fitxategia, dataord):
         else:
             f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {mezua}\n")
 
+def lortu_elementu_kopuruak(fitxategi_bidea, log_fitxategia, i, total):
+    """Lortu elementu kopuruak datu espazialen fitxategi batentzat (mota guztien batuketa)"""
+    try:
+        # Idatzi log-era prozesatzen ari garen fitxategia
+        idatzi_logera(f"[{i}/{total}] - {os.path.basename(fitxategi_bidea)}", log_fitxategia, 1)
+
+        # GPKG fitxategietarako, layer guztien elementuak batu
+        if fitxategi_bidea.endswith('.gpkg'):
+            total_elements = 0
+            # Fiona erabiliz layerrak listatu
+            layers = fiona.listlayers(fitxategi_bidea)
+            for layer in layers:
+                try:
+                    layer_gdf = gpd.read_file(fitxategi_bidea, layer=layer)
+                    total_elements += len(layer_gdf)
+                except Exception as e:
+                    print(f"Errorea {fitxategi_bidea} (layer: {layer}) irakurtzean: {e}")
+            return total_elements
+        else:  # Shapefile eta beste formatuentzat
+            gdf = gpd.read_file(fitxategi_bidea)
+            return len(gdf)
+
+    except Exception as e:
+        print(f"Errorea {fitxategi_bidea} irakurtzean: {e}")
+        return None
+
 def sortu_alderaketa_txostena(helburu_direktorioa, log_fitxategia):
     """Sortu alderaketa txostena helburuko direktorioaren eta aurreko bertsioaren artean"""
+    alderaketa_hasiera = time.time()
+    idatzi_logera("Alderaketa prozesua hasten...", log_fitxategia, 1)
+
     # Lortu aurreko bertsioaren direktorioa (YYYYMMDD data kenduta)
     base_izena = os.path.basename(helburu_direktorioa)
     aurreko_izena = base_izena.split('_')[0]
@@ -45,25 +76,48 @@ def sortu_alderaketa_txostena(helburu_direktorioa, log_fitxategia):
         idatzi_logera(f"Oharra: Aurreko bertsiorik ez da aurkitu: {aurreko_direktorioa}", log_fitxategia, 1)
         return
 
-    # Bilatu fitxategi guztiak bi direktorioetan
+    # 1. Fasea: Fitxategi zerrendak bildu
+    idatzi_logera("Fitxategi zerrendak bildu...", log_fitxategia, 1)
+
+    # Bilatu fitxategi guztiak bi direktorioetan (.shp eta .gpkg soilik)
     helburu_fitxategiak = {}
+    helburu_fitxategi_zerrenda = []
     for root, _, files in os.walk(helburu_direktorioa):
         for file in files:
-            erlatiboa = os.path.relpath(os.path.join(root, file), helburu_direktorioa)
-            helburu_fitxategiak[erlatiboa] = os.path.getsize(os.path.join(root, file))
+            if file.endswith(('.shp', '.gpkg')):
+                bide_osoa = os.path.join(root, file)
+                erlatiboa = os.path.relpath(bide_osoa, helburu_direktorioa)
+                helburu_fitxategi_zerrenda.append((erlatiboa, bide_osoa))
 
     aurreko_fitxategiak = {}
+    aurreko_fitxategi_zerrenda = []
     for root, _, files in os.walk(aurreko_direktorioa):
         for file in files:
-            erlatiboa = os.path.relpath(os.path.join(root, file), aurreko_direktorioa)
-            aurreko_fitxategiak[erlatiboa] = os.path.getsize(os.path.join(root, file))
+            if file.endswith(('.shp', '.gpkg')):
+                bide_osoa = os.path.join(root, file)
+                erlatiboa = os.path.relpath(bide_osoa, aurreko_direktorioa)
+                aurreko_fitxategi_zerrenda.append((erlatiboa, bide_osoa))
+
+    # 2. Fasea: Elementu kopuruak kalkulatu (helburu direktorioa)
+    idatzi_logera(f"Helburuko direktorioko {len(helburu_fitxategi_zerrenda)} fitxategi prozesatzen...", log_fitxategia, 1)
+    for i, (erlatiboa, bide_osoa) in enumerate(helburu_fitxategi_zerrenda, 1):
+        kopurua = lortu_elementu_kopuruak(bide_osoa, log_fitxategia, i, len(helburu_fitxategi_zerrenda))
+        if kopurua is not None:
+            helburu_fitxategiak[erlatiboa] = kopurua
+
+    # 3. Fasea: Elementu kopuruak kalkulatu (aurreko direktorioa)
+    idatzi_logera(f"Aurreko direktorioko {len(aurreko_fitxategi_zerrenda)} fitxategi prozesatzen...", log_fitxategia, 1)
+    for i, (erlatiboa, bide_osoa) in enumerate(aurreko_fitxategi_zerrenda, 1):
+        kopurua = lortu_elementu_kopuruak(bide_osoa, log_fitxategia, i, len(aurreko_fitxategi_zerrenda))
+        if kopurua is not None:
+            aurreko_fitxategiak[erlatiboa] = kopurua
 
     # Sortu CSV direktorioa existitzen ez bada
     if not os.path.exists(CSV_DIR):
         os.makedirs(CSV_DIR)
 
     # Ezabatu aurreko CSV fitxategiak
-    txosten_izena = f"{CSV_DIR}/{data_str}_tiles_files.csv"
+    txosten_izena = f"{CSV_DIR}/{data_str}_tiles_features.csv"
     ezab_csv = glob.glob(txosten_izena.replace(data_str, "*"))
     for fitx_csv in ezab_csv:
         try:
@@ -76,30 +130,33 @@ def sortu_alderaketa_txostena(helburu_direktorioa, log_fitxategia):
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow([
             os.path.basename(helburu_direktorioa),
-            "Tamaina (KB)",
+            "Features",
             os.path.basename(aurreko_direktorioa),
-            "Aurreko tamaina (KB)",
+            "Features (aurrekoa)",
             "Aldea (%)"
         ])
 
         # 1. Taula: Fitxategi komunak
         komunak = set(helburu_fitxategiak.keys()) & set(aurreko_fitxategiak.keys())
         for fitxategia in sorted(komunak):
-            tamaina_kb = helburu_fitxategiak[fitxategia] / 1024
-            aurreko_tamaina_kb = aurreko_fitxategiak[fitxategia] / 1024
-            aldea = ((tamaina_kb - aurreko_tamaina_kb) / aurreko_tamaina_kb) * 100 if aurreko_tamaina_kb != 0 else 0
+            oraingoa = helburu_fitxategiak[fitxategia]
+            aurrekoa = aurreko_fitxategiak[fitxategia]
+
+            # Kalkulatu aldea
+            if aurrekoa == 0:
+                aldea = 0 if oraingoa == 0 else 100.0
+            else:
+                aldea = ((oraingoa - aurrekoa) / aurrekoa) * 100
 
             csvwriter.writerow([
                 fitxategia,
-                round(tamaina_kb, 2),
+                oraingoa,
                 fitxategia,
-                round(aurreko_tamaina_kb, 2),
+                aurrekoa,
                 round(aldea, 2)
             ])
 
     # 2. Taula: Fitxategi ezberdinak (logerako)
-
-    # Ezberdinak
     berriak = set(helburu_fitxategiak.keys()) - set(aurreko_fitxategiak.keys())
     ezabatuak = set(aurreko_fitxategiak.keys()) - set(helburu_fitxategiak.keys())
 
@@ -108,39 +165,50 @@ def sortu_alderaketa_txostena(helburu_direktorioa, log_fitxategia):
 
     # Helburuan bakarrik daudenak
     if berriak:
-        berriak2 = [(f, round(helburu_fitxategiak[f] / 1024, 2)) for f in sorted(berriak)]
+        berriak2 = [(f, helburu_fitxategiak[f]) for f in sorted(berriak)]
         idatzi_logera(f"\n{os.path.basename(helburu_direktorioa)}:\n", log_fitxategia, 0)
         idatzi_logera(tabulate(
             berriak2,
-            headers=['Fitxategia', 'Tamaina (KB)'],
+            headers=['Fitxategia', 'Features'],
             tablefmt='grid'
         ), log_fitxategia, 0)
 
         # CSVa
         with open(txosten_izena, 'a', newline='') as csvfile:
             csvwriter = csv.writer(csvfile)
-            for berriak2_1, berriak2_2 in berriak2:
-                csvwriter.writerow([berriak2_1, berriak2_2, "-", "-", 100.0])
+            for fitx, kop in berriak2:
+                csvwriter.writerow([fitx, kop, "-", "-", 100.0])
 
     # Aurrekoan bakarrik daudenak
     if ezabatuak:
-        ezabatuak2 = [(f, round(aurreko_fitxategiak[f] / 1024, 2)) for f in sorted(ezabatuak)]
+        ezabatuak2 = [(f, aurreko_fitxategiak[f]) for f in sorted(ezabatuak)]
         idatzi_logera(f"\n{os.path.basename(aurreko_direktorioa)}:\n", log_fitxategia, 0)
         idatzi_logera(tabulate(
             ezabatuak2,
-            headers=['Fitxategia', 'Tamaina (KB)'],
+            headers=['Fitxategia', 'Features'],
             tablefmt='grid'
         ), log_fitxategia, 0)
 
         # CSVa
         with open(txosten_izena, 'a', newline='') as csvfile:
             csvwriter = csv.writer(csvfile)
-            for ezabatuak2_1, ezabatuak2_2 in ezabatuak2:
-                csvwriter.writerow(["-", "-", ezabatuak2_1, ezabatuak2_2, 100.0])
+            for fitx, kop in ezabatuak2:
+                csvwriter.writerow(["-", "-", fitx, kop, 100.0])
 
     if berriak or ezabatuak:
         idatzi_logera("\n============================\n", log_fitxategia, 0)
 
+    # Denbora-kontagailua bukatu
+    iraupena = time.time() - alderaketa_hasiera
+    orduak, resto = divmod(iraupena, 3600)
+    minutuak, segundoak = divmod(resto, 60)
+    denbora_mezua = (
+        f"Alderaketa prozesuaren iraupena: "
+        f"{int(orduak)}h {int(minutuak)}m {int(segundoak)}s\n"
+        f"Guztira {len(helburu_fitxategiak)} fitxategi berri eta "
+        f"{len(aurreko_fitxategiak)} fitxategi zahar alderatu dira"
+    )
+    idatzi_logera(denbora_mezua, log_fitxategia, 1)
     idatzi_logera(f"Alderaketa txostena sortu da: {txosten_izena}", log_fitxategia, 1)
 
 def kopiatu_direktorioa(jatorrizkoa, helburua, log_fitxategia):
@@ -169,7 +237,7 @@ def kopiatu_direktorioa(jatorrizkoa, helburua, log_fitxategia):
 
     for i, fitxategia in enumerate(fitxategi_zerrenda, 1):
         idatzi_logera(
-            f"[{i}/{total}] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {os.path.basename(fitxategia)}",
+            f"[{i}/{total}] - {os.path.basename(fitxategia)}",
             log_fitxategia,
             1
         )
@@ -183,7 +251,7 @@ def kopiatu_direktorioa(jatorrizkoa, helburua, log_fitxategia):
     minutuak, segundoak = divmod(resto, 60)
     idatzi_logera(
         f"Prozesua bukatuta."
-        f"Prozesuaren iraupena: {int(orduak)}h {int(minutuak)}m {int(segundoak)}s\n"
+        f" Prozesuaren iraupena: {int(orduak)}h {int(minutuak)}m {int(segundoak)}s\n"
         f"{total} fitxategi kopiatu dira {helburu_osoa} helburura.",
         log_fitxategia,
         1
@@ -216,4 +284,13 @@ if __name__ == "__main__":
         idatzi_logera("Errorea: Helburu direktorioa ez da existitzen.", log_fitxategia, 1)
         sys.exit(1)
 
+    hasiera = time.time()
     kopiatu_direktorioa(jatorrizkoa, helburua, log_fitxategia)
+    iraupena = time.time() - hasiera
+    orduak, resto = divmod(iraupena, 3600)
+    minutuak, segundoak = divmod(resto, 60)
+    idatzi_logera(
+        f"Prozesu osoaren iraupena: {int(orduak)}h {int(minutuak)}m {int(segundoak)}s.",
+        log_fitxategia,
+        1
+    )
