@@ -40,119 +40,100 @@ def direktorioa_ezabatu(zerbitzaria, direktorioa):
     return False
 
 def sortu_alderaketa_txostena(zerbitzaria, helburu_direktorioa):
+    import re
+
     data_str = datetime.now().strftime("%Y%m%d")
     zerbitzari_izena = zerbitzaria.split("@")[1].split(".")[0] if "@" in zerbitzaria else zerbitzaria.split(".")[0]
-
     base_izena = os.path.basename(helburu_direktorioa)
     aurreko_izena = base_izena.split('_')[0]
     aurreko_direktorioa = os.path.join(os.path.dirname(helburu_direktorioa), aurreko_izena)
 
-    def lortu_fitxategiak(zerbitzaria, direktorioa):
+    def lortu_elementu_kopuruak(direktorioa):
+        """
+        Zerbitzariaren direktorio batean dauden .shp eta .gpkg fitxategien elementu-kopurua lortzen du.
+        """
+        komandoa = f'''
+        cd {direktorioa} && \
+        find . \\( -name "*.shp" -o -name "*.gpkg" \\) -type f | while read f; do
+            if [[ "$f" == *.shp ]]; then
+                count=$(ogrinfo -ro -al "$f" 2>/dev/null | grep "Feature Count" | awk -F': ' '{{print $2}}')
+            elif [[ "$f" == *.gpkg ]]; then
+                count=0
+                for layer in $(ogrinfo -so -al "$f" | grep "Layer name" | awk '{{print $3}}'); do
+                    lay_count=$(ogrinfo "$f" -sql "SELECT COUNT(*) FROM '$layer'" 2>/dev/null | grep "COUNT_*" | awk '{{print $4}}')
+                    count=$((count + lay_count))
+                done
+            else
+                count=0
+            fi
+            echo "${{f#./}}:$count"
+        done
+        '''
+
         try:
-            # Komando bakarra fitxategi guztien zerrenda eta tamainak lortzeko
-            cmd = (
-                f'ssh -o ConnectTimeout=120 -o BatchMode=yes '
-                f'-o StrictHostKeyChecking=no -o LogLevel=ERROR '
-                f'{zerbitzaria} '
-                f'"cd {direktorioa} && '
-                f'{{ find . -type f -exec du -b {{}} + 2>/dev/null || echo "ERROR_FIND"; }}"'
-            )
-
-            # Exekutatu komandoa
             output = subprocess.check_output(
-                cmd,
-                shell=True,
-                timeout=300,  # 5 minutuko denbora-muga
+                ["ssh", zerbitzaria, komandoa],
                 universal_newlines=True,
-                stderr=subprocess.PIPE
+                timeout=300
             )
-
-            if "ERROR_FIND" in output:
-                log(f"Errorea: ezin izan dira fitxategiak bilatu {zerbitzaria}:{direktorioa}")
-                return {}
-
-            fitxategiak = {}
-            for line in output.splitlines():
-                if not line.strip() or line == "ERROR_FIND":
-                    continue
-
-                try:
-                    # Formatua: "tamaina\t./path/to/file"
-                    tamaina, file_path = line.split('\t', 1)
-
-                    # Kendu "./" hasieratik
-                    file_path = file_path[2:] if file_path.startswith("./") else file_path
-
-                    if tamaina.isdigit():
-                        fitxategiak[file_path] = int(tamaina)
-                except Exception as e:
-                    log(f"Errorea line prozesatzean '{line}': {str(e)}")
-
-            return fitxategiak
-
-        except subprocess.TimeoutExpired:
-            log(f"SSH timeout {zerbitzaria}-rekin direktorioa irakurtzean: {direktorioa}")
-            return {}
+            emaitzak = {}
+            for lerroa in output.strip().splitlines():
+                if ":" in lerroa:
+                    izena, kopurua = lerroa.rsplit(":", 1)
+                    emaitzak[izena.strip()] = int(kopurua)
+            return emaitzak
         except subprocess.CalledProcessError as e:
-            log(f"SSH errorea {zerbitzaria}-rekin. Stderr: {e.stderr}")
+            log(f"Errorea: {direktorioa}-n elementu kopuruak lortzean")
             return {}
         except Exception as e:
-            log(f"Errore esperogabea {zerbitzaria}-rekin: {str(e)}")
+            log(f"Errore esperogabea: {str(e)}")
             return {}
 
-    # Fitxategiak lortu (errore-kudeaketa gehiagorekin)
-    helburu_fitxategiak = lortu_fitxategiak(zerbitzaria, helburu_direktorioa)
-    if not helburu_fitxategiak:
-        log(f"Errorea: ezin izan dira fitxategiak lortu {helburu_direktorioa}-n")
+    helburu_elem = lortu_elementu_kopuruak(helburu_direktorioa)
+    if not helburu_elem:
+        log("Errorea: helburuko fitxategietatik ez da ezer lortu")
         return
 
-    aurreko_fitxategiak = lortu_fitxategiak(zerbitzaria, aurreko_direktorioa)
-    if not aurreko_fitxategiak:
-        log(f"Oharra: aurreko bertsiorik ez da aurkitu {aurreko_direktorioa}-n")
+    aurreko_elem = lortu_elementu_kopuruak(aurreko_direktorioa)
+    if not aurreko_elem:
+        log("Oharra: aurreko bertsiorik ez da aurkitu")
+        aurreko_elem = {}
 
-    # CSV fitxategia sortu
+    # CSV fitxategia prestatu
     if not os.path.exists(CSV_DIR):
         os.makedirs(CSV_DIR)
 
-    txosten_izena = f"{CSV_DIR}/{data_str}_gpkg_{zerbitzari_izena}_files.csv"
-    for fitx_csv in glob.glob(txosten_izena.replace(data_str, "*")):
+    txosten_izena = f"{CSV_DIR}/{data_str}_gpkg_{zerbitzari_izena}_features.csv"
+    for zaharra in glob.glob(txosten_izena.replace(data_str, "*")):
         try:
-            os.remove(fitx_csv)
+            os.remove(zaharra)
         except OSError as e:
-            log(f"Errorea '{fitx_csv}' ezabatzean: {e}")
+            log(f"Errorea '{zaharra}' ezabatzean: {e}")
 
     with open(txosten_izena, 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow([
             os.path.basename(helburu_direktorioa),
-            "Tamaina (KB)",
+            "Elementu kopurua",
             os.path.basename(aurreko_direktorioa),
-            "Aurreko tamaina (KB)",
+            "Aurreko kopurua",
             "Aldea (%)"
         ])
 
-        komunak = set(helburu_fitxategiak.keys()) & set(aurreko_fitxategiak.keys())
-        for fitxategia in sorted(komunak):
-            tamaina_kb = helburu_fitxategiak[fitxategia] / 1024
-            aurreko_tamaina_kb = aurreko_fitxategiak[fitxategia] / 1024
-            aldea = ((tamaina_kb - aurreko_tamaina_kb) / aurreko_tamaina_kb) * 100 if aurreko_tamaina_kb != 0 else 0
-            csvwriter.writerow([
-                fitxategia,
-                round(tamaina_kb, 2),
-                fitxategia,
-                round(aurreko_tamaina_kb, 2),
-                round(aldea, 2)
-            ])
+        komunak = set(helburu_elem) & set(aurreko_elem)
+        for fitx in sorted(komunak):
+            h = helburu_elem[fitx]
+            a = aurreko_elem[fitx]
+            aldea = ((h - a) / a * 100) if a != 0 else 100
+            csvwriter.writerow([fitx, h, fitx, a, round(aldea, 2)])
 
-        berriak = set(helburu_fitxategiak.keys()) - set(aurreko_fitxategiak.keys())
-        for fitxategia in sorted(berriak):
-            tamaina_kb = helburu_fitxategiak[fitxategia] / 1024
-            csvwriter.writerow([fitxategia, round(tamaina_kb, 2), "-", "-", 100.0])
+        berriak = set(helburu_elem) - set(aurreko_elem)
+        for fitx in sorted(berriak):
+            csvwriter.writerow([fitx, helburu_elem[fitx], "-", "-", 100.0])
 
-        ezabatuak = set(aurreko_fitxategiak.keys()) - set(helburu_fitxategiak.keys())
-        for fitxategia in sorted(ezabatuak):
-            aurreko_tamaina_kb = aurreko_fitxategiak[fitxategia] / 1024
-            csvwriter.writerow(["-", "-", fitxategia, round(aurreko_tamaina_kb, 2), 100.0])
+        ezabatuak = set(aurreko_elem) - set(helburu_elem)
+        for fitx in sorted(ezabatuak):
+            csvwriter.writerow(["-", "-", fitx, aurreko_elem[fitx], 100.0])
 
     log(f"Alderaketa-txostena sortu da: {txosten_izena}")
 
