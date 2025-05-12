@@ -2323,7 +2323,7 @@ initcap(a.tipo_i) type_en,
 '{\"official_id\":\"1\",\"official_text_eu\":\"${oft1eu}\",\"official_text_es\":\"${oft1es}\",\"official_text_en\":\"${oft1en}\"}' official,
 b.geom
 from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.mu_mup b
-where a.id_nombre1=b.tag
+where a.id_nombre1=b.mup
 order by a.id_nombre1"
 
 mu_sql_02="select
