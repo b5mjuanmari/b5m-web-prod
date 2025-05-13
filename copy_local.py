@@ -8,6 +8,7 @@ from tabulate import tabulate
 import glob
 import geopandas as gpd
 import fiona
+from fastkml import kml
 
 # CSV direktorioa
 CSV_DIR = "/home9/web5000/doc/reports/csv"
@@ -37,15 +38,13 @@ def idatzi_logera(mezua, log_fitxategia, dataord):
             f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {mezua}\n")
 
 def lortu_elementu_kopuruak(fitxategi_bidea, log_fitxategia, i, total):
-    """Lortu elementu kopuruak datu espazialen fitxategi batentzat (mota guztien batuketa)"""
+    """Lortu elementu kopuruak datu espazialen edo CSV fitxategientzat"""
     try:
-        # Idatzi log-era prozesatzen ari garen fitxategia
         idatzi_logera(f"[{i}/{total}] - {os.path.basename(fitxategi_bidea)}", log_fitxategia, 1)
 
-        # GPKG fitxategietarako, layer guztien elementuak batu
+        # GPKG fitxategietarako
         if fitxategi_bidea.endswith('.gpkg'):
             total_elements = 0
-            # Fiona erabiliz layerrak listatu
             layers = fiona.listlayers(fitxategi_bidea)
             for layer in layers:
                 try:
@@ -54,7 +53,29 @@ def lortu_elementu_kopuruak(fitxategi_bidea, log_fitxategia, i, total):
                 except Exception as e:
                     print(f"Errorea {fitxategi_bidea} (layer: {layer}) irakurtzean: {e}")
             return total_elements
-        else:  # Shapefile eta beste formatuentzat
+
+        # KML fitxategientzat
+        elif fitxategi_bidea.endswith('.kml'):
+            from fastkml import kml
+            with open(fitxategi_bidea, 'rb') as f:
+                k = kml.KML()
+                k.from_string(f.read())
+                count = 0
+                for d in k.features():
+                    for fld in d.features():
+                        count += len(list(fld.features()))
+                return count
+
+        # CSV fitxategientzat
+        elif fitxategi_bidea.endswith('.csv'):
+            with open(fitxategi_bidea, 'r', encoding='utf-8') as f:
+                # Goiburukoa baztertzeko: next(f)
+                next(f)
+                count = sum(1 for _ in f)
+            return count
+
+        # Beste formatuentzat (shp, geojson, etab.)
+        else:
             gdf = gpd.read_file(fitxategi_bidea)
             return len(gdf)
 
@@ -80,18 +101,19 @@ def sortu_alderaketa_txostena(helburu_direktorioa, log_fitxategia):
         else:
            aurreko_direktorioa = aurreko_direktorioa2
            helburu_direktorioa2 = '/'.join(helburu_direktorioa.split('/')[:-1] + [helburu_direktorioa.split('/')[-1].upper()])
+           shutil.rmtree(helburu_direktorioa2)
            os.rename(helburu_direktorioa, helburu_direktorioa2)
            helburu_direktorioa = helburu_direktorioa2
 
     # 1. Fasea: Fitxategi zerrendak bildu
     idatzi_logera("Fitxategi zerrendak bildu...", log_fitxategia, 1)
 
-    # Bilatu fitxategi guztiak bi direktorioetan (.shp eta .gpkg soilik)
+    # Bilatu fitxategi guztiak bi direktorioetan
     helburu_fitxategiak = {}
     helburu_fitxategi_zerrenda = []
     for root, _, files in os.walk(helburu_direktorioa):
         for file in files:
-            if file.endswith(('.shp', '.gpkg')):
+            if file.endswith(('.shp', '.gpkg', '.geojson', '.kml', '.csv')):
                 bide_osoa = os.path.join(root, file)
                 erlatiboa = os.path.relpath(bide_osoa, helburu_direktorioa)
                 helburu_fitxategi_zerrenda.append((erlatiboa, bide_osoa))
@@ -100,7 +122,7 @@ def sortu_alderaketa_txostena(helburu_direktorioa, log_fitxategia):
     aurreko_fitxategi_zerrenda = []
     for root, _, files in os.walk(aurreko_direktorioa):
         for file in files:
-            if file.endswith(('.shp', '.gpkg')):
+            if file.endswith(('.shp', '.gpkg', '.geojson', '.kml', '.csv')):
                 bide_osoa = os.path.join(root, file)
                 erlatiboa = os.path.relpath(bide_osoa, aurreko_direktorioa)
                 aurreko_fitxategi_zerrenda.append((erlatiboa, bide_osoa))
