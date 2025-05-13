@@ -9,6 +9,8 @@ import glob
 import geopandas as gpd
 import fiona
 from fastkml import kml
+import zipfile
+import tempfile
 
 # CSV direktorioa
 CSV_DIR = "/home9/web5000/doc/reports/csv"
@@ -16,13 +18,14 @@ CSV_DIR = "/home9/web5000/doc/reports/csv"
 # Eguneko data
 data_str = datetime.now().strftime("%Y%m%d")
 
-def konfiguratu_loga():
+def konfiguratu_loga(jatorrizkoa):
     os.makedirs(log_dir, exist_ok=True)
 
     # Log fitxategiaren izena (script_izena_YYYYMMDD.log)
     script_izena = os.path.splitext(os.path.basename(__file__))[0]
     gaurko_data = datetime.now().strftime("%Y%m%d")
-    log_fitxategia = os.path.join(log_dir, f"{script_izena}_{gaurko_data}.log")
+    jat = jatorrizkoa.split('/')[-1].lower()
+    log_fitxategia = os.path.join(log_dir, f"{script_izena}_{gaurko_data}_{jat}.log")
 
     # Existitzen bada, ezabatu
     if os.path.exists(log_fitxategia):
@@ -38,12 +41,31 @@ def idatzi_logera(mezua, log_fitxategia, dataord):
             f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {mezua}\n")
 
 def lortu_elementu_kopuruak(fitxategi_bidea, log_fitxategia, i, total):
-    """Lortu elementu kopuruak datu espazialen edo CSV fitxategientzat"""
+    """Lortu elementu kopuruak (Geo fitxategiak, CSV, edo ZIP barrukoak barne)"""
     try:
         idatzi_logera(f"[{i}/{total}] - {os.path.basename(fitxategi_bidea)}", log_fitxategia, 1)
 
-        # GPKG fitxategietarako
-        if fitxategi_bidea.endswith('.gpkg'):
+        # ZIP fitxategientzat: deskonprimitu eta lehenengo onartutako fitxategia prozesatu
+        if fitxategi_bidea.endswith('.zip'):
+            with zipfile.ZipFile(fitxategi_bidea, 'r') as zip_ref:
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    zip_ref.extractall(tmpdir)
+                    # Onartutako fitxategiak
+                    onartuak = ['.gpkg', '.kml', '.shp', '.geojson', '.csv']
+                    # Lehenengo egokia aurkitu
+                    aurkitua = False
+                    for root, _, files in os.walk(tmpdir):
+                        for file in files:
+                            if any(file.endswith(ext) for ext in onartuak):
+                                full_path = os.path.join(root, file)
+                                aurkitua = True
+                                return lortu_elementu_kopuruak(full_path, log_fitxategia, i, total)
+                    if not aurkitua:
+                        print(f"Ez da onartutako fitxategirik aurkitu ZIP honetan: {fitxategi_bidea}")
+            return None
+
+        # GPKG fitxategientzat
+        elif fitxategi_bidea.endswith('.gpkg'):
             total_elements = 0
             layers = fiona.listlayers(fitxategi_bidea)
             for layer in layers:
@@ -69,12 +91,11 @@ def lortu_elementu_kopuruak(fitxategi_bidea, log_fitxategia, i, total):
         # CSV fitxategientzat
         elif fitxategi_bidea.endswith('.csv'):
             with open(fitxategi_bidea, 'r', encoding='utf-8') as f:
-                # Goiburukoa baztertzeko: next(f)
-                next(f)
+                next(f)  # Goiburukoa saltatu nahi bada
                 count = sum(1 for _ in f)
             return count
 
-        # Beste formatuentzat (shp, geojson, etab.)
+        # Beste formatuak (GeoJSON, SHP, ...)
         else:
             gdf = gpd.read_file(fitxategi_bidea)
             return len(gdf)
@@ -113,7 +134,7 @@ def sortu_alderaketa_txostena(helburu_direktorioa, log_fitxategia):
     helburu_fitxategi_zerrenda = []
     for root, _, files in os.walk(helburu_direktorioa):
         for file in files:
-            if file.endswith(('.shp', '.gpkg', '.geojson', '.kml', '.csv')):
+            if file.endswith(('.shp', '.gpkg', '.geojson', '.kml', '.csv', '.zip')):
                 bide_osoa = os.path.join(root, file)
                 erlatiboa = os.path.relpath(bide_osoa, helburu_direktorioa)
                 helburu_fitxategi_zerrenda.append((erlatiboa, bide_osoa))
@@ -122,7 +143,7 @@ def sortu_alderaketa_txostena(helburu_direktorioa, log_fitxategia):
     aurreko_fitxategi_zerrenda = []
     for root, _, files in os.walk(aurreko_direktorioa):
         for file in files:
-            if file.endswith(('.shp', '.gpkg', '.geojson', '.kml', '.csv')):
+            if file.endswith(('.shp', '.gpkg', '.geojson', '.kml', '.csv', '.zip')):
                 bide_osoa = os.path.join(root, file)
                 erlatiboa = os.path.relpath(bide_osoa, aurreko_direktorioa)
                 aurreko_fitxategi_zerrenda.append((erlatiboa, bide_osoa))
@@ -147,7 +168,7 @@ def sortu_alderaketa_txostena(helburu_direktorioa, log_fitxategia):
 
     # Ezabatu aurreko CSV fitxategiak
     mota = helburu_direktorioa.split('/')[-1].split('_')[0].lower()
-    txosten_izena = f"{CSV_DIR}/{data_str}_{mota}.csv"
+    txosten_izena = f"{CSV_DIR}/{data_str}_{mota}_features.csv"
     ezab_csv = glob.glob(txosten_izena.replace(data_str, "*"))
     for fitx_csv in ezab_csv:
         try:
@@ -293,10 +314,6 @@ def kopiatu_direktorioa(jatorrizkoa, helburua, log_fitxategia):
     return True
 
 if __name__ == "__main__":
-    # Log direktorioaren bidea
-    log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "log")
-    log_fitxategia = konfiguratu_loga()
-
     if len(sys.argv) != 3:
         errorea = (
             f"Erabilera: python3 {os.path.basename(sys.argv[0])} "
@@ -313,6 +330,10 @@ if __name__ == "__main__":
     if not os.path.isdir(helburua):
         idatzi_logera("Errorea: Helburu direktorioa ez da existitzen.", log_fitxategia, 1)
         sys.exit(1)
+
+    # Log direktorioaren bidea
+    log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "log")
+    log_fitxategia = konfiguratu_loga(jatorrizkoa)
 
     hasiera = time.time()
     kopiatu_direktorioa(jatorrizkoa, helburua, log_fitxategia)
