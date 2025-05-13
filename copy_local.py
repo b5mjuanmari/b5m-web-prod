@@ -122,7 +122,8 @@ def sortu_alderaketa_txostena(helburu_direktorioa, log_fitxategia):
         else:
            aurreko_direktorioa = aurreko_direktorioa2
            helburu_direktorioa2 = '/'.join(helburu_direktorioa.split('/')[:-1] + [helburu_direktorioa.split('/')[-1].upper()])
-           shutil.rmtree(helburu_direktorioa2)
+           if os.path.exists(helburu_direktorioa2):
+               shutil.rmtree(helburu_direktorioa2)
            os.rename(helburu_direktorioa, helburu_direktorioa2)
            helburu_direktorioa = helburu_direktorioa2
 
