@@ -114,10 +114,10 @@ def sortu_alderaketa_txostena(zerbitzaria, helburu_direktorioa):
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow([
             os.path.basename(helburu_direktorioa),
-            "Elementu kopurua",
+            "Features",
             os.path.basename(aurreko_direktorioa),
-            "Aurreko kopurua",
-            "Aldea (%)"
+            "Previous",
+            "Diff %"
         ])
 
         komunak = set(helburu_elem) & set(aurreko_elem)

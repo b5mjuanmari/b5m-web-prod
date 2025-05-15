@@ -184,8 +184,8 @@ def sortu_alderaketa_txostena(helburu_direktorioa, log_fitxategia):
             os.path.basename(helburu_direktorioa),
             "Features",
             os.path.basename(aurreko_direktorioa),
-            "Features (aurrekoa)",
-            "Aldea (%)"
+            "Previous",
+            "Diff %"
         ])
 
         # 1. Taula: Fitxategi komunak
