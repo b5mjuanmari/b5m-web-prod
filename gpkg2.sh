@@ -28,10 +28,8 @@ con="b5mweb_25830/web+@//exploracle:1521/bdet"
 con2="b5mweb_nombres/web+@//exploracle:1521/bdet"
 tpl="giputz"
 usrd1="juanmari"
-usrd2="develop"
 hstd1="b5mdev"
-usrp1="juanmari"
-usrp2="live"
+usrp1="live"
 hstp1a="b5mlive1.gipuzkoa.eus"
 hstp1b="b5mlive2.gipuzkoa.eus"
 tmpd="/tmp"
@@ -48,8 +46,8 @@ if [ ! -d "$logd" ]
 then
 	mkdir "$logd" 2> /dev/null
 fi
-rm "$log" 2> /dev/null
-rm "$err" 2> /dev/null
+rm -f "$log" 2> /dev/null
+rm -f "$err" 2> /dev/null
 
 # Eremuak deskribatzeko aldagaiak / Variables de descripción de campos
 des_c1="field_name,description_eu,description_es,description_en"
@@ -63,6 +61,11 @@ dwn_url1="https://b5m.gipuzkoa.eus"
 if [ $# -lt 1 ]; then
 		echo "Erabilera: $scr <fitxategi_izena.dsv> [1 -> ekoizpenera]"
     exit 1
+fi
+
+# Mezuak logera besterik ez
+if [ "$3" = "1" ]; then
+	crn=10
 fi
 
 # Konfigurazio-fitxategia dagoen egiaztatu / Comprobar si hay un fichero de configuración

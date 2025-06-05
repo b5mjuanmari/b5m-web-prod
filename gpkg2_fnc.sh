@@ -92,7 +92,7 @@ function cp_gpk {
 			tb04="$(cnx "${usrp1}@${hstp1}" "ssh" "$ta04")"
 			ta05="put \"$tmpg\" \"$tmpg\""
 			tb05="$(cnx "${usrp1}@${hstp1}" "sftp" "$ta05")"
-			ta06="cd \"$gpkp\";if [ -f \"$tmpg\" ];then sudo rm \"$fipg\";else exit;fi;if [ ! -d \"$gpkp\" ];then sudo mkdir \"$gpkp\";sudo chown -R ${usrp2}:${usrp2} \"$gpkp\";fi;sudo mv \"$tmpg\" \"$fipg\";sudo chown ${usrp2}:${usrp2} \"$fipg\";rm \"$tmpg\""
+			ta06="cd \"$gpkp\";if [ -f \"$tmpg\" ];then sudo rm \"$fipg\";else exit;fi;if [ ! -d \"$gpkp\" ];then sudo mkdir \"$gpkp\";sudo chown -R ${usrp1}:${usrp1} \"$gpkp\";fi;sudo mv \"$tmpg\" \"$fipg\";sudo chown ${usrp1}:${usrp1} \"$fipg\";rm \"$tmpg\""
 			tb06="$(cnx "${usrp1}@${hstp1}" "ssh" "$ta06")"
 			tbs02="${tb04}${tb05}${tb08}"
 			if [ "$tbs02" != "" ]
