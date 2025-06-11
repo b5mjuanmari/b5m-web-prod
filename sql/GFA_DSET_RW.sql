@@ -16,5 +16,6 @@ join
   b5mweb_nombres.v_vialtramo d on d.idut = b.idut
 where
   a.id_nombre2 = '0990'
+  and d.nomtipo_e = 'trenbidea'
 order by
   a.url_2d;

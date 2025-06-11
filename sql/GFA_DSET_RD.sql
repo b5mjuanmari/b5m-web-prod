@@ -26,5 +26,6 @@ join
   b5mweb_nombres.vv_color_desc f on f.color = e.color
 where
   a.id_nombre2 = '9000'
+  and d.nomtipo_e = 'errepidea'
 order by
   a.url_2d;
