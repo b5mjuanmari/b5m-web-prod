@@ -208,10 +208,7 @@ def generate_datasets(sql):
                 # GPKG kasuan, jatorrizko fitxategia helburuko kokalekura kopiatu
                 target_file = os.path.join(ruta2, f"{destino}.gpkg")
                 shutil.copy2(intermediate_gpkg, target_file)
-                #log(f"GPKG fitxategia kopiatu da: {target_file}\n")
 
-                # Ez ezabatu jatorrizko GPKG fitxategia
-                keep_gpkg = True
             else:
                 # Beste formatuetarako, ohiko prozesua
                 if formato == "SHP":
@@ -224,14 +221,6 @@ def generate_datasets(sql):
                     generate_csv(intermediate_gpkg, destino)
                 else:
                     log(f"{formato} ez da onartzen.\n")
-
-                # Markatu GPKG fitxategia ezabatzeko
-                keep_gpkg = False
-
-            # 3. GPKG fitxategia ezabatu (beharrezkoa ez bada)
-            #if not keep_gpkg and os.path.exists(intermediate_gpkg):
-                #os.remove(intermediate_gpkg)
-                #log(f"GPKG fitxategia ezabatu da: {os.path.basename(intermediate_gpkg)}\n")
 
         except Exception as e:
             log(f"Errorea {destino} prozesatzean: {str(e)}\n")
@@ -250,7 +239,7 @@ def generate_datasets(sql):
 
         log(f"{time.time() - iteration_start:.2f}s - geratzen da: {estimated_str}\n")
 
-    # GPKG karpeta hutsik badago, ezabatu
+    # GPKG karpeta ezabatu
     try:
         if os.path.exists(gpkg_dir):
             shutil.rmtree(gpkg_dir)
