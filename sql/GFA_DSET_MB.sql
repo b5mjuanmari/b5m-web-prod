@@ -23,7 +23,6 @@ left join
   b5mweb_nombres.n_municipios e on b.codmuni = e.codmuni
 where
   c.tabla = 'n_municipios'
-and
-  (d.tipo_c = 'comarca' or d.idnombre is null)
+  and (d.tipo_c = 'comarca' or d.idnombre is null)
 order by
   a.idnombre asc;
