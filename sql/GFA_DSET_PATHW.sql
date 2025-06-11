@@ -4,8 +4,8 @@ select
   b.nombre_e as name,
   b.nombre_e as name_eu,
   b.nombre_c as name_es,
-  b.nomtipo_e as type_eu,
-  b.nomtipo_c as type_es,
+  upper(substr(b.nomtipo_e, 1, 1)) || lower(substr(b.nomtipo_e, 2)) as type_eu,
+  upper(substr(b.nomtipo_c, 1, 1)) || lower(substr(b.nomtipo_c, 2)) as type_es,
   b.codigo1 as codmuni,
   b.codigo2 as codvial,
   b.puente_tunel as bridge_tunnel,
@@ -21,4 +21,4 @@ join
 left join
   b5mweb_nombres.solr_gen_toponimia_2d c on c.idnombre = b.idnombre
 order by
-  a.idut;
+  c.url_2d, a.idut;
