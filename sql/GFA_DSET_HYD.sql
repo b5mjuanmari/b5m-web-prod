@@ -9,7 +9,7 @@ select
   end as name,
   a.nom_e as name_eu,
   a.nom_c as name_es,
-   c_synonyms.synonyme_id as b5midnameothers,
+  c_synonyms.synonyme_id as b5midnameothers,
   c_synonyms.synonyme_eu as name_others_eu,
   c_synonyms.synonyme_es as name_others_es,
   trim(initcap(substr(a.subtipo, 1, instr(a.subtipo, ' / ') - 1))) as subtype_eu,
