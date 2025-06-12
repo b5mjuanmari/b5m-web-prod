@@ -9,8 +9,9 @@ select
   end as name,
   a.nom_e as name_eu,
   a.nom_c as name_es,
-  c_synonyms.synonyme_eu as synonymes_eu,
-  c_synonyms.synonyme_es as synonymes_es,
+   c_synonyms.synonyme_id as b5midnameothers,
+  c_synonyms.synonyme_eu as name_others_eu,
+  c_synonyms.synonyme_es as name_others_es,
   trim(initcap(substr(a.subtipo, 1, instr(a.subtipo, ' / ') - 1))) as subtype_eu,
   trim(initcap(substr(a.subtipo, instr(a.subtipo, ' / ') + 3))) as subtype_es,
   a.nivel as "LEVEL",
@@ -25,6 +26,7 @@ left join
 left join (
   select
     idnombueno,
+    listagg(idnombre, ', ') within group (order by idnombre) as synonyme_id,
     listagg(nomcompleto_e, ', ') within group (order by nomcompleto_e) as synonyme_eu,
     listagg(nomcompleto_c, ', ') within group (order by nomcompleto_c) as synonyme_es
   from
