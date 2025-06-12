@@ -1,20 +1,23 @@
 select
-  a.url_2d as b5mcode,
-  b.idut as b5midut,
-  case when a.nombre_e = a.nombre_c then a.nombre_e else a.nombre_e || ' / ' || a.nombre_c end as name,
-  a.nombre_e as name_eu,
-  a.nombre_c as name_es,
-  b.subtipo as subtype,
-  trim(initcap(substr(b.subtipo, 1, instr(b.subtipo, ' / ') - 1))) as subtype_eu,
-  trim(initcap(substr(b.subtipo, instr(b.subtipo, ' / ') + 3))) as subtype_es,
-  b.nivel as "LEVEL",
-  b.idnomcuenca as idnombasin,
-  b.cuenca_e as basin_eu,
-  b.cuenca_c as basin_es,
-  b.polyline as geom
+  b.url_2d as b5mcode,
+  a.idut as b5midut,
+  case
+    when a.nom_e is null and a.nom_c is null then null
+    when a.nom_e = a.nom_c then a.nom_e
+    else a.nom_e || ' / ' || a.nom_c
+  end as name,
+  a.nom_e as name_eu,
+  a.nom_c as name_es,
+  trim(initcap(substr(a.subtipo, 1, instr(a.subtipo, ' / ') - 1))) as subtype_eu,
+  trim(initcap(substr(a.subtipo, instr(a.subtipo, ' / ') + 3))) as subtype_es,
+  a.nivel as "LEVEL",
+  a.idnomcuenca as idnombasin,
+  a.cuenca_e as basin_eu,
+  a.cuenca_c as basin_es,
+  a.polyline as geom
 from
-  b5mweb_nombres.solr_gen_toponimia_2d a
-join
-  b5mweb_25830.ibaiak b on to_char(b.idnombre) = a.id_nombre1
+  b5mweb_25830.ibaiak a
+left join
+  b5mweb_nombres.solr_gen_toponimia_2d b on b.id_nombre1 = to_char(a.idnombre)
 order by
-  a.url_2d, b.idut;
+  b.url_2d, a.idut;
