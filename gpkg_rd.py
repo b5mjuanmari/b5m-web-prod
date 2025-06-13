@@ -26,7 +26,7 @@ def konexioa_egin():
     )
 
     denbora = time.time() - hasiera
-    print(f"[{ora_data()}] Konexioa eginda ({denbora:.2f} segundu)")
+    print(f"[{ora_data()}] Konexioa eginda ({denbora:.2f} segundo)")
     return konexioa
 
 def gpkg_sortu(gpkg_izena):
@@ -43,7 +43,7 @@ def gpkg_sortu(gpkg_izena):
     datuak.Destroy()
 
     denbora = time.time() - hasiera
-    print(f"[{ora_data()}] {gpkg_izena} fitxategia sortu da ({denbora:.2f} segundu)")
+    print(f"[{ora_data()}] {gpkg_izena} fitxategia sortu da ({denbora:.2f} segundo)")
 
 def datuak_esportatu(gpkg_izena):
     """Datuak Oracle-tik esportatu eta GPKG fitxategian gorde"""
@@ -68,18 +68,21 @@ def datuak_esportatu(gpkg_izena):
 
     # SQL kontsulta, geometria WKT formatura bihurtzeko
     sql_geom = """
-    SELECT
+    select
       a.idut as b5midut,
-      b.puente_tunel as bridge_tunnel,
-      b.idnombre b5midname,
-      SDO_UTIL.TO_WKTGEOMETRY(a.polyline) as geom_wkt
-    FROM
+      b.bridge_tunnel,
+      sdo_util.to_wktgeometry(a.polyline) as geom_wkt
+    from
       b5mweb_25830.vialesind a
-    JOIN
-      b5mweb_nombres.v_vialtramo b on b.idut = a.idut
-    WHERE
-      b.nomtipo_e = 'errepidea'
-    ORDER BY
+    join
+      (
+        select idut,
+        max(puente_tunel) as bridge_tunnel
+        from b5mweb_nombres.v_vialtramo
+        where nomtipo_e = 'errepidea'
+        group by idut
+      ) b on b.idut = a.idut
+    order by
       a.idut
     """
 
@@ -100,7 +103,6 @@ def datuak_esportatu(gpkg_izena):
         # Eremuak gehitu
         layer.CreateField(ogr.FieldDefn("b5midut", ogr.OFTString))
         layer.CreateField(ogr.FieldDefn("bridge_tunnel", ogr.OFTString))
-        layer.CreateField(ogr.FieldDefn("b5midname", ogr.OFTString))
 
         # Datu geometrikoak gehitu
         kont = 0
@@ -108,11 +110,10 @@ def datuak_esportatu(gpkg_izena):
             feature = ogr.Feature(layer.GetLayerDefn())
             feature.SetField("b5midut", str(erregistroa[0]))
             feature.SetField("bridge_tunnel", str(erregistroa[1]))
-            feature.SetField("b5midname", str(erregistroa[2]))
 
-            if erregistroa[3] is not None:
+            if erregistroa[2] is not None:
                 try:
-                    geometria = ogr.CreateGeometryFromWkt(str(erregistroa[3]))
+                    geometria = ogr.CreateGeometryFromWkt(str(erregistroa[2]))
                     feature.SetGeometry(geometria)
                 except Exception as e:
                     print(f"[{ora_data()}] Oharra: geometria ezin izan da gehitu - {str(e)}")
@@ -125,24 +126,24 @@ def datuak_esportatu(gpkg_izena):
             if kont % 1000 == 0:
                 print(f"[{ora_data()}] {kont} erregistro prozesatu dira...")
 
-        denbora = time.time() - geom_hasiera
-        print(f"[{ora_data()}] {geom_taula_izena} taula geografikoa sortu da ({kont} erregistro, {denbora:.2f} segundu)")
+        denbora_geom = time.time() - geom_hasiera
+        print(f"[{ora_data()}] {geom_taula_izena} taula geografikoa sortu da ({kont} erregistro, {denbora_geom:.2f} segundo)")
 
     except Exception as e:
         print(f"[{ora_data()}] ERROREA: {geom_taula_izena} taula sortzean - {str(e)}")
         raise
 
     # ==============================================
-    # 2. Taula alfanumerikoa sortu
+    # 2. Atributuen taula alfanumerikoa sortu
     # ==============================================
-    dat_taula_izena = f"{oinarrizko_izena}_dat"
-    print(f"\n[{ora_data()}] {dat_taula_izena} taula alfanumerikoa sortzen...")
-    dat_hasiera = time.time()
+    att_taula_izena = f"{oinarrizko_izena}_att"
+    print(f"\n[{ora_data()}] {att_taula_izena} taula alfanumerikoa sortzen...")
+    att_hasiera = time.time()
 
-    sql_dat = """
-    SELECT DISTINCT
+    sql_att = """
+    select distinct
       a.url_2d as b5mcode,
-      CASE WHEN a.nombre_e = a.nombre_c THEN a.nombre_e ELSE a.nombre_e || ' / ' || a.nombre_c END as name,
+      case when a.nombre_e = a.nombre_c then a.nombre_e else a.nombre_e || ' / ' || a.nombre_c end as name,
       a.nombre_e as name_eu,
       a.nombre_c as name_es,
       e.description_eu as type_eu,
@@ -152,27 +153,27 @@ def datuak_esportatu(gpkg_izena):
       b.observacion_e observation_eu,
       b.observacion_c observation_es,
       a.idnombre b5midname
-    FROM
+    from
       b5mweb_nombres.solr_gen_toponimia_2d a
-    JOIN
-      b5mweb_nombres.v_vialtramo b ON b.idnombre = a.idnombre
-    JOIN
-      b5mweb_nombres.vv_color d ON TO_CHAR(d.codigo) = a.id_nombre1
-    JOIN
-      b5mweb_nombres.vv_color_desc e ON e.color = d.color
-    WHERE
+    join
+      b5mweb_nombres.v_vialtramo b on b.idnombre = a.idnombre
+    join
+      b5mweb_nombres.vv_color d on to_char(d.codigo) = a.id_nombre1
+    join
+      b5mweb_nombres.vv_color_desc e on e.color = d.color
+    where
       a.id_nombre2 = '9000'
-      AND b.nomtipo_e = 'errepidea'
-    ORDER BY
+      and b.nomtipo_e = 'errepidea'
+    order by
       a.url_2d
     """
 
     try:
-        cursor.execute(sql_dat)
+        cursor.execute(sql_att)
 
-        # Taula alfanumerikoa sortu
+        # Atributuen taula alfanumerikoa sortu
         layer = datuak.CreateLayer(
-            dat_taula_izena,
+            att_taula_izena,
             None,
             ogr.wkbNone,
             ["OVERWRITE=YES"]
@@ -191,7 +192,7 @@ def datuak_esportatu(gpkg_izena):
         layer.CreateField(ogr.FieldDefn("observation_es", ogr.OFTString))
         layer.CreateField(ogr.FieldDefn("b5midname", ogr.OFTString))
 
-        # Datu alfanumerikoak gehitu
+        # Atributuen datu alfanumerikoak gehitu
         kont = 0
         for erregistroa in cursor:
             feature = ogr.Feature(layer.GetLayerDefn())
@@ -215,15 +216,73 @@ def datuak_esportatu(gpkg_izena):
             if kont % 1000 == 0:
                 print(f"[{ora_data()}] {kont} erregistro prozesatu dira...")
 
-        denbora = time.time() - dat_hasiera
-        print(f"[{ora_data()}] {dat_taula_izena} taula alfanumerikoa sortu da ({kont} erregistro, {denbora:.2f} segundu)")
+        denbora_att = time.time() - att_hasiera
+        print(f"[{ora_data()}] {att_taula_izena} taula alfanumerikoa sortu da ({kont} erregistro, {denbora_att:.2f} segundo)")
 
     except Exception as e:
-        print(f"[{ora_data()}] ERROREA: {dat_taula_izena} taula sortzean - {str(e)}")
+        print(f"[{ora_data()}] ERROREA: {att_taula_izena} taula sortzean - {str(e)}")
         raise
 
     # ==============================================
-    # 3. Bista sortu eta GPKG metadata eguneratu
+    # 3. Erlazioen taula alfanumerikoak sortu
+    # ==============================================
+    rel_taula_izena = f"{oinarrizko_izena}_rel"
+    print(f"\n[{ora_data()}] {rel_taula_izena} taula alfanumerikoa sortzen...")
+    rel_hasiera = time.time()
+
+    sql_rel = """
+    select
+      a.idut as b5midut,
+      b.idnombre b5midname
+    from
+      b5mweb_25830.vialesind a
+    join
+      b5mweb_nombres.v_vialtramo b on b.idut = a.idut
+    where
+      b.nomtipo_e = 'errepidea'
+    order by
+      a.idut
+    """
+
+    try:
+        cursor.execute(sql_rel)
+
+        # Atributuen taula alfanumerikoa sortu
+        layer = datuak.CreateLayer(
+            rel_taula_izena,
+            None,
+            ogr.wkbNone,
+            ["OVERWRITE=YES"]
+        )
+
+        # Eremuak gehitu
+        layer.CreateField(ogr.FieldDefn("b5midut", ogr.OFTString))
+        layer.CreateField(ogr.FieldDefn("b5midname", ogr.OFTString))
+
+        # Atributuen datu alfanumerikoak gehitu
+        kont = 0
+        for erregistroa in cursor:
+            feature = ogr.Feature(layer.GetLayerDefn())
+            feature.SetField("b5midut", str(erregistroa[0]))
+            feature.SetField("b5midname", str(erregistroa[1]))
+
+            layer.CreateFeature(feature)
+            feature = None
+            kont += 1
+
+            # Progresua erakutsi 1000 erregistroko
+            if kont % 1000 == 0:
+                print(f"[{ora_data()}] {kont} erregistro prozesatu dira...")
+
+        denbora_rel = time.time() - rel_hasiera
+        print(f"[{ora_data()}] {rel_taula_izena} taula alfanumerikoa sortu da ({kont} erregistro, {denbora_rel:.2f} segundo)")
+
+    except Exception as e:
+        print(f"[{ora_data()}] ERROREA: {rel_taula_izena} taula sortzean - {str(e)}")
+        raise
+
+    # ==============================================
+    # 4. Bista sortu eta GPKG metadata eguneratu
     # ==============================================
     bista_izena = f"{oinarrizko_izena}_view"
     print(f"\n[{ora_data()}] {bista_izena} bista eta metadata prestatzen...")
@@ -234,25 +293,29 @@ def datuak_esportatu(gpkg_izena):
         sql_bista = f"""
         CREATE VIEW {bista_izena} AS
         SELECT
-          g.b5midut,
+          a.b5mcode,
+          a.name,
+          a.name_eu,
+          a.name_es,
+          a.type_eu,
+          a.type_es,
           g.bridge_tunnel,
-          g.b5midname,
-          g.geom,
-          d.b5mcode,
-          d.name,
-          d.name_eu,
-          d.name_es,
-          d.type_eu,
-          d.type_es,
-          d.description_eu,
-          d.description_es,
-          d.observation_eu,
-          d.observation_es
+          a.description_eu,
+          a.description_es,
+          a.observation_eu,
+          a.observation_es,
+          g.b5midut,
+          r.b5midname,
+          g.geom
         FROM
-          {geom_taula_izena} g
+          {rel_taula_izena} r
         JOIN
-          {dat_taula_izena} d ON g.b5midname = d.b5midname
+          {geom_taula_izena} g ON r.b5midut = g.b5midut
+        JOIN
+          {att_taula_izena} a ON r.b5midname = a.b5midname
         """
+
+        # Bista sortu
         datuak.ExecuteSQL(sql_bista)
 
         # GPKG metadata taulak eguneratu
@@ -274,8 +337,8 @@ def datuak_esportatu(gpkg_izena):
         """
         datuak.ExecuteSQL(sql_geom_columns)
 
-        denbora = time.time() - bista_hasiera
-        print(f"[{ora_data()}] {bista_izena} bista ondo sortu da eta metadata eguneratu da ({denbora:.2f} segundu)")
+        denbora_view = time.time() - bista_hasiera
+        print(f"[{ora_data()}] {bista_izena} bista ondo sortu da eta metadata eguneratu da ({denbora_view:.2f} segundo)")
 
     except Exception as e:
         print(f"[{ora_data()}] ERROREA: bista sortzean edo metadata eguneratzean - {str(e)}")
@@ -289,10 +352,11 @@ def datuak_esportatu(gpkg_izena):
     print(f"\n[{ora_data()}] PROZESU OROKORRA AMAITU DA")
     print("====================================")
     print("Denbora-estatistikak:")
-    print(f"- Taula geografikoa: {time.time() - geom_hasiera:.2f} segundu")
-    print(f"- Taula alfanumerikoa: {time.time() - dat_hasiera:.2f} segundu")
-    print(f"- Bista eta metadata: {time.time() - bista_hasiera:.2f} segundu")
-    print(f"GUZTIRA: {guztira_denbora:.2f} segundu")
+    print(f"- Taula geografikoa: {denbora_geom:.2f} segundo")
+    print(f"- Atributuen taula alfanumerikoa: {denbora_att:.2f} segundo")
+    print(f"- Erlazioen taula alfanumerikoa: {denbora_rel:.2f} segundo")
+    print(f"- Bista eta metadata: {denbora_view:.2f} segundo")
+    print(f"GUZTIRA: {guztira_denbora:.2f} segundo")
     print("====================================\n")
 
     # Itxi konexioak
@@ -323,10 +387,10 @@ def main():
         datuak_esportatu(args.gpkg_izena)
 
         denbora = time.time() - script_hasiera
-        print(f"\n[{ora_data()}] Prozesua arrakastaz amaitu da. Guztira {denbora:.2f} segundu.")
+        print(f"\n[{ora_data()}] Prozesua arrakastaz amaitu da. Guztira {denbora:.2f} segund0.")
     except Exception as e:
         denbora = time.time() - script_hasiera
-        print(f"\n[{ora_data()}] ERROREA: Prozesua eten da {denbora:.2f} segundutan")
+        print(f"\n[{ora_data()}] ERROREA: Prozesua eten da {denbora:.2f} segundotan")
         print(f"Errore-mezua: {str(e)}")
         sys.exit(1)
 
