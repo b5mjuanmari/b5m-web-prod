@@ -1,6 +1,7 @@
 select
   c.url_2d as b5mcode,
   a.idut as b5midut,
+  b.idnombre as b5midname,
   b.nombre_e as name,
   b.nombre_e as name_eu,
   b.nombre_c as name_es,
