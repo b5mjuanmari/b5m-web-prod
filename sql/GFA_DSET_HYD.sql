@@ -1,7 +1,5 @@
 select
   b.url_2d as b5mcode,
-  a.idut as b5midut,
-  a.idnombre as b5midname,
   case
     when a.nom_e is null and a.nom_c is null then null
     when a.nom_e = a.nom_c then a.nom_e
@@ -18,6 +16,8 @@ select
   a.idnomcuenca as b5midnamebasin,
   a.cuenca_e as basin_eu,
   a.cuenca_c as basin_es,
+  a.idut as b5midut,
+  a.idnombre as b5midname,
   a.polyline as geom
 from
   b5mweb_25830.ibaiak a

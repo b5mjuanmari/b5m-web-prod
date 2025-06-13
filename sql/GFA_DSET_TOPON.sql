@@ -1,6 +1,5 @@
 select
   a.url_2d as b5mcode,
-  a.idnombre as b5midname,
   case when a.nombre_e = a.nombre_c then a.nombre_e else a.nombre_e || ' / ' || a.nombre_c end as name,
   a.nombre_e as name_eu,
   a.nombre_c as name_es,
@@ -35,6 +34,7 @@ select
   replace(to_char(sdo_geom.sdo_min_mbr_ordinate(sdo_geom.sdo_mbr(sdo_cs.transform(a.geom_mbr,4326)),2),'fm99d00000'),',','.') || ',' ||
   replace(to_char(sdo_geom.sdo_max_mbr_ordinate(sdo_geom.sdo_mbr(sdo_cs.transform(a.geom_mbr,4326)),1),'fm99d00000'),',','.') || ',' ||
   replace(to_char(sdo_geom.sdo_max_mbr_ordinate(sdo_geom.sdo_mbr(sdo_cs.transform(a.geom_mbr,4326)),2),'fm99d00000'),',','.') as bbox_lonlat,
+  a.idnombre as b5midname,
   a.geom_cen as geom
 from
   b5mweb_nombres.solr_gen_toponimia_2d a

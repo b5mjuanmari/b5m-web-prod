@@ -1,7 +1,5 @@
 select
   a.url_2d as b5mcode,
-  c.idut as b5midut,
-  a.idnombre as b5midname,
   case when a.nombre_e = a.nombre_c then a.nombre_e else a.nombre_e || ' / ' || a.nombre_c end as name,
   a.nombre_e as name_eu,
   a.nombre_c as name_es,
@@ -12,6 +10,8 @@ select
   b.descripcion_c description_es,
   b.observacion_e observation_eu,
   b.observacion_c observation_es,
+  c.idut as b5midut,
+  a.idnombre as b5midname,
   c.polyline as geom
 from
   b5mweb_nombres.solr_gen_toponimia_2d a

@@ -1,7 +1,5 @@
 select
   c.url_2d as b5mcode,
-  a.idut as b5midut,
-  a.idnombre as b5midname,
   b.codmuni,
   e.codmuniine,
   decode(c.muni_e, c.muni_c, c.muni_e, c.muni_e || ' / ' || c.muni_c) as name, -- KML
@@ -11,6 +9,8 @@ select
   c.nombre_c as enclave_es,
   d.nombre_e as region_eu,
   d.nombre_c as region_es,
+  a.idut as b5midut,
+  a.idnombre as b5midname,
   a.polygon as geom
 from
   b5mweb_25830.gipu_a a

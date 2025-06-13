@@ -1,7 +1,5 @@
 select
   c.url_2d as b5mcode,
-  a.idut as b5midut,
-  b.idnombre as b5midname,
   b.nombre_e as name,
   b.nombre_e as name_eu,
   b.nombre_c as name_es,
@@ -14,6 +12,8 @@ select
   b.descripcion_c description_es,
   b.observacion_e observation_eu,
   b.observacion_c observation_es,
+  a.idut as b5midut,
+  b.idnombre as b5midname,
   a.polyline as geom
 from
   b5mweb_25830.vialesind a

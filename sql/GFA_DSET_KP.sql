@@ -1,7 +1,5 @@
 select
   a.url_2d as b5mcode,
-  b.idut as b5midut,
-  b.idnombre as b5midname,
   a.nombre||' '||a.sentido_eu || ' / ' || a.sentido_es as name,
   a.nombre||' '||a.sentido_eu as name_eu,
   a.nombre||' '||a.sentido_es as name_es,
@@ -15,6 +13,8 @@ select
   a.codmunis as codmuni,
   a.muni_e as muni_eu,
   a.muni_c as muni_es,
+  b.idut as b5midut,
+  b.idnombre as b5midname,
   b.point as geom
 from
   b5mweb_nombres.solr_pkil_2d a

@@ -1,6 +1,5 @@
 select
   'E_A' || b.idut as b5mcode,
-  b.idut as b5midut,
   case
     when replace(
       replace(
@@ -121,6 +120,7 @@ select
   c.altura_med as average_height,
   c.altura_max as max_height,
   to_char(d.dateofconstruction_end, 'yyyy-mm-dd') as date_construction,
+  b.idut as b5midut,
   sdo_aggr_union(sdoaggrtype(b.polygon, 0.005)) as geom
 from
   b5mweb_nombres.n_edifgen a
