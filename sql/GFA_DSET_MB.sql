@@ -2,7 +2,10 @@ select
   c.url_2d as b5mcode,
   b.codmuni,
   e.codmuniine,
-  decode(c.muni_e, c.muni_c, c.muni_e, c.muni_e || ' / ' || c.muni_c) as name, -- KML
+  case
+    when c.muni_e = c.muni_c then c.muni_e
+    else c.muni_e || ' / ' || c.muni_c
+  end as name,
   c.muni_e as name_eu,
   c.muni_c as name_es,
   c.nombre_e as enclave_eu,

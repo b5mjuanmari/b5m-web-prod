@@ -1,6 +1,9 @@
 select
   a.url_2d as b5mcode,
-  case when a.dirpostal_e = a.dirpostal_c then a.dirpostal_e else a.dirpostal_e || ' / ' || a.dirpostal_c end as name,
+  case
+    when a.dirpostal_e = a.dirpostal_c then a.dirpostal_e
+    else a.dirpostal_e || ' / ' || a.dirpostal_c
+  end as name,
   a.dirpostal_e as name_eu,
   a.dirpostal_c as name_es,
   'posta helbidea' as type_eu,

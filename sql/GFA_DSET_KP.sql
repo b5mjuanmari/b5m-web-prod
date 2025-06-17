@@ -1,6 +1,6 @@
 select
   a.url_2d as b5mcode,
-  a.nombre||' '||a.sentido_eu || ' / ' || a.sentido_es as name,
+  a.pk as name,
   a.nombre||' '||a.sentido_eu as name_eu,
   a.nombre||' '||a.sentido_es as name_es,
   a.pk as kp,

@@ -105,8 +105,14 @@ select
   a.calle_e as street_eu,
   a.calle_c as street_es,
   a.noportal as house_number,
-  case when a.bis = ' ' then null else a.bis end as bis,
-  case when a.codpostal = ' ' then null else cast(a.codpostal as integer) end as postcode,
+  case
+    when a.bis = ' ' then null
+    else a.bis
+  end as bis,
+  case when a.codpostal = ' '
+    then null
+    else cast(a.codpostal as integer)
+  end as postcode,
   a.accesorio as accessory,
   a.bloque as block,
   a.distrito as coddistr,

@@ -1,6 +1,9 @@
 select
   a.url_2d as b5mcode,
-  case when a.nombre_e = a.nombre_c then a.nombre_e else a.nombre_e || ' / ' || a.nombre_c end as name,
+  case
+    when a.nombre_e = a.nombre_c then a.nombre_e
+    else a.nombre_e || ' / ' || a.nombre_c
+  end as name,
   a.nombre_e as name_eu,
   a.nombre_c as name_es,
   b.puente_tunel as bridge_tunnel,
