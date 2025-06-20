@@ -23,11 +23,24 @@ ogr2ogr_bin = "/usr/local/bin/ogr2ogr"
 
 # SQL kontsulta
 sql = """
-select a.nombre_es, a.origen, a.destino, b.extension, b.formato, b.namefield
-from b5mweb_nombres.datasets2_info a
-join b5mweb_nombres.datasets2_ficheros b on a.id_dataset = b.id_dataset
-where a.crear = 1
-order by a.orden"""
+select
+  case
+    when a.nombre_eu = a.nombre_es then a.nombre_eu
+    else a.nombre_eu || ' / ' || a.nombre_es
+  end as name,
+  a.origen,
+  a.destino,
+  b.extension,
+  b.formato,
+  b.namefield
+from
+  b5mweb_nombres.datasets2_info a
+inner join
+  b5mweb_nombres.datasets2_ficheros b on a.id_dataset = b.id_dataset
+where
+  a.crear = 1
+order by
+  a.orden"""
 
 ruta1 = "/home5/SHP"
 ruta2 = "/home/data/datos_explotacion/CUR/datasets2"
@@ -195,9 +208,9 @@ def generate_datasets(sql):
     start_time = time.time()
     processed_datasets = 0
 
-    for i, (nombre, origen, destino, extension, formato, namefield) in enumerate(datasets, start=1):
+    for i, (name, origen, destino, extension, formato, namefield) in enumerate(datasets, start=1):
         iteration_start = time.time()
-        log(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {i}/{total_datasets} - {destino} - {nombre} - {formato} - ")
+        log(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {i}/{total_datasets} - {destino} - {name} - {formato} - ")
 
         try:
             # 1. Lehenik eta behin GPKG fitxategia sortu
