@@ -127,6 +127,7 @@ select
   c.altura_max as max_height,
   to_char(d.dateofconstruction_end, 'yyyy-mm-dd') as date_construction,
   b.idut as b5midut,
+  a.idpostal as b5midaddress,
   sdo_aggr_union(sdoaggrtype(b.polygon, 0.005)) as geom
 from
   b5mweb_nombres.n_edifgen a
