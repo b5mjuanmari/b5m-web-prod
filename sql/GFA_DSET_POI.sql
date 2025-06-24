@@ -1,6 +1,5 @@
 select
   'POI_' || a.id_actividad as b5mcode,
-  a.cla_santi as id_type_poi,
   coalesce(a.nombre_comercial_e, a.nombre_comercial_c) as name_eu,
   a.nombre_comercial_c as name_es,
   e.name_eu as type_eu,
@@ -31,6 +30,7 @@ select
   b.bis as bis,
   to_char(b.accesorio) as accessory,
   b.codpostal as postal_code,
+  a.cla_santi as b5midpoi,
   c.point as geom
 from b5mweb_nombres.n_actipuerta a
 join b5mweb_nombres.n_dir_postal b on a.id_postal = b.idnombre
@@ -45,16 +45,16 @@ where a.id_postal <> 0
   and d.enabled = 1
   and a.cla_santi <> 'F.1.1'
 union all
-select b5mcode, id_type_poi, name_eu, name_es, type_eu, type_es, type_en, class_eu, class_es, class_en,
+select b5mcode, name_eu, name_es, type_eu, type_es, type_en, class_eu, class_es, class_en,
    class_description_eu, class_description_es, class_description_en,
    class_icon, category_eu, category_es, category_en,
    category_description_eu, category_description_es, category_description_en,
    category_icon, b5mcode_d, codmuni, muni_eu, muni_es,
-   codstreet, street_eu, street_es, door_number, bis, accessory, postal_code, geom
+   codstreet, street_eu, street_es, door_number, bis, accessory, postal_code,
+   b5midpoi, geom
 from (
   select
     'POI_' || b.idnombre as b5mcode,
-    f.code as id_type_poi,
     b.izena as name_eu,
     b.nombre as name_es,
     f.name_eu as type_eu,
@@ -88,6 +88,7 @@ from (
     c.bis as bis,
     c.acc as accessory,
     c.cp as postal_code,
+    f.code as b5midpoi,
     a.point as geom,
     row_number() over (partition by
       b.idnombre, f.code, b.izena, b.nombre,
@@ -125,7 +126,6 @@ where rn = 1
 union all
 select
   'POI_' || a.idnombre as b5mcode,
-  f.code as id_type_poi,
   a.izena as name_eu,
   a.nombre as name_es,
   f.name_eu as type_eu,
@@ -159,6 +159,7 @@ select
   c.bis as bis,
   c.acc as accessory,
   c.cp as postal_code,
+  f.code as b5midpoi,
   a.geom as geom
 from b5mweb_25830.monu3 a
 left join b5mweb_nombres.n_edifacti2 c
@@ -182,7 +183,6 @@ join b5mweb_nombres.poi_icons_url j
 union all
 select
   'POI_' || a.idnombre as b5mcode,
-  f.code as id_type_poi,
   a.izena as name_eu,
   a.nombre as name_es,
   f.name_eu as type_eu,
@@ -206,17 +206,18 @@ select
     when c.idpostal is null or c.idpostal = 0 then null
     else 'D_A' || c.idpostal
   end as b5mcode_d,
-    c.codmuni as codmuni,
-    d.nombre_e as muni_eu,
-    d.nombre_c as muni_es,
-    c.codcalle as codstreet,
-    c.calle as street_eu,
-    c.calle as street_es,
-    c.noportal as door_number,
-    c.bis as bis,
-    c.acc as accessory,
-    c.cp as postal_code,
-    a.point as geom
+  c.codmuni as codmuni,
+  d.nombre_e as muni_eu,
+  d.nombre_c as muni_es,
+  c.codcalle as codstreet,
+  c.calle as street_eu,
+  c.calle as street_es,
+  c.noportal as door_number,
+  c.bis as bis,
+  c.acc as accessory,
+  c.cp as postal_code,
+  f.code as b5midpoi,
+  a.point as geom
 from b5mweb_25830.monu5 a
 left join b5mweb_nombres.n_edifacti2 c
   on c.idut = a.idut
