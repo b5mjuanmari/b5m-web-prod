@@ -1,5 +1,9 @@
 select
   'POI_' || a.id_actividad as b5mcode,
+  case
+    when coalesce(a.nombre_comercial_e, a.nombre_comercial_c) = a.nombre_comercial_c then coalesce(a.nombre_comercial_e, a.nombre_comercial_c)
+    else coalesce(a.nombre_comercial_e, a.nombre_comercial_c) || ' / ' || a.nombre_comercial_c
+  end as name,
   coalesce(a.nombre_comercial_e, a.nombre_comercial_c) as name_eu,
   a.nombre_comercial_c as name_es,
   e.name_eu as type_eu,
@@ -45,7 +49,7 @@ where a.id_postal <> 0
   and d.enabled = 1
   and a.cla_santi <> 'F.1.1'
 union all
-select b5mcode, name_eu, name_es, type_eu, type_es, type_en, class_eu, class_es, class_en,
+select b5mcode, name, name_eu, name_es, type_eu, type_es, type_en, class_eu, class_es, class_en,
    class_description_eu, class_description_es, class_description_en,
    class_icon, category_eu, category_es, category_en,
    category_description_eu, category_description_es, category_description_en,
@@ -55,6 +59,10 @@ select b5mcode, name_eu, name_es, type_eu, type_es, type_en, class_eu, class_es,
 from (
   select
     'POI_' || b.idnombre as b5mcode,
+    case
+      when b.izena = b.nombre then b.izena
+      else b.izena || ' / ' || b.nombre
+    end as name,
     b.izena as name_eu,
     b.nombre as name_es,
     f.name_eu as type_eu,
@@ -91,7 +99,7 @@ from (
     f.code as b5midpoi,
     a.point as geom,
     row_number() over (partition by
-      b.idnombre, f.code, b.izena, b.nombre,
+      b.idnombre, b.izena, b.izena, b.nombre,
       f.title_eu, f.title_es, f.title_en,
       f.description_eu, f.description_es, f.description_en,
       j.url, h.icon,
@@ -99,7 +107,7 @@ from (
       e.description_eu, e.description_es, e.description_en,
       i.icon, c.idpostal, c.codmuni,
       d.nombre_e, d.nombre_c, c.codcalle,
-      c.calle, c.noportal, c.bis, c.acc, c.cp
+      c.calle, c.noportal, c.bis, c.acc, c.cp, f.code
       order by b.idnombre) as rn
     from b5mweb_25830.monu1p a
     join b5mweb_25830.monu1 b on a.idut = b.idut
@@ -126,6 +134,10 @@ where rn = 1
 union all
 select
   'POI_' || a.idnombre as b5mcode,
+  case
+    when a.izena = a.nombre then a.izena
+    else a.izena || ' / ' || a.nombre
+  end as name,
   a.izena as name_eu,
   a.nombre as name_es,
   f.name_eu as type_eu,
@@ -183,6 +195,10 @@ join b5mweb_nombres.poi_icons_url j
 union all
 select
   'POI_' || a.idnombre as b5mcode,
+  case
+    when a.izena = a.nombre then a.izena
+    else a.izena || ' / ' || a.nombre
+  end as name,
   a.izena as name_eu,
   a.nombre as name_es,
   f.name_eu as type_eu,
