@@ -32,7 +32,6 @@ select
   b.calle_c as street_es,
   b.noportal as house_number,
   b.bis as bis,
-  to_char(b.accesorio) as accessory,
   b.codpostal as postal_code,
   a.cla_santi as b5midpoi,
   c.point as geom
@@ -54,7 +53,7 @@ select b5mcode, name, name_eu, name_es, type_eu, type_es, type_en, class_eu, cla
    class_icon, category_eu, category_es, category_en,
    category_description_eu, category_description_es, category_description_en,
    category_icon, b5mcode_d, codmuni, muni_eu, muni_es,
-   codstreet, street_eu, street_es, house_number, bis, accessory, postal_code,
+   codstreet, street_eu, street_es, house_number, bis, postal_code,
    b5midpoi, geom
 from (
   select
@@ -94,7 +93,6 @@ from (
     c.calle as street_es,
     c.noportal as house_number,
     c.bis as bis,
-    c.acc as accessory,
     c.cp as postal_code,
     f.code as b5midpoi,
     a.point as geom,
@@ -169,7 +167,6 @@ select
   c.calle as street_es,
   c.noportal as house_number,
   c.bis as bis,
-  c.acc as accessory,
   c.cp as postal_code,
   f.code as b5midpoi,
   a.geom as geom
@@ -230,7 +227,6 @@ select
   c.calle as street_es,
   c.noportal as house_number,
   c.bis as bis,
-  c.acc as accessory,
   c.cp as postal_code,
   f.code as b5midpoi,
   a.point as geom
