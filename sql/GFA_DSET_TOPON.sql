@@ -17,7 +17,7 @@ select
   a.desc_e as desc_eu,
   a.desc_c as desc_es,
   a.desc_i as desc_en,
-  b.codcalle as codpath,
+  b.codcalle as codstreet,
   b.calle_e as street_eu,
   b.calle_c as street_es,
   b.noportal as house_number,

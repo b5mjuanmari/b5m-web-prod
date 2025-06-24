@@ -12,7 +12,7 @@ select
   a.codmuni as codmuni,
   a.municipio_e as muni_eu,
   a.municipio_c as muni_es,
-  a.codcalle as codpath,
+  a.codcalle as codstreet,
   a.calle_e as street_eu,
   a.calle_c as street_es,
   a.noportal as house_number,
