@@ -1,4 +1,26 @@
-with grouped_data as (
+with
+mozterminos_data as (
+  select
+    id_mojon,
+    rtrim(xmlagg(xmlelement(e, codigos || ', ') order by codigos).extract('//text()').getclobval(), ', ') as codenclaves,
+    rtrim(xmlagg(xmlelement(e, encls || ', ') order by encls).extract('//text()').getclobval(), ', ') as enclaves,
+    rtrim(xmlagg(xmlelement(e, munis || ', ') order by munis).extract('//text()').getclobval(), ', ') as municipalities
+  from
+    b5mweb_nombres.a_mojterminos
+  group by
+    id_mojon
+),
+mojacta_data as (
+  select
+    id_mojon,
+    rtrim(xmlagg(xmlelement(e, id_acta || ', ') order by id_acta).extract('//text()').getclobval(), ', ') as id_actas,
+    rtrim(xmlagg(xmlelement(e, num || ', ') order by id_acta).extract('//text()').getclobval(), ', ') as nums
+  from
+    b5mweb_nombres.a_mojacta1
+  group by
+    id_mojon
+),
+grouped_data as (
   select
     'MG_' || a.id_mojon as b5mcode,
     a.id_mojon as name,
@@ -25,10 +47,12 @@ with grouped_data as (
     f.tipolo_es as typology_es,
     f.tipolo_en as typology_en,
     a.revision as inspectiondate,
-    b.idut as b5midut,
-    rtrim(xmlagg(xmlelement(e, g.codigos || ', ' ) order by g.codigos).extract('//text()').getclobval(), ', ') as codenclaves,
-    rtrim(xmlagg(xmlelement(e, g.encls || ', ' ) order by g.encls).extract('//text()').getclobval(), ', ') as enclaves,
-    rtrim(xmlagg(xmlelement(e, g.munis || ', ' ) order by g.munis).extract('//text()').getclobval(), ', ') as municipalities
+    gd.codenclaves,
+    gd.enclaves,
+    gd.municipalities,
+    md.id_actas as b5midacts,
+    md.nums as numberinact,
+    b.idut as b5midut
   from
     b5mweb_nombres.a_mojon a
   left join
@@ -42,34 +66,9 @@ with grouped_data as (
   left join
     b5mweb_nombres.a_mojon_tipologia f on a.tipologia = f.tipolo
   left join
-    b5mweb_nombres.a_mojterminos g on a.id_mojon = g.id_mojon
-  group by
-    'MG_' || a.id_mojon,
-    a.id_mojon,
-    a.tipo,
-    c.tipo_eu,
-    c.tipo_es,
-    c.tipo_en,
-    a.precision,
-    d.precisi_eu,
-    d.comenta_eu,
-    d.precisi_es,
-    d.comenta_es,
-    d.precisi_en,
-    d.comenta_en,
-    a.localizacion,
-    a.observacion_e,
-    a.observacion_c,
-    a.estado,
-    e.estado_eu,
-    e.estado_es,
-    e.estado_en,
-    a.tipologia,
-    f.tipolo_eu,
-    f.tipolo_es,
-    f.tipolo_en,
-    a.revision,
-    b.idut
+    mozterminos_data gd on a.id_mojon = gd.id_mojon
+  left join
+    mojacta_data md on a.id_mojon = md.id_mojon
 )
 select
   gd.*,
