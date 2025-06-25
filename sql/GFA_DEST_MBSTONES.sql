@@ -12,13 +12,17 @@ mozterminos_data as (
 ),
 mojacta_data as (
   select
-    id_mojon,
-    rtrim(xmlagg(xmlelement(e, id_acta || ', ') order by id_acta).extract('//text()').getclobval(), ', ') as id_actas,
-    rtrim(xmlagg(xmlelement(e, num || ', ') order by id_acta).extract('//text()').getclobval(), ', ') as nums
+    a.id_mojon,
+    rtrim(xmlagg(xmlelement(e, a.id_acta || ', ') order by a.id_acta).extract('//text()').getclobval(), ', ') as b5midacts,
+    rtrim(xmlagg(xmlelement(e, a.num || ', ') order by a.id_acta).extract('//text()').getclobval(), ', ') as landmarknumber,
+    rtrim(xmlagg(xmlelement(e, b.linea_e || ', ') order by b.id_acta).extract('//text()').getclobval(), ', ') as boundaryline_eu,
+    rtrim(xmlagg(xmlelement(e, b.linea_c || ', ') order by b.id_acta).extract('//text()').getclobval(), ', ') as boundaryline_es
   from
-    b5mweb_nombres.a_mojacta1
+    b5mweb_nombres.a_mojacta1 a
+  left join
+    b5mweb_nombres.a_actas b on a.id_acta = b.id_acta
   group by
-    id_mojon
+    a.id_mojon
 ),
 grouped_data as (
   select
@@ -50,8 +54,10 @@ grouped_data as (
     gd.codenclaves,
     gd.enclaves,
     gd.municipalities,
-    md.id_actas as b5midacts,
-    md.nums as numberinact,
+    md.b5midacts,
+    md.landmarknumber,
+    md.boundaryline_eu,
+    md.boundaryline_es,
     b.idut as b5midut
   from
     b5mweb_nombres.a_mojon a
