@@ -78,27 +78,67 @@ def execute_sql(query):
 def generate_gpkg(origen, destino):
     """Sortu GPKG fitxategia jatorrizko datuetatik"""
     gpkg_file = os.path.join(gpkg_dir, f"{destino}.gpkg")
-
     if os.path.exists(gpkg_file):
         return gpkg_file
 
-    ogr2ogr_command = [
-        ogr2ogr_bin,
-        "-f", "GPKG",
-        "-s_srs", "EPSG:25830",
-        "-t_srs", "EPSG:25830",
-        "-nln", destino,
-        "-lco", "GEOMETRY_NAME=geom",
-        "-lco", "FID=FID",
-        gpkg_file
-    ]
+    if origen.strip().lower().startswith("with"):
+        # SQL sententzia exekutatu eta behin behineko CSV fitxategia sortu
+        csv_file = os.path.join(gpkg_dir, f"{destino}.csv")
+        if os.path.exists(csv_file):
+            os.remove(csv_file)
 
-    if origen.strip().lower().startswith("select"):
-        ogr2ogr_command.extend(["-sql", origen, f"OCI:{db_user2}/{db_pass}@{db_dsn}:{db_tab}"])
+        # Oracle datu-basearekin konektatu eta SQL sententzia exekutatu
+        try:
+            with cx_Oracle.connect(db_user, db_pass, db_dsn) as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute(origen)
+                    with open(csv_file, 'w', newline='') as csvfile:
+                        csv_writer = csv.writer(csvfile)
+                        # Idatzi goiburukoak
+                        columns = [col[0] for col in cursor.description]
+                        csv_writer.writerow(columns)
+                        # Idatzi datuak
+                        for row in cursor:
+                            csv_writer.writerow(row)
+        except cx_Oracle.DatabaseError as e:
+            log(f"Errorea SQL exekutzean: {e}\n")
+            return None
+
+        # CSV fitxategia GPKG fitxategira bihurtu
+        ogr2ogr_command = [
+            ogr2ogr_bin,
+            "-f", "GPKG",
+            "-s_srs", "EPSG:25830",
+            "-t_srs", "EPSG:25830",
+            "-nln", destino,
+            "-lco", "GEOMETRY_NAME=geom",
+            "-lco", "FID=FID",
+            gpkg_file,
+            csv_file,
+            "-oo", "KEEP_GEOM_COLUMNS=NO"
+        ]
+        subprocess.run(ogr2ogr_command, check=True)
+
+        # Ezabatu behin behineko CSV fitxategia
+        if os.path.exists(csv_file):
+            os.remove(csv_file)
     else:
-        ogr2ogr_command.append(os.path.join(ruta1, f"{origen}.shp"))
+        ogr2ogr_command = [
+            ogr2ogr_bin,
+            "-f", "GPKG",
+            "-s_srs", "EPSG:25830",
+            "-t_srs", "EPSG:25830",
+            "-nln", destino,
+            "-lco", "GEOMETRY_NAME=geom",
+            "-lco", "FID=FID",
+            gpkg_file
+        ]
+        if origen.strip().lower().startswith("select"):
+            ogr2ogr_command.extend(["-sql", origen, f"OCI:{db_user2}/{db_pass}@{db_dsn}:{db_tab}"])
+        else:
+            ogr2ogr_command.append(os.path.join(ruta1, f"{origen}.shp"))
+        subprocess.run(ogr2ogr_command, check=True)
 
-    subprocess.run(ogr2ogr_command, check=True)
     return gpkg_file
 
 def generate_shp(gpkg_file, destino):
