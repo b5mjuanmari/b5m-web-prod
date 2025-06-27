@@ -78,7 +78,7 @@ grouped_data as (
 )
 select
   gd.*,
-  b.point as geom
+  sdo_util.to_wktgeometry(b.point) as wkt
 from
   grouped_data gd
 left join
