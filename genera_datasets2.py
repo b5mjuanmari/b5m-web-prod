@@ -75,13 +75,59 @@ def execute_sql(query):
         log(f"Errorea SQL exekutzean: {e}\n")
         return []
 
+def kargatu_shapefile_gpkg(sfp, gpkgp, gpkgt):
+    """Shapefile bat GPKG fitxategi batean kargatu."""
+    command = [
+        "ogr2ogr",
+        "-f", "GPKG",
+        "-update",
+        "-append",
+        "-nlt", "PROMOTE_TO_MULTI",
+        "-nln", gpkgt,
+        gpkgp,
+        sfp
+    ]
+    try:
+        subprocess.run(command, check=True)
+    except subprocess.CalledProcessError as e:
+        log(f"Errorea gertatu da {sfp} shapefile-a GPKG fitxategian kargatzean: {e}")
+
+def generate_gpkg_cadastre(origen, gpkg_file):
+    """Sortu katastroko GPKG fitxategia"""
+    origen_lerroak = origen.splitlines()
+    origen_dir = ruta1 + "/" + origen_lerroak[0]
+    shapefiles = [f for f in os.listdir(origen_dir) if f.endswith('.shp')]
+    for index, fitx_shp in enumerate(shapefiles, start=1):
+        shapefile_path = os.path.join(origen_dir, fitx_shp)
+        uneko_data_ordua = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        fitx_shp_oin = fitx_shp.split('.')[0]
+        # Bilatu katea eta hurrengo lerroaren berri eman
+        lerroak = origen.splitlines()
+        j = 0
+        for i, lerroa in enumerate(lerroak):
+            if fitx_shp_oin in lerroa:
+                if i + 1 < len(lerroak):
+                    gpkg_tab = lerroak[i + 1].split('-- ')[1]
+                    j = 1
+
+        if j == 0:
+            gpkg_tab = fitx_shp_oin
+
+        # Shapefile bat GPKG fitxategi batean kargatu
+        kargatu_shapefile_gpkg(shapefile_path, gpkg_file, gpkg_tab)
+
+    return gpkg_file
+
 def generate_gpkg(origen, destino):
     """Sortu GPKG fitxategia jatorrizko datuetatik"""
     gpkg_file = os.path.join(gpkg_dir, f"{destino}.gpkg")
     if os.path.exists(gpkg_file):
         return gpkg_file
 
-    if origen.strip().lower().startswith("with"):
+    if origen.split('/')[0].lower() == "catastro":
+        # Katastroaren kasu berezia
+        generate_gpkg_cadastre(origen, gpkg_file)
+    elif origen.strip().lower().startswith("with"):
         # SQL sententzia exekutatu eta behin behineko CSV fitxategia sortu
         csv_file = os.path.join(gpkg_dir, f"{destino}.csv")
         if os.path.exists(csv_file):
