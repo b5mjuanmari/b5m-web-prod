@@ -75,8 +75,9 @@ def execute_sql(query):
         log(f"Errorea SQL exekutzean: {e}\n")
         return []
 
-def kargatu_shapefile_gpkg(sfp, gpkgp, gpkgt):
+def kargatu_shapefile_gpkg(sfp, gpkgp, gpkgt, gpkgs):
     """Shapefile bat GPKG fitxategi batean kargatu."""
+    #"-sql", "select herria as MUNI from " + sft,
     command = [
         "ogr2ogr",
         "-f", "GPKG",
@@ -84,6 +85,9 @@ def kargatu_shapefile_gpkg(sfp, gpkgp, gpkgt):
         "-append",
         "-nlt", "PROMOTE_TO_MULTI",
         "-nln", gpkgt,
+        "-sql", gpkgs,
+        "-lco", "GEOMETRY_NAME=geom",
+        "-lco", "FID=FID",
         gpkgp,
         sfp
     ]
@@ -99,22 +103,22 @@ def generate_gpkg_cadastre(origen, gpkg_file):
     shapefiles = [f for f in os.listdir(origen_dir) if f.endswith('.shp')]
     for index, fitx_shp in enumerate(shapefiles, start=1):
         shapefile_path = os.path.join(origen_dir, fitx_shp)
-        uneko_data_ordua = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         fitx_shp_oin = fitx_shp.split('.')[0]
         # Bilatu katea eta hurrengo lerroaren berri eman
         lerroak = origen.splitlines()
         j = 0
         for i, lerroa in enumerate(lerroak):
-            if fitx_shp_oin in lerroa:
+            if "-- " + fitx_shp_oin in lerroa:
                 if i + 1 < len(lerroak):
                     gpkg_tab = lerroak[i + 1].split('-- ')[1]
+                    gpkg_sel = lerroak[i + 2]
                     j = 1
 
         if j == 0:
             gpkg_tab = fitx_shp_oin
 
         # Shapefile bat GPKG fitxategi batean kargatu
-        kargatu_shapefile_gpkg(shapefile_path, gpkg_file, gpkg_tab)
+        kargatu_shapefile_gpkg(shapefile_path, gpkg_file, gpkg_tab, gpkg_sel)
 
     return gpkg_file
 
