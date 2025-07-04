@@ -1,0 +1,13 @@
+Catastro/Catastro_WMS
+
+-- GUNEAK_ZONAS
+-- GFA_DST_CP_ZONING
+select herria as MUNI, kodea as CADASTRALZONINGCODE from GUNEAK_ZONAS
+
+-- HIRILUR_URBANO
+-- GFA_DST_CP_URBAN
+select erreferentz as NATIONALCADASTRALREFRERENCE, erreferentz as NAME, herria as MUNI, zona as CADASTRALZONINGCODE from HIRILUR_URBANO
+
+-- LANDALUR_RUSTICA
+-- GFA_DST_CP_LAND
+select erreferentz as NATIONALCADASTRALREFRERENCE, erreferentz as NAME, herria as MUNI from LANDALUR_RUSTICA
