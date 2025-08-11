@@ -101,7 +101,7 @@ gk_abs=("B5m GK kodea" "B5m código GK" "B5m Code GK")
 
 # 17. cv_speleology
 cv_gpk="cv_speleology"
-cv_des=("Leizea eta espeleologia" "Cueva y espeleología" "Cave and speleology")
+cv_des=("Espeleologia" "Espeleología" "Cave and speleology")
 cv_abs=("B5m CV kodea" "B5m código CV" "B5m Code CV")
 
 # 18. bi_biotopes
@@ -1544,17 +1544,35 @@ cv_sql_02="select distinct
   case when
     a.muni_e is null
   then
-    upper(substr(d.tm, 1, 1)) || lower(substr(d.tm, 2))
+     case when
+      d.tm = 'ALAVA'
+    then
+      'Araba'
+    else
+      case when
+        d.tm = 'NAVARRA'
+      then
+        'Nafarroa'
+      else
+        upper(substr(d.tm, 1, 1)) || lower(substr(d.tm, 2))
+      end
+    end
   else
     replace(a.muni_e, ',', '|')
   end as b5mcode_others_m_name_eu,
   case when
     a.muni_c is null
   then
-    upper(substr(d.tm, 1, 1)) || lower(substr(d.tm, 2))
+    case when
+      d.tm = 'ALAVA'
+    then
+      'Álava'
+    else
+      upper(substr(d.tm, 1, 1)) || lower(substr(d.tm, 2))
+    end
   else
     replace(a.muni_c, ',', '|')
-  end as b5mcode_others_m_name_eu,
+  end as b5mcode_others_m_name_es,
   '"$s_gpk"|"${s_des[0]}"|"${s_des[1]}"|"${s_des[2]}"|"${s_abs[0]}"|"${s_abs[1]}"|"${s_abs[2]}"' as b5mcode_others_s_type,
   case when
     b.idnomcomarca is null
