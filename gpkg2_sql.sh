@@ -1500,9 +1500,9 @@ cv_sql_01="select
 a.url_2d b5mcode,
 a.nombre_e name_eu,
 a.nombre_c name_es,
-a.tipo_e type_eu,
-a.tipo_c type_es,
-a.tipo_i type_en,
+upper(substr(a.tipo_e, 1, 1)) || substr(a.tipo_e, 2) type_eu,
+upper(substr(a.tipo_c, 1, 1)) || substr(a.tipo_c, 2) type_es,
+upper(substr(a.tipo_i, 1, 1)) || substr(a.tipo_i, 2) type_en,
 '"$url_cat_eu"'||replace(a.id_nombre1,'CE','') catalog_link_eu,
 '"$url_cat_es"'||replace(a.id_nombre1,'CE','') catalog_link_es,
 b.origen_e source_eu,
@@ -1510,8 +1510,15 @@ b.origen_c source_es,
 b.origen_c source_en,
 b.desnivel gradient_metres,
 b.desarrollo growth_metres,
-b.macizo mountain_range,
-b.zona zone,
+case
+  when
+    b.macizo = 'PM'
+  then
+    b.macizo
+  else
+    upper(substr(b.macizo, 1, 1)) || lower(substr(b.macizo, 2))
+end as massif,
+upper(substr(b.zona, 1, 1)) || lower(substr(b.zona, 2)) zone,
 b.z altitude_metres,
 decode(b.sima,null,0,1) chasm,
 decode(b.cueva,null,0,1) cave,
@@ -1524,21 +1531,64 @@ from b5mweb_nombres.solr_gen_toponimia_2d a,b5mweb_25830.cuevas b
 where a.id_nombre1=b.tag
 order by a.id_nombre1"
 
-cv_sql_02="select
-distinct a.url_2d b5mcode,
-'"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' b5mcode_others_m_type,
-decode(a.codmunis,null,null,'M_'||replace(a.codmunis,',','|M_')) b5mcode_others_m,
-replace(a.muni_e,',','|') b5mcode_others_m_name_eu,
-replace(a.muni_c,',','|') b5mcode_others_m_name_es,
-'"$s_gpk"|"${s_des[0]}"|"${s_des[1]}"|"${s_des[2]}"|"${s_abs[0]}"|"${s_abs[1]}"|"${s_abs[2]}"' b5mcode_others_s_type,
-decode(b.idnomcomarca,null,null,'S_'||b.idnomcomarca) b5mcode_others_s,
-c.nombre_e b5mcode_others_s_name_eu,
-c.nombre_c b5mcode_others_s_name_es
-from b5mweb_nombres.solr_gen_toponimia_2d a,(select distinct codmuni,idnomcomarca from b5mweb_25830.giputz) b,b5mweb_nombres.solr_gen_toponimia_2d c
-where a.url_2d like 'CV_%'
-and a.codmunis=b.codmuni(+)
-and 'S_'||b.idnomcomarca=c.url_2d(+)
-order by to_number(replace(a.url_2d,'CV_CE',''))"
+cv_sql_02="select distinct
+  a.url_2d as b5mcode,
+  '"$m_gpk"|"${m_des[0]}"|"${m_des[1]}"|"${m_des[2]}"|"${m_abs[0]}"|"${m_abs[1]}"|"${m_abs[2]}"' as b5mcode_others_m_type,
+  case when
+    a.codmunis is null
+  then
+    'M_9999'
+  else
+    'M_' || replace(a.codmunis, ',', '|M_')
+  end as b5mcode_others_m,
+  case when
+    a.muni_e is null
+  then
+    upper(substr(d.tm, 1, 1)) || lower(substr(d.tm, 2))
+  else
+    replace(a.muni_e, ',', '|')
+  end as b5mcode_others_m_name_eu,
+  case when
+    a.muni_c is null
+  then
+    upper(substr(d.tm, 1, 1)) || lower(substr(d.tm, 2))
+  else
+    replace(a.muni_c, ',', '|')
+  end as b5mcode_others_m_name_eu,
+  '"$s_gpk"|"${s_des[0]}"|"${s_des[1]}"|"${s_des[2]}"|"${s_abs[0]}"|"${s_abs[1]}"|"${s_abs[2]}"' as b5mcode_others_s_type,
+  case when
+    b.idnomcomarca is null
+  then
+    null
+  else
+    'S_' || b.idnomcomarca
+  end as b5mcode_others_s,
+  case when
+    a.muni_e is null
+  then
+    null
+  else
+    c.nombre_e
+  end as b5mcode_others_s_name_eu,
+  case when
+    a.muni_e is null
+  then
+    null
+  else
+    c.nombre_c
+  end as b5mcode_others_s_name_es
+from
+  b5mweb_nombres.solr_gen_toponimia_2d a
+left join
+  (select distinct codmuni, idnomcomarca from b5mweb_25830.giputz) b on a.codmunis = b.codmuni
+left join
+  b5mweb_nombres.solr_gen_toponimia_2d c on 'S_' || b.idnomcomarca = c.url_2d
+left join
+  b5mweb_25830.cuevas d on a.id_nombre1 = d.tag
+where
+  a.url_2d like 'CV_%'
+order by
+  cast(replace(a.url_2d, 'CV_CE', '') as integer)"
 
 cv_sql_03="select
 a.*,
