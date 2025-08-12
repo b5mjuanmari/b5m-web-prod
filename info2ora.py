@@ -2,60 +2,85 @@
 # -*- coding: utf-8 -*-
 
 """
-csv_to_oracle_update.py
+info2ora.py
 
-CSV fitxategiak Oracle 11g-ko UPDATE sententzietara bihurtzen ditu, eremuetan
-dauden kakotxak ("...") mantenduz eta lerroak jatorrizko formatuan gordez.
+Fitxategiak Oracle 11g-ra eguneratzeko script-a:
+- CSV fitxategiak → campos_csv eremua (jatorrizko formatua mantenduz)
+- SQL fitxategiak → origen eremua (kontsultako ';' amaiera kenduz)
 """
 
 import os
 import sys
-import csv
+
+def kendu_azken_puntukoma(sql_edukia):
+    """SQL sententziaren azkeneko ';' kentzen du baldin badago"""
+    return sql_edukia.rstrip().rstrip(';')
 
 def egiaztatu_parametroak():
     if len(sys.argv) != 3:
-        print(f"Errorea: Erabilera: python3 {sys.argv[0]} <csv_direktorioa> <irteerako_sql_fitxategia>")
+        print(f"Erabilera: python3 {sys.argv[0]} <sarrera> <irteera.sql>")
         sys.exit(1)
 
-    csv_dir = sys.argv[1]
-    if not os.path.isdir(csv_dir):
-        print(f"Errorea: '{csv_dir}' direktorioa ez da existitzen")
+    sarrera = sys.argv[1]
+    if not os.path.exists(sarrera):
+        print("Errorea: Sarrerako fitxategia/direktorioa ez da existitzen")
         sys.exit(1)
 
-    csv_fitxategiak = [f for f in os.listdir(csv_dir) if f.endswith('.csv')]
-    if not csv_fitxategiak:
-        print(f"Errorea: '{csv_dir}' direktorioan ez da CSV fitxategirik aurkitu")
+    return sarrera, sys.argv[2]
+
+def bilatu_fitxategiak(sarrera):
+    if os.path.isfile(sarrera):
+        if not sarrera.lower().endswith(('.csv','.sql')):
+            print("Errorea: Fitxategiak CSV edo SQL luzapena izan behar du")
+            sys.exit(1)
+        return [sarrera]
+
+    fitxategiak = [os.path.join(sarrera, f) for f in os.listdir(sarrera)
+                 if f.lower().endswith(('.csv','.sql'))]
+
+    if not fitxategiak:
+        print("Errorea: Ez da CSV edo SQL fitxategirik aurkitu")
         sys.exit(1)
 
-    return csv_dir, sys.argv[2], csv_fitxategiak
+    return fitxategiak
 
-def csv_to_oracle_clob(csv_path):
-    """CSV fitxategiaren edukia jatorrizko formatuan irakurtzen du"""
-    with open(csv_path, 'r', encoding='utf-8') as f:
-        return f.read()
+def sortu_update(fitxategia):
+    izena = os.path.splitext(os.path.basename(fitxategia))[0]
 
-def sortu_update_sententzia(destino, clob_edukia):
-    """UPDATE sententzia sortzen du, jatorrizko CSV formatua mantenduz"""
-    clob_safe = clob_edukia.replace("'", "''")
-    return f"""UPDATE datasets2_info
-SET campos_csv = TO_CLOB(q'[{clob_safe}]')
-WHERE destino = '{destino}';\n\n"""
+    try:
+        with open(fitxategia, 'r', encoding='utf-8') as f:
+            edukia = f.read().strip()
+
+        if fitxategia.lower().endswith('.csv'):
+            return f"""UPDATE datasets2_info
+SET campos_csv = TO_CLOB(q'[{edukia.replace("'","''")}]')
+WHERE destino = '{izena}';\n"""
+
+        elif fitxategia.lower().endswith('.sql'):
+            garbitua = kendu_azken_puntukoma(edukia)
+            return f"""UPDATE datasets2_info
+SET origen = '{garbitua.replace("'","''")}'
+WHERE destino = '{izena}';\n"""
+
+    except Exception as e:
+        print(f"Errorea {fitxategia} irakurtzean: {str(e)}")
+        return None
 
 def main():
-    csv_dir, sql_irteera, csv_fitxategiak = egiaztatu_parametroak()
-    total_fitxategiak = len(csv_fitxategiak)
+    sarrera, irteera = egiaztatu_parametroak()
+    fitxategiak = bilatu_fitxategiak(sarrera)
 
-    if os.path.exists(sql_irteera):
-        os.remove(sql_irteera)
+    if os.path.exists(irteera):
+        os.remove(irteera)
 
-    with open(sql_irteera, 'w', encoding='utf-8') as sql_file:
-        for idx, csv_fitx in enumerate(csv_fitxategiak, 1):
-            csv_path = os.path.join(csv_dir, csv_fitx)
-            destino = os.path.splitext(csv_fitx)[0]
-            clob_edukia = csv_to_oracle_clob(csv_path)
+    with open(irteera, 'w', encoding='utf-8') as out:
+        for i, fitx in enumerate(fitxategiak, 1):
+            update = sortu_update(fitx)
+            if update:
+                out.write(update)
+                print(f"[{i}/{len(fitxategiak)}] {os.path.basename(fitx)}")
 
-            sql_file.write(sortu_update_sententzia(destino, clob_edukia))
-            print(f"[{idx}/{total_fitxategiak}] {csv_fitx}")
+    print(f"\nEginda! {len(fitxategiak)} fitxategi prozesatu dira.")
 
 if __name__ == "__main__":
     main()
