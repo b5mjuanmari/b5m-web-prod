@@ -19,8 +19,8 @@ select
   b.codmunis as codmuni,
   b.muni_e as muni_eu,
   b.muni_c as muni_es,
-  a.desnivel as heightdifference,
-  a.desarrollo as length,
+  a.desnivel as heightdifference_m,
+  a.desarrollo as length_m,
   case
     when a.macizo = 'PM' then a.macizo
     else upper(substr(a.macizo, 1, 1)) || lower(substr(a.macizo, 2))
@@ -28,7 +28,7 @@ select
   upper(substr(a.zona, 1, 1)) || lower(substr(a.zona, 2)) as zone,
   a.x x_etrs89utm30N,
   a.y y_etrs89utm30N,
-  a.z altitude,
+  a.z altitude_m,
   a.web_e url_eu,
   a.web_c url_es,
   a.geom as geom
