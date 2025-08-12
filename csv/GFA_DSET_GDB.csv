@@ -1,0 +1,7 @@
+name,"Puntu geodesikoaren izena","Nombre del punto geodésico","Geodetic point name"
+codmuni,"Udalerri kodea","Código municipal","Municipal code"
+muni_eu,"Udalerriaren izena euskaraz","Nombre del municipio en euskera","Municipality name in Basque"
+muni_es,"Udalerriaren izena gaztelaniaz","Nombre del municipio en castellano","Municipality name in Spanish"
+type,"Puntu geodesiko mota","Tipo de punto geodésico","Geodetic point type"
+url,"Informazio URLa","URL de información","Information URL"
+geom,"Geometria (puntua)","Geometría (punto)","Geometry (point)"

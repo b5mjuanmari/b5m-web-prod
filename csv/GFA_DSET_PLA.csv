@@ -1,0 +1,6 @@
+b5midut,"B5M erregistroaren identifikadorea","Identificador del registro B5M","B5M record identifier"
+b5midutagr,"B5M erregistro multzoaren identifikadorea","Identificador del conjunto de registros B5M","B5M record set identifier"
+name,"Gunearen izena","Nombre del área","Area name"
+name_eu,"Gunearen izena euskaraz","Nombre del área en euskera","Area name in Basque"
+name_es,"Gunearen izena gaztelaniaz","Nombre del área en castellano","Area name in Spanish"
+geom,"Geometria (lerroa)","Geometría (línea)","Geometry (line)"
