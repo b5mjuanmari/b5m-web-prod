@@ -1,8 +1,8 @@
-b5mcode,"Katalogoko elementuaren kodea","El código del elemento en el catálogo","The catalogue item code"
-name,"Trenbidearen izena","Nombre de la vía férrea","Railway name"
-name_eu,"Trenbidearen izena euskaraz","Nombre de la vía férrea en euskera","Railway name in Basque"
-name_es,"Trenbidearen izena gaztelaniaz","Nombre de la vía férrea en castellano","Railway name in Spanish"
-bridge_tunnel,"Zubia/tunela","Puente/túnel","Bridge/tunnel"
-b5midut,"B5M erregistroaren identifikadorea","Identificador del registro B5M","B5M record identifier"
-b5midname,"B5M izen identifikadorea","Identificador de nombre B5M","B5M name identifier"
-geom,"Geometria (lerroa)","Geometría (línea)","Geometry (line)"
+b5mcode,Katalogoko elementuaren kodea,El código del elemento en el catálogo,The catalogue item code
+name,Trenbidearen izena,Nombre de la vía férrea,Railway name
+name_eu,Trenbidearen izena euskaraz,Nombre de la vía férrea en euskera,Railway name in Basque
+name_es,Trenbidearen izena gaztelaniaz,Nombre de la vía férrea en castellano,Railway name in Spanish
+bridge_tunnel,Zubia/tunela,Puente/túnel,Bridge/tunnel
+b5midut,B5M erregistroaren identifikadorea,Identificador del registro B5M,B5M record identifier
+b5midname,B5M izen identifikadorea,Identificador de nombre B5M,B5M name identifier
+geom,Geometria (lerroa),Geometría (línea),Geometry (line)

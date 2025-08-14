@@ -1,17 +1,17 @@
-b5mcode,"Suhiltzaileen kodea","Código de estación de bomberos","Fire station code"
-name,"Suhiltzaileen izena","Nombre de la estación de bomberos","Fire station name"
-name_eu,"Suhiltzaileen izena euskaraz","Nombre de la estación de bomberos en euskera","Fire station name in Basque"
-name_es,"Suhiltzaileen izena gaztelaniaz","Nombre de la estación de bomberos en castellano","Fire station name in Spanish"
-codmuni,"Udalerri kodea","Código municipal","Municipal code"
-muni_eu,"Udalerriaren izena euskaraz","Nombre del municipio en euskera","Municipality name in Basque"
-muni_es,"Udalerriaren izena gaztelaniaz","Nombre del municipio en castellano","Municipality name in Spanish"
-codstreet,"Kale kodea","Código de calle","Street code"
-street_eu,"Kalearen izena euskaraz","Nombre de la calle en euskera","Street name in Basque"
-street_es,"Kalearen izena gaztelaniaz","Nombre de la calle en castellano","Street name in Spanish"
-house_number,"Etxe zenbakia","Número de portal","House number"
-bis,"Bis kodea","Código bis","Bis code"
-postcode,"Posta kodea","Código postal","Postal code"
-b5midnamebuilding,"Eraikinaren izen identifikadorea","Identificador del nombre del edificio","Building name identifier"
-b5midut,"B5M erregistroaren identifikadorea","Identificador del registro B5M","B5M record identifier"
-b5midaddress,"Helbide identifikadorea","Identificador de dirección","Address identifier"
-geom,"Geometria (erdiguneko puntua)","Geometría (punto central)","Geometry (centroid point)"
+b5mcode,Suhiltzaileen kodea,Código de estación de bomberos,Fire station code
+name,Suhiltzaileen izena,Nombre de la estación de bomberos,Fire station name
+name_eu,Suhiltzaileen izena euskaraz,Nombre de la estación de bomberos en euskera,Fire station name in Basque
+name_es,Suhiltzaileen izena gaztelaniaz,Nombre de la estación de bomberos en castellano,Fire station name in Spanish
+codmuni,Udalerri kodea,Código municipal,Municipal code
+muni_eu,Udalerriaren izena euskaraz,Nombre del municipio en euskera,Municipality name in Basque
+muni_es,Udalerriaren izena gaztelaniaz,Nombre del municipio en castellano,Municipality name in Spanish
+codstreet,Kale kodea,Código de calle,Street code
+street_eu,Kalearen izena euskaraz,Nombre de la calle en euskera,Street name in Basque
+street_es,Kalearen izena gaztelaniaz,Nombre de la calle en castellano,Street name in Spanish
+house_number,Etxe zenbakia,Número de portal,House number
+bis,Bis kodea,Código bis,Bis code
+postcode,Posta kodea,Código postal,Postal code
+b5midnamebuilding,Eraikinaren izen identifikadorea,Identificador del nombre del edificio,Building name identifier
+b5midut,B5M erregistroaren identifikadorea,Identificador del registro B5M,B5M record identifier
+b5midaddress,Helbide identifikadorea,Identificador de dirección,Address identifier
+geom,Geometria (erdiguneko puntua),Geometría (punto central),Geometry (centroid point)

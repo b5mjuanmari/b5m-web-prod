@@ -1,34 +1,34 @@
-b5mcode,"Eraikinaren kodea","Código del edificio","Building code"
-name,"Eraikinaren helbide osoa","Dirección completa del edificio","Full building address"
-name_eu,"Eraikinaren helbidea euskaraz","Dirección del edificio en euskera","Building address in Basque"
-name_es,"Eraikinaren helbidea gaztelaniaz","Dirección del edificio en castellano","Building address in Spanish"
-type_eu,"Eraikin mota euskaraz","Tipo de edificio en euskera","Building type in Basque"
-type_es,"Eraikin mota gaztelaniaz","Tipo de edificio en castellano","Building type in Spanish"
-type_en,"Eraikin mota ingelesez","Tipo de edificio en inglés","Building type in English"
-subtype_eu,"Eraikin azpimota euskaraz","Subtipo de edificio en euskera","Building subtype in Basque"
-subtype_es,"Eraikin azpimota gaztelaniaz","Subtipo de edificio en castellano","Building subtype in Spanish"
-subtype_en,"Eraikin azpimota ingelesez","Subtipo de edificio en inglés","Building subtype in English"
-codmuni,"Udalerri kodea","Código municipal","Municipal code"
-muni_eu,"Udalerriaren izena euskaraz","Nombre del municipio en euskera","Municipality name in Basque"
-muni_es,"Udalerriaren izena gaztelaniaz","Nombre del municipio en castellano","Municipality name in Spanish"
-codstreet,"Kale kodea","Código de calle","Street code"
-street_eu,"Kalearen izena euskaraz","Nombre de la calle en euskera","Street name in Basque"
-street_es,"Kalearen izena gaztelaniaz","Nombre de la calle en castellano","Street name in Spanish"
-house_number,"Etxe zenbakia","Número de portal","House number"
-bis,"Bis kodea","Código bis","Bis code"
-postcode,"Posta kodea","Código postal","Postal code"
-accessory,"Osagarria","Accesorio","Accessory"
-block,"Blokea","Bloque","Block"
-coddistr,"Barruti kodea","Código de distrito","District code"
-codsec,"Atal kodea","Código de sección","Section code"
-b5midnamebuilding,"Eraikinaren izen identifikadorea","Identificador del nombre del edificio","Building name identifier"
-name_building_eu,"Eraikinaren izena euskaraz","Nombre del edificio en euskera","Building name in Basque"
-name_building_es,"Eraikinaren izena gaztelaniaz","Nombre del edificio en castellano","Building name in Spanish"
-b5midnamebuilingothers,"Eraikinaren beste izen identifikadoreak","Otros identificadores de nombre del edificio","Other building name identifiers"
-name_building_others_eu,"Eraikinaren beste izenak euskaraz","Otros nombres del edificio en euskera","Other building names in Basque"
-average_height,"Altuera bataz bestekoa (m)","Altura media (m)","Average height (m)"
-max_height,"Gehienezko altuera (m)","Altura máxima (m)","Maximum height (m)"
-date_construction,"Eraikuntza data","Fecha de construcción","Construction date"
-b5midut,"B5M erregistroaren identifikadorea","Identificador del registro B5M","B5M record identifier"
-b5midaddress,"Helbide identifikadorea","Identificador de dirección","Address identifier"
-geom,"Geometria (poligonoa)","Geometría (polígono)","Geometry (polygon)"
+b5mcode,Eraikinaren kodea,Código del edificio,Building code
+name,Eraikinaren helbide osoa,Dirección completa del edificio,Full building address
+name_eu,Eraikinaren helbidea euskaraz,Dirección del edificio en euskera,Building address in Basque
+name_es,Eraikinaren helbidea gaztelaniaz,Dirección del edificio en castellano,Building address in Spanish
+type_eu,Eraikin mota euskaraz,Tipo de edificio en euskera,Building type in Basque
+type_es,Eraikin mota gaztelaniaz,Tipo de edificio en castellano,Building type in Spanish
+type_en,Eraikin mota ingelesez,Tipo de edificio en inglés,Building type in English
+subtype_eu,Eraikin azpimota euskaraz,Subtipo de edificio en euskera,Building subtype in Basque
+subtype_es,Eraikin azpimota gaztelaniaz,Subtipo de edificio en castellano,Building subtype in Spanish
+subtype_en,Eraikin azpimota ingelesez,Subtipo de edificio en inglés,Building subtype in English
+codmuni,Udalerri kodea,Código municipal,Municipal code
+muni_eu,Udalerriaren izena euskaraz,Nombre del municipio en euskera,Municipality name in Basque
+muni_es,Udalerriaren izena gaztelaniaz,Nombre del municipio en castellano,Municipality name in Spanish
+codstreet,Kale kodea,Código de calle,Street code
+street_eu,Kalearen izena euskaraz,Nombre de la calle en euskera,Street name in Basque
+street_es,Kalearen izena gaztelaniaz,Nombre de la calle en castellano,Street name in Spanish
+house_number,Etxe zenbakia,Número de portal,House number
+bis,Bis kodea,Código bis,Bis code
+postcode,Posta kodea,Código postal,Postal code
+accessory,Osagarria,Accesorio,Accessory
+block,Blokea,Bloque,Block
+coddistr,Barruti kodea,Código de distrito,District code
+codsec,Atal kodea,Código de sección,Section code
+b5midnamebuilding,Eraikinaren izen identifikadorea,Identificador del nombre del edificio,Building name identifier
+name_building_eu,Eraikinaren izena euskaraz,Nombre del edificio en euskera,Building name in Basque
+name_building_es,Eraikinaren izena gaztelaniaz,Nombre del edificio en castellano,Building name in Spanish
+b5midnamebuilingothers,Eraikinaren beste izen identifikadoreak,Otros identificadores de nombre del edificio,Other building name identifiers
+name_building_others_eu,Eraikinaren beste izenak euskaraz,Otros nombres del edificio en euskera,Other building names in Basque
+average_height,Altuera bataz bestekoa (m),Altura media (m),Average height (m)
+max_height,Gehienezko altuera (m),Altura máxima (m),Maximum height (m)
+date_construction,Eraikuntza data,Fecha de construcción,Construction date
+b5midut,B5M erregistroaren identifikadorea,Identificador del registro B5M,B5M record identifier
+b5midaddress,Helbide identifikadorea,Identificador de dirección,Address identifier
+geom,Geometria (poligonoa),Geometría (polígono),Geometry (polygon)

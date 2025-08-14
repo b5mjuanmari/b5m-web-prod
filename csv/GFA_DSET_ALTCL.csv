@@ -1,7 +1,7 @@
-b5midut,"B5M erregistroaren identifikadorea","Identificador del registro B5M","B5M record identifier"
-name,"Altuera-kurbaren etiketa","Etiqueta de la curva de nivel","Contour line label"
-altimetry_value,"Altuera balioa","Valor de altitud","Altitude value"
-type_eu,"Mota euskaraz","Tipo en euskera","Type in Basque"
-type_es,"Mota gaztelaniaz","Tipo en castellano","Type in Spanish"
-type_en,"Mota ingelesez","Tipo en inglés","Type in English"
-geom,"Geometria (lerroa)","Geometría (línea)","Geometry (line)"
+b5midut,B5M erregistroaren identifikadorea,Identificador del registro B5M,B5M record identifier
+name,Altuera-kurbaren etiketa,Etiqueta de la curva de nivel,Contour line label
+altimetry_value,Altuera balioa,Valor de altitud,Altitude value
+type_eu,Mota euskaraz,Tipo en euskera,Type in Basque
+type_es,Mota gaztelaniaz,Tipo en castellano,Type in Spanish
+type_en,Mota ingelesez,Tipo en inglés,Type in English
+geom,Geometria (lerroa),Geometría (línea),Geometry (line)

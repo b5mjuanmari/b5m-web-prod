@@ -1,7 +1,7 @@
-b5midut,"B5M erregistroaren identifikadorea","Identificador del registro B5M","B5M record identifier"
-name,"Altuera balioa","Valor de altitud","Altitude value"
-altimetry_value,"Altuera balioa","Valor de altitud","Altitude value"
-type_eu,"Altuera mota euskaraz","Tipo de altitud en euskera","Altitude type in Basque"
-type_es,"Altuera mota gaztelaniaz","Tipo de altitud en castellano","Altitude type in Spanish"
-type_en,"Altuera mota ingelesez","Tipo de altitud en inglés","Altitude type in English"
-geom,"Geometria (puntua)","Geometría (punto)","Geometry (point)"
+b5midut,B5M erregistroaren identifikadorea,Identificador del registro B5M,B5M record identifier
+name,Altuera balioa,Valor de altitud,Altitude value
+altimetry_value,Altuera balioa,Valor de altitud,Altitude value
+type_eu,Altuera mota euskaraz,Tipo de altitud en euskera,Altitude type in Basque
+type_es,Altuera mota gaztelaniaz,Tipo de altitud en castellano,Altitude type in Spanish
+type_en,Altuera mota ingelesez,Tipo de altitud en inglés,Altitude type in English
+geom,Geometria (puntua),Geometría (punto),Geometry (point)

@@ -1,16 +1,16 @@
-b5mcode,"Katalogoko elementuaren kodea","El código del elemento en el catálogo","The catalogue item code"
-name,"Bidearen izena","Nombre del vial","Path name"
-name_eu,"Bidearen izena euskaraz","Nombre del vial en euskera","Path name in Basque"
-name_es,"Bidearen izena gaztelaniaz","Nombre del vial en castellano","Path name in Spanish"
-type_eu,"Bide mota euskaraz","Tipo de vial en euskera","Path type in Basque"
-type_es,"Bide mota gaztelaniaz","Tipo de vial en castellano","Path type in Spanish"
-codmuni,"Udalerri kodea","Código municipal","Municipal code"
-codvial,"Bide kodea","Código de vial","Path code"
-bridge_tunnel,"Zubia/tunela","Puente/túnel","Bridge/tunnel"
-description_eu,"Deskribapena euskaraz","Descripción en euskera","Description in Basque"
-description_es,"Deskribapena gaztelaniaz","Descripción en castellano","Description in Spanish"
-observation_eu,"Oharra euskaraz","Observación en euskera","Observation in Basque"
-observation_es,"Oharra gaztelaniaz","Observación en castellano","Observation in Spanish"
-b5midut,"B5M erregistroaren identifikadorea","Identificador del registro B5M","B5M record identifier"
-b5midname,"B5M izen identifikadorea","Identificador de nombre B5M","B5M name identifier"
-geom,"Geometria (lerroa)","Geometría (línea)","Geometry (line)"
+b5mcode,Katalogoko elementuaren kodea,El código del elemento en el catálogo,The catalogue item code
+name,Bidearen izena,Nombre del vial,Path name
+name_eu,Bidearen izena euskaraz,Nombre del vial en euskera,Path name in Basque
+name_es,Bidearen izena gaztelaniaz,Nombre del vial en castellano,Path name in Spanish
+type_eu,Bide mota euskaraz,Tipo de vial en euskera,Path type in Basque
+type_es,Bide mota gaztelaniaz,Tipo de vial en castellano,Path type in Spanish
+codmuni,Udalerri kodea,Código municipal,Municipal code
+codvial,Bide kodea,Código de vial,Path code
+bridge_tunnel,Zubia/tunela,Puente/túnel,Bridge/tunnel
+description_eu,Deskribapena euskaraz,Descripción en euskera,Description in Basque
+description_es,Deskribapena gaztelaniaz,Descripción en castellano,Description in Spanish
+observation_eu,Oharra euskaraz,Observación en euskera,Observation in Basque
+observation_es,Oharra gaztelaniaz,Observación en castellano,Observation in Spanish
+b5midut,B5M erregistroaren identifikadorea,Identificador del registro B5M,B5M record identifier
+b5midname,B5M izen identifikadorea,Identificador de nombre B5M,B5M name identifier
+geom,Geometria (lerroa),Geometría (línea),Geometry (line)

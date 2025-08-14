@@ -1,33 +1,33 @@
-b5mcode,"Katalogoko elementuaren kodea","El código del elemento en el catálogo","The catalogue item code"
-name,"Toponimoaren izena","Nombre del topónimo","Toponym name"
-name_eu,"Toponimoaren izena euskaraz","Nombre del topónimo en euskera","Toponym name in Basque"
-name_es,"Toponimoaren izena gaztelaniaz","Nombre del topónimo en castellano","Toponym name in Spanish"
-type_eu,"Toponimo mota euskaraz","Tipo de topónimo en euskera","Toponym type in Basque"
-type_es,"Toponimo mota gaztelaniaz","Tipo de topónimo en castellano","Toponym type in Spanish"
-type_en,"Toponimo mota ingelesez","Tipo de topónimo en inglés","Toponym type in English"
-codmuni,"Udalerri kodea","Código municipal","Municipal code"
-muni_eu,"Udalerriaren izena euskaraz","Nombre del municipio en euskera","Municipality name in Basque"
-muni_es,"Udalerriaren izena gaztelaniaz","Nombre del municipio en castellano","Municipality name in Spanish"
-basin_eu,"Arroaren izena euskaraz","Nombre de la cuenca en euskera","Basin name in Basque"
-basin_es,"Arroaren izena gaztelaniaz","Nombre de la cuenca en castellano","Basin name in Spanish"
-desc_eu,"Deskribapena euskaraz","Descripción en euskera","Description in Basque"
-desc_es,"Deskribapena gaztelaniaz","Descripción en castellano","Description in Spanish"
-desc_en,"Deskribapena ingelesez","Descripción en inglés","Description in English"
-codstreet,"Kale kodea","Código de calle","Street code"
-street_eu,"Kalearen izena euskaraz","Nombre de la calle en euskera","Street name in Basque"
-street_es,"Kalearen izena gaztelaniaz","Nombre de la calle en castellano","Street name in Spanish"
-house_number,"Etxe zenbakia","Número de portal","House number"
-bis,"Bis kodea","Código bis","Bis code"
-postcode,"Posta kodea","Código postal","Postal code"
-accessory,"Osagarria","Accesorio","Accessory"
-block,"Blokea","Bloque","Block"
-coddistri,"Barruti kodea","Código de distrito","District code"
-codsec,"Atal kodea","Código de sección","Section code"
-name_building_eu,"Eraikinaren izena euskaraz","Nombre del edificio en euskera","Building name in Basque"
-name_building_es,"Eraikinaren izena gaztelaniaz","Nombre del edificio en castellano","Building name in Spanish"
-x_cen_etrs89,"Erdiguneko X koordenatua (ETRS89)","Coordenada X del centroide (ETRS89)","Centroid X coordinate (ETRS89)"
-y_cen_etrs89,"Erdiguneko Y koordenatua (ETRS89)","Coordenada Y del centroide (ETRS89)","Centroid Y coordinate (ETRS89)"
-cen_lonlat,"Erdiguneko longitudea/latitudea (WGS84)","Longitud/latitud del centroide (WGS84)","Centroid longitude/latitude (WGS84)"
-bbox_lonlat,"Bounding box-aren koordenatuak (WGS84)","Coordenadas del bounding box (WGS84)","Bounding box coordinates (WGS84)"
-b5midname,"B5M izen identifikadorea","Identificador de nombre B5M","B5M name identifier"
-geom,"Geometria (erdiguneko puntua)","Geometría (punto central)","Geometry (centroid point)"
+b5mcode,Katalogoko elementuaren kodea,El código del elemento en el catálogo,The catalogue item code
+name,Toponimoaren izena,Nombre del topónimo,Toponym name
+name_eu,Toponimoaren izena euskaraz,Nombre del topónimo en euskera,Toponym name in Basque
+name_es,Toponimoaren izena gaztelaniaz,Nombre del topónimo en castellano,Toponym name in Spanish
+type_eu,Toponimo mota euskaraz,Tipo de topónimo en euskera,Toponym type in Basque
+type_es,Toponimo mota gaztelaniaz,Tipo de topónimo en castellano,Toponym type in Spanish
+type_en,Toponimo mota ingelesez,Tipo de topónimo en inglés,Toponym type in English
+codmuni,Udalerri kodea,Código municipal,Municipal code
+muni_eu,Udalerriaren izena euskaraz,Nombre del municipio en euskera,Municipality name in Basque
+muni_es,Udalerriaren izena gaztelaniaz,Nombre del municipio en castellano,Municipality name in Spanish
+basin_eu,Arroaren izena euskaraz,Nombre de la cuenca en euskera,Basin name in Basque
+basin_es,Arroaren izena gaztelaniaz,Nombre de la cuenca en castellano,Basin name in Spanish
+desc_eu,Deskribapena euskaraz,Descripción en euskera,Description in Basque
+desc_es,Deskribapena gaztelaniaz,Descripción en castellano,Description in Spanish
+desc_en,Deskribapena ingelesez,Descripción en inglés,Description in English
+codstreet,Kale kodea,Código de calle,Street code
+street_eu,Kalearen izena euskaraz,Nombre de la calle en euskera,Street name in Basque
+street_es,Kalearen izena gaztelaniaz,Nombre de la calle en castellano,Street name in Spanish
+house_number,Etxe zenbakia,Número de portal,House number
+bis,Bis kodea,Código bis,Bis code
+postcode,Posta kodea,Código postal,Postal code
+accessory,Osagarria,Accesorio,Accessory
+block,Blokea,Bloque,Block
+coddistri,Barruti kodea,Código de distrito,District code
+codsec,Atal kodea,Código de sección,Section code
+name_building_eu,Eraikinaren izena euskaraz,Nombre del edificio en euskera,Building name in Basque
+name_building_es,Eraikinaren izena gaztelaniaz,Nombre del edificio en castellano,Building name in Spanish
+x_cen_etrs89,Erdiguneko X koordenatua (ETRS89),Coordenada X del centroide (ETRS89),Centroid X coordinate (ETRS89)
+y_cen_etrs89,Erdiguneko Y koordenatua (ETRS89),Coordenada Y del centroide (ETRS89),Centroid Y coordinate (ETRS89)
+cen_lonlat,Erdiguneko longitudea/latitudea (WGS84),Longitud/latitud del centroide (WGS84),Centroid longitude/latitude (WGS84)
+bbox_lonlat,Bounding box-aren koordenatuak (WGS84),Coordenadas del bounding box (WGS84),Bounding box coordinates (WGS84)
+b5midname,B5M izen identifikadorea,Identificador de nombre B5M,B5M name identifier
+geom,Geometria (erdiguneko puntua),Geometría (punto central),Geometry (centroid point)

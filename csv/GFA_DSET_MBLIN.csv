@@ -1,20 +1,20 @@
-b5mcode,"Katalogoko elementuaren kodea","El código del elemento en el catálogo","The catalogue item code"
-name,"Muga-lerroaren izena","Nombre de la línea de límite","Boundary line name"
-name_eu,"Muga-lerroaren izena euskaraz","Nombre de la línea de límite en euskera","Boundary line name in Basque"
-name_es,"Muga-lerroaren izena gaztelaniaz","Nombre de la línea de límite en castellano","Boundary line name in Spanish"
-codenclave1,"Enklabe kodea (1)","Código de enclave (1)","Enclave code (1)"
-enclave1,"Enklabea (1)","Enclave (1)","Enclave (1)"
-muni1,"Udalerria (1)","Municipio (1)","Municipality (1)"
-codenclave2,"Enklabe kodea (2)","Código de enclave (2)","Enclave code (2)"
-enclave2,"Enklabea (2)","Enclave (2)","Enclave (2)"
-muni2,"Udalerria (2)","Municipio (2)","Municipality (2)"
-linkact,"Aktaren esteka","Enlace al acta","Act link"
-linkfieldlog,"Egunerokoaren esteka","Enlace al cuaderno de campo","Field log link"
-numlandmarks,"Muga kopurua","Número de mojones","Number of landmarks"
-comment_eu,"Iruzkina euskaraz","Comentario en euskera","Comment in Basque"
-comment_es,"Iruzkina gaztelaniaz","Comentario en castellano","Comment in Spanish"
-validation_date,"Balioztatze data","Fecha de validación","Validation date"
-b5midact,"Aktaren identifikadorea","Identificador del acta","Act identifier"
-b5middocact,"Aktaren dokumentu identifikadorea","Identificador del documento del acta","Act document identifier"
-b5midfieldlog,"Egunerokoaren identifikadorea","Identificador del cuaderno de campo","Field log identifier"
-geom,"Geometria (lerroa)","Geometría (línea)","Geometry (line)"
+b5mcode,Katalogoko elementuaren kodea,El código del elemento en el catálogo,The catalogue item code
+name,Muga-lerroaren izena,Nombre de la línea de límite,Boundary line name
+name_eu,Muga-lerroaren izena euskaraz,Nombre de la línea de límite en euskera,Boundary line name in Basque
+name_es,Muga-lerroaren izena gaztelaniaz,Nombre de la línea de límite en castellano,Boundary line name in Spanish
+codenclave1,Enklabe kodea (1),Código de enclave (1),Enclave code (1)
+enclave1,Enklabea (1),Enclave (1),Enclave (1)
+muni1,Udalerria (1),Municipio (1),Municipality (1)
+codenclave2,Enklabe kodea (2),Código de enclave (2),Enclave code (2)
+enclave2,Enklabea (2),Enclave (2),Enclave (2)
+muni2,Udalerria (2),Municipio (2),Municipality (2)
+linkact,Aktaren esteka,Enlace al acta,Act link
+linkfieldlog,Egunerokoaren esteka,Enlace al cuaderno de campo,Field log link
+numlandmarks,Muga kopurua,Número de mojones,Number of landmarks
+comment_eu,Iruzkina euskaraz,Comentario en euskera,Comment in Basque
+comment_es,Iruzkina gaztelaniaz,Comentario en castellano,Comment in Spanish
+validation_date,Balioztatze data,Fecha de validación,Validation date
+b5midact,Aktaren identifikadorea,Identificador del acta,Act identifier
+b5middocact,Aktaren dokumentu identifikadorea,Identificador del documento del acta,Act document identifier
+b5midfieldlog,Egunerokoaren identifikadorea,Identificador del cuaderno de campo,Field log identifier
+geom,Geometria (lerroa),Geometría (línea),Geometry (line)

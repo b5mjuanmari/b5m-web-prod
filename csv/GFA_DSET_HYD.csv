@@ -1,16 +1,16 @@
-b5mcode,"Katalogoko elementuaren kodea","El código del elemento en el catálogo","The catalogue item code"
-name,"Ibaiaren izena","Nombre del río","River name"
-name_eu,"Ibaiaren izena euskaraz","Nombre del río en euskera","River name in Basque"
-name_es,"Ibaiaren izena gaztelaniaz","Nombre del río en castellano","River name in Spanish"
-b5midnameothers,"Beste izen identifikadoreak","Otros identificadores de nombre","Other name identifiers"
-name_others_eu,"Beste izenak euskaraz","Otros nombres en euskera","Other names in Basque"
-name_others_es,"Beste izenak gaztelaniaz","Otros nombres en castellano","Other names in Spanish"
-subtype_eu,"Ibai azpimota euskaraz","Subtipo de río en euskera","River subtype in Basque"
-subtype_es,"Ibai azpimota gaztelaniaz","Subtipo de río en castellano","River subtype in Spanish"
-LEVEL,"Maila","Nivel","Level"
-b5midnamebasin,"Arroaren izen identifikadorea","Identificador del nombre de la cuenca","Basin name identifier"
-basin_eu,"Arroaren izena euskaraz","Nombre de la cuenca en euskera","Basin name in Basque"
-basin_es,"Arroaren izena gaztelaniaz","Nombre de la cuenca en castellano","Basin name in Spanish"
-b5midut,"B5M erregistroaren identifikadorea","Identificador del registro B5M","B5M record identifier"
-b5midname,"B5M izen identifikadorea","Identificador de nombre B5M","B5M name identifier"
-geom,"Geometria (lerroa)","Geometría (línea)","Geometry (line)"
+b5mcode,Katalogoko elementuaren kodea,El código del elemento en el catálogo,The catalogue item code
+name,Ibaiaren izena,Nombre del río,River name
+name_eu,Ibaiaren izena euskaraz,Nombre del río en euskera,River name in Basque
+name_es,Ibaiaren izena gaztelaniaz,Nombre del río en castellano,River name in Spanish
+b5midnameothers,Beste izen identifikadoreak,Otros identificadores de nombre,Other name identifiers
+name_others_eu,Beste izenak euskaraz,Otros nombres en euskera,Other names in Basque
+name_others_es,Beste izenak gaztelaniaz,Otros nombres en castellano,Other names in Spanish
+subtype_eu,Ibai azpimota euskaraz,Subtipo de río en euskera,River subtype in Basque
+subtype_es,Ibai azpimota gaztelaniaz,Subtipo de río en castellano,River subtype in Spanish
+LEVEL,Maila,Nivel,Level
+b5midnamebasin,Arroaren izen identifikadorea,Identificador del nombre de la cuenca,Basin name identifier
+basin_eu,Arroaren izena euskaraz,Nombre de la cuenca en euskera,Basin name in Basque
+basin_es,Arroaren izena gaztelaniaz,Nombre de la cuenca en castellano,Basin name in Spanish
+b5midut,B5M erregistroaren identifikadorea,Identificador del registro B5M,B5M record identifier
+b5midname,B5M izen identifikadorea,Identificador de nombre B5M,B5M name identifier
+geom,Geometria (lerroa),Geometría (línea),Geometry (line)
