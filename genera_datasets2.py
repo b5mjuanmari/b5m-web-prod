@@ -279,6 +279,8 @@ def generate_kml(gpkg_file, destino, namefield, campos_csv):
     kml_file = os.path.join(gpkg_dir, f"{destino}.kml")
     if os.path.exists(kml_file):
         os.remove(kml_file)
+
+    # 1. Lehenik KML fitxategia sortu ogr2ogr-rekin
     kml_command = [
         ogr2ogr_bin,
         "-f", "KML",
@@ -289,23 +291,54 @@ def generate_kml(gpkg_file, destino, namefield, campos_csv):
     ]
     subprocess.run(kml_command, check=True)
 
-    # KML fitxategian eremu deskribapenak gehitu komentario gisa
+    # 2. Eremu deskribapenak gehitu Document elementuaren barruan
     if campos_csv:
-        with open(kml_file, 'r+') as f:
+        with open(kml_file, 'r+', encoding='utf-8') as f:
             content = f.read()
-            f.seek(0, 0)
-            f.write("<!--\nEremuen deskribapena:\n")
+
+            # Bilatu Document etiketa
+            doc_start = content.find('<Document id="root_doc">')
+            if doc_start == -1:
+                doc_start = content.find('<Document>')
+                if doc_start == -1:
+                    raise ValueError("Ezin da <Document> elementua aurkitu KML fitxategian")
+
+            # Kalkulatu kokalekua (Document etiketaren ondoren)
+            insert_pos = content.find('>', doc_start) + 1
+
+            # Sortu deskribapenak KML formatuan
+            desc_lines = [
+                '<description><![CDATA[',
+                'Eremuen deskribapena / Descripción de los campos / Field Description:'
+            ]
+
             for line in campos_csv.split('\n'):
                 if line.strip():
-                    parts = [part.strip() for part in line.split(',')]
+                    parts = [part.strip().strip('"') for part in line.split(',')]
                     if len(parts) >= 4:
-                        f.write(f"{parts[0]}: EU - {parts[1]}, ES - {parts[2]}, EN - {parts[3]}\n")
-            f.write("-->\n" + content)
+                        desc_lines.append(
+                            f'{parts[0].upper()}: '
+                            f'{parts[1]} / {parts[2]} / {parts[3]}'
+                        )
 
+            desc_lines.extend([']]></description>'])
+            descriptions = '\n    '.join(desc_lines)
+
+            # Sartu deskribapenak kokaleku egokian
+            new_content = content[:insert_pos] + '\n    ' + descriptions + content[insert_pos:]
+
+            # Idatzi fitxategia berriro
+            f.seek(0)
+            f.write(new_content)
+            f.truncate()
+
+    # 3. Kopiatu helburuko direktorioa
     kml_file2 = os.path.join(ruta2, f"{destino}.kml")
     if os.path.exists(kml_file2):
         os.remove(kml_file2)
     shutil.copy2(kml_file, kml_file2)
+
+    # 4. Garbitu behin behineko fitxategia
     if os.path.exists(kml_file):
         os.remove(kml_file)
 
