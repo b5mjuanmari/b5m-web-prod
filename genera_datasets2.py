@@ -254,7 +254,7 @@ def generate_shp(gpkg_file, destino, campos_csv):
                 if line.strip():
                     parts = [part.strip() for part in line.split(',')]
                     if len(parts) >= 4:
-                        f.write(f"{parts[0]}: {parts[1].strip(chr(34))} / {parts[2].strip(chr(34))} / {parts[3].strip(chr(34))}\n")
+                        f.write(f"{parts[0].upper()}: {parts[1].strip(chr(34))} / {parts[2].strip(chr(34))} / {parts[3].strip(chr(34))}\n")
 
     zip_file = os.path.join(ruta2, f"{gpkg_dir}/{destino}_SHP.zip")
     if os.path.exists(zip_file):
@@ -314,6 +314,8 @@ def generate_geojson(gpkg_file, destino, campos_csv):
     geojson_file = os.path.join(gpkg_dir, f"{destino}.geojson")
     if os.path.exists(geojson_file):
         os.remove(geojson_file)
+
+    # 1. Lehenik GeoJSON fitxategia sortu ogr2ogr-rekin
     geojson_command = [
         ogr2ogr_bin,
         "-f", "GeoJSON",
@@ -322,29 +324,43 @@ def generate_geojson(gpkg_file, destino, campos_csv):
     ]
     subprocess.run(geojson_command, check=True)
 
-    # GeoJSON fitxategian eremu deskribapenak gehitu _fieldDescriptions propietatean
+    # 2. Eremu deskribapenak gehitu JSON-aren egitura egokian
     if campos_csv:
-        with open(geojson_file, 'r+') as f:
+        with open(geojson_file, 'r+', encoding='utf-8') as f:
             data = json.load(f)
+
+            # Sortu eremu deskribapenak (eremu-izenak LARRIZ)
             field_descriptions = {}
             for line in campos_csv.split('\n'):
                 if line.strip():
                     parts = [part.strip() for part in line.split(',')]
                     if len(parts) >= 4:
-                        field_descriptions[parts[0]] = {
-                            "eu": parts[1],
-                            "es": parts[2],
-                            "en": parts[3]
+                        eremu_izena = parts[0].upper()  # Eremu-izena LARRIZ bihurtu
+                        field_descriptions[eremu_izena] = {
+                            "eu": parts[1].strip('"'),
+                            "es": parts[2].strip('"'),
+                            "en": parts[3].strip('"')
                         }
-            data['_fieldDescriptions'] = field_descriptions
+
+            # Eguneratu JSON egitura
+            updated_data = {
+                "type": "FeatureCollection",
+                "_fieldDescriptions": field_descriptions,
+                **{k: v for k, v in data.items() if k not in ["type"]}
+            }
+
+            # Idatzi fitxategia berriro
             f.seek(0)
-            json.dump(data, f, ensure_ascii=False, indent=2)
+            json.dump(updated_data, f, ensure_ascii=False, indent=2, sort_keys=False)
             f.truncate()
 
+    # 3. Kopiatu helburuko direktorioa
     geojson_file2 = os.path.join(ruta2, f"{destino}.geojson")
     if os.path.exists(geojson_file2):
         os.remove(geojson_file2)
     shutil.copy2(geojson_file, geojson_file2)
+
+    # 4. Garbitu behin behineko fitxategia
     if os.path.exists(geojson_file):
         os.remove(geojson_file)
 
@@ -371,7 +387,7 @@ def generate_csv(gpkg_file, destino, campos_csv):
                 if line.strip():
                     parts = [part.strip() for part in line.split(',')]
                     if len(parts) >= 4:
-                        f.write(f"{parts[0]}: {parts[1].strip(chr(34))} / {parts[2].strip(chr(34))} / {parts[3].strip(chr(34))}\n")
+                        f.write(f"{parts[0].upper()}: {parts[1].strip(chr(34))} / {parts[2].strip(chr(34))} / {parts[3].strip(chr(34))}\n")
 
     csv_file2 = os.path.join(ruta2, f"{destino}.csv")
     if os.path.exists(csv_file2):
