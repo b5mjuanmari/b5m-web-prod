@@ -217,7 +217,7 @@ def generate_gpkg(origen, destino, campos_csv):
             if line.strip():
                 parts = [part.strip() for part in line.split(',')]
                 if len(parts) >= 4:
-                    description = f"eu: {parts[1].strip(chr(34))}, es: {parts[2].strip(chr(34))}, en: {parts[3].strip(chr(34))}"
+                    description = f"{parts[1].strip(chr(34))} / {parts[2].strip(chr(34))} / {parts[3].strip(chr(34))}"
 
                     # gpkg_data_columns sartu / eguneratu
                     conn2_c.execute("""
