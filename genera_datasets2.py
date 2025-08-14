@@ -8,6 +8,8 @@ import time
 import math
 import shutil
 import sys
+import sqlite3
+import json
 
 # NLS_LANG aldagaia konfiguratu Oracle-rentzat
 os.environ["NLS_LANG"] = "SPANISH_SPAIN.UTF8"
@@ -21,7 +23,7 @@ db_dsn = os.getenv("DB_DSN", "bdet")
 db_tab = os.getenv("DB_TAB", "GIPUTZ")
 ogr2ogr_bin = "/usr/local/bin/ogr2ogr"
 
-# SQL kontsulta
+# SQL kontsulta (ALDATUTA - campos_csv gehitu da)
 sql = """
 select
   case
@@ -32,7 +34,8 @@ select
   a.destino,
   b.extension,
   b.formato,
-  b.namefield
+  b.namefield,
+  a.campos_csv
 from
   b5mweb_nombres.datasets2_info a
 inner join
@@ -122,8 +125,8 @@ def generate_gpkg_cadastre(origen, gpkg_file):
 
     return gpkg_file
 
-def generate_gpkg(origen, destino):
-    """Sortu GPKG fitxategia jatorrizko datuetatik"""
+def generate_gpkg(origen, destino, campos_csv):
+    """Sortu GPKG fitxategia jatorrizko datuetatik eremu deskribapenekin"""
     gpkg_file = os.path.join(gpkg_dir, f"{destino}.gpkg")
     if os.path.exists(gpkg_file):
         return gpkg_file
@@ -189,10 +192,46 @@ def generate_gpkg(origen, destino):
             ogr2ogr_command.append(os.path.join(ruta1, f"{origen}.shp"))
         subprocess.run(ogr2ogr_command, check=True)
 
+    # GPKG fitxategian eremu deskribapenak gehitu (campos_csv erabiliz)
+    if campos_csv:
+        #conn2 = sqlite3.connect(str(gpkg_file.resolve()))
+        conn2 = sqlite3.connect(gpkg_file)
+        conn2_c = conn2.cursor()
+
+        # gpkg_data_columns taula sortu (baldin ez badago)
+        conn2_c.execute("""
+        CREATE TABLE IF NOT EXISTS gpkg_data_columns (
+            table_name TEXT NOT NULL,
+            column_name TEXT NOT NULL,
+            name TEXT,
+            title TEXT,
+            description TEXT,
+            mime_type TEXT,
+            constraint_name TEXT,
+            PRIMARY KEY (table_name, column_name)
+        )
+        """)
+
+        # Eremu bakoitzaren deskribapena sartu comment moduan
+        for line in campos_csv.split('\n'):
+            if line.strip():
+                parts = [part.strip() for part in line.split(',')]
+                if len(parts) >= 4:
+                    description = f"eu: {parts[1].strip(chr(34))}, es: {parts[2].strip(chr(34))}, en: {parts[3].strip(chr(34))}"
+
+                    # gpkg_data_columns sartu / eguneratu
+                    conn2_c.execute("""
+                    INSERT OR REPLACE INTO gpkg_data_columns (table_name, column_name, description)
+                    VALUES (?, ?, ?)
+                    """, (destino, parts[0], description))
+
+        conn2.commit()
+        conn2.close()
+
     return gpkg_file
 
-def generate_shp(gpkg_file, destino):
-    """Sortu SHP fitxategia GPKG-tik"""
+def generate_shp(gpkg_file, destino, campos_csv):
+    """Sortu SHP fitxategia GPKG-tik eremu deskribapenekin"""
     shp_files = [f"{gpkg_dir}/{destino}.{ext}" for ext in ["shp", "shx", "dbf", "prj"]]
     for shp_file in shp_files:
         if os.path.exists(shp_file):
@@ -206,6 +245,17 @@ def generate_shp(gpkg_file, destino):
     ]
     subprocess.run(shp_command, check=True)
 
+    # README fitxategia sortu eremu deskribapenekin
+    readme_file = os.path.join(gpkg_dir, f"README_{destino}.txt")
+    with open(readme_file, 'w') as f:
+        f.write("Eremuen deskribapena / Descripción de los campos / Field Description:\n")
+        if campos_csv:
+            for line in campos_csv.split('\n'):
+                if line.strip():
+                    parts = [part.strip() for part in line.split(',')]
+                    if len(parts) >= 4:
+                        f.write(f"{parts[0]}: {parts[1].strip(chr(34))} / {parts[2].strip(chr(34))} / {parts[3].strip(chr(34))}\n")
+
     zip_file = os.path.join(ruta2, f"{gpkg_dir}/{destino}_SHP.zip")
     if os.path.exists(zip_file):
         os.remove(zip_file)
@@ -214,6 +264,8 @@ def generate_shp(gpkg_file, destino):
             if os.path.exists(shp_file):
                 zipf.write(shp_file, os.path.basename(shp_file))
                 os.remove(shp_file)
+        zipf.write(readme_file, os.path.basename(readme_file))
+        os.remove(readme_file)
 
     target_file = os.path.join(ruta2, f"{destino}.zip")
     if os.path.exists(target_file):
@@ -222,8 +274,8 @@ def generate_shp(gpkg_file, destino):
     if os.path.exists(zip_file):
         os.remove(zip_file)
 
-def generate_kml(gpkg_file, destino, namefield):
-    """Sortu KML fitxategia GPKG-tik"""
+def generate_kml(gpkg_file, destino, namefield, campos_csv):
+    """Sortu KML fitxategia GPKG-tik eremu deskribapenekin"""
     kml_file = os.path.join(gpkg_dir, f"{destino}.kml")
     if os.path.exists(kml_file):
         os.remove(kml_file)
@@ -236,6 +288,20 @@ def generate_kml(gpkg_file, destino, namefield):
         gpkg_file
     ]
     subprocess.run(kml_command, check=True)
+
+    # KML fitxategian eremu deskribapenak gehitu komentario gisa
+    if campos_csv:
+        with open(kml_file, 'r+') as f:
+            content = f.read()
+            f.seek(0, 0)
+            f.write("<!--\nEremuen deskribapena:\n")
+            for line in campos_csv.split('\n'):
+                if line.strip():
+                    parts = [part.strip() for part in line.split(',')]
+                    if len(parts) >= 4:
+                        f.write(f"{parts[0]}: EU - {parts[1]}, ES - {parts[2]}, EN - {parts[3]}\n")
+            f.write("-->\n" + content)
+
     kml_file2 = os.path.join(ruta2, f"{destino}.kml")
     if os.path.exists(kml_file2):
         os.remove(kml_file2)
@@ -243,8 +309,8 @@ def generate_kml(gpkg_file, destino, namefield):
     if os.path.exists(kml_file):
         os.remove(kml_file)
 
-def generate_geojson(gpkg_file, destino):
-    """Sortu GeoJSON fitxategia GPKG-tik"""
+def generate_geojson(gpkg_file, destino, campos_csv):
+    """Sortu GeoJSON fitxategia GPKG-tik eremu deskribapenekin"""
     geojson_file = os.path.join(gpkg_dir, f"{destino}.geojson")
     if os.path.exists(geojson_file):
         os.remove(geojson_file)
@@ -255,6 +321,26 @@ def generate_geojson(gpkg_file, destino):
         gpkg_file
     ]
     subprocess.run(geojson_command, check=True)
+
+    # GeoJSON fitxategian eremu deskribapenak gehitu _fieldDescriptions propietatean
+    if campos_csv:
+        with open(geojson_file, 'r+') as f:
+            data = json.load(f)
+            field_descriptions = {}
+            for line in campos_csv.split('\n'):
+                if line.strip():
+                    parts = [part.strip() for part in line.split(',')]
+                    if len(parts) >= 4:
+                        field_descriptions[parts[0]] = {
+                            "eu": parts[1],
+                            "es": parts[2],
+                            "en": parts[3]
+                        }
+            data['_fieldDescriptions'] = field_descriptions
+            f.seek(0)
+            json.dump(data, f, ensure_ascii=False, indent=2)
+            f.truncate()
+
     geojson_file2 = os.path.join(ruta2, f"{destino}.geojson")
     if os.path.exists(geojson_file2):
         os.remove(geojson_file2)
@@ -262,8 +348,8 @@ def generate_geojson(gpkg_file, destino):
     if os.path.exists(geojson_file):
         os.remove(geojson_file)
 
-def generate_csv(gpkg_file, destino):
-    """Sortu CSV fitxategia GPKG-tik"""
+def generate_csv(gpkg_file, destino, campos_csv):
+    """Sortu CSV fitxategia GPKG-tik eremu deskribapenekin"""
     csv_file = os.path.join(gpkg_dir, f"{destino}.csv")
     if os.path.exists(csv_file):
         os.remove(csv_file)
@@ -275,6 +361,18 @@ def generate_csv(gpkg_file, destino):
         gpkg_file
     ]
     subprocess.run(csv_command, check=True)
+
+    # README fitxategia sortu eremu deskribapenekin
+    readme_file = os.path.join(gpkg_dir, f"README_{destino}.txt")
+    with open(readme_file, 'w') as f:
+        f.write("Eremuen deskribapena / Descripción de los campos / Field Description:\n")
+        if campos_csv:
+            for line in campos_csv.split('\n'):
+                if line.strip():
+                    parts = [part.strip() for part in line.split(',')]
+                    if len(parts) >= 4:
+                        f.write(f"{parts[0]}: {parts[1].strip(chr(34))} / {parts[2].strip(chr(34))} / {parts[3].strip(chr(34))}\n")
+
     csv_file2 = os.path.join(ruta2, f"{destino}.csv")
     if os.path.exists(csv_file2):
         os.remove(csv_file2)
@@ -285,7 +383,9 @@ def generate_csv(gpkg_file, destino):
     zip_file = os.path.join(ruta2, f"{destino}_CSV.zip")
     with zipfile.ZipFile(zip_file, "w", zipfile.ZIP_DEFLATED) as zipf:
         zipf.write(csv_file2, os.path.basename(csv_file))
+        zipf.write(readme_file, os.path.basename(readme_file))
     os.remove(csv_file2)
+    os.remove(readme_file)
 
 def generate_datasets(sql):
     datasets = execute_sql(sql)
@@ -298,32 +398,28 @@ def generate_datasets(sql):
     start_time = time.time()
     processed_datasets = 0
 
-    for i, (name, origen, destino, extension, formato, namefield) in enumerate(datasets, start=1):
+    for i, (name, origen, destino, extension, formato, namefield, campos_csv) in enumerate(datasets, start=1):
         iteration_start = time.time()
         log(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {i}/{total_datasets} - {destino} - {name} - {formato} - ")
 
         try:
-            # 1. Lehenik eta behin GPKG fitxategia sortu
-            intermediate_gpkg = generate_gpkg(origen, destino)
+            # 1. Lehenik eta behin GPKG fitxategia sortu (campos_csv parametroa gehitu da)
+            intermediate_gpkg = generate_gpkg(origen, destino, campos_csv)
 
-            # 2. Formatuaren arabera prozesatu
+            # 2. Formatuaren arabera prozesatu (campos_csv parametroa gehitu da funtzio guztietan)
             if formato == "GPKG":
-                # GPKG kasuan, jatorrizko fitxategia helburuko kokalekura kopiatu
                 target_file = os.path.join(ruta2, f"{destino}.gpkg")
                 shutil.copy2(intermediate_gpkg, target_file)
-
+            elif formato == "SHP":
+                generate_shp(intermediate_gpkg, destino, campos_csv)
+            elif formato == "KML":
+                generate_kml(intermediate_gpkg, destino, namefield, campos_csv)
+            elif formato == "GeoJSON":
+                generate_geojson(intermediate_gpkg, destino, campos_csv)
+            elif formato == "CSV":
+                generate_csv(intermediate_gpkg, destino, campos_csv)
             else:
-                # Beste formatuetarako, ohiko prozesua
-                if formato == "SHP":
-                    generate_shp(intermediate_gpkg, destino)
-                elif formato == "KML":
-                    generate_kml(intermediate_gpkg, destino, namefield)
-                elif formato == "GeoJSON":
-                    generate_geojson(intermediate_gpkg, destino)
-                elif formato == "CSV":
-                    generate_csv(intermediate_gpkg, destino)
-                else:
-                    log(f"{formato} ez da onartzen.\n")
+                log(f"{formato} ez da onartzen.\n")
 
         except Exception as e:
             log(f"Errorea {destino} prozesatzean: {str(e)}\n")
@@ -335,7 +431,6 @@ def generate_datasets(sql):
         remaining_datasets = total_datasets - processed_datasets
         estimated_remaining = avg_time_per_dataset * remaining_datasets
 
-        # Denbora estimatua formatu irakurgarrian
         hours, rem = divmod(estimated_remaining, 3600)
         minutes, seconds = divmod(rem, 60)
         estimated_str = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
