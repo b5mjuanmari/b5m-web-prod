@@ -1,0 +1,20 @@
+INSPIREID,Eraikinaren INSPIRE identifikatzailea,Identificador INSPIRE del edificio,Building INSPIRE identifier
+ENDCONSTRU,Eraikuntzaren amaiera-data,Fecha de finalización de la construcción,Construction end date
+URL_CADAST,Kadastroaren URLa,URL del catastro,Cadastre URL
+ELEVATION,Altuera itsas mailarekiko,Altitud sobre el nivel del mar,Elevation above sea level
+DWELLINGS,Etxebizitza kopurua,Número de viviendas,Number of dwellings
+HEIGHTABOG,Goiko solairuen altuera,Altura de las plantas superiores,Height of upper floors
+FLOORABOGR,Goiko solairu kopurua,Número de plantas superiores,Number of upper floors
+HEIGHTBELG,Beheko solairuen altuera,Altura de las plantas inferiores,Height of lower floors
+FLOORBELGR,Beheko solairu kopurua,Número de plantas inferiores,Number of lower floors
+URL_PHOTO,Argazkiaren URLa,URL de la foto,Photo URL
+OFFICIALVA,Balio ofiziala,Valor oficial,Official value
+REFPERCENT,Erreferentzia ehunekoa,Porcentaje de referencia,Reference percentage
+VALUATIOND,Balorazio-data,Fecha de valoración,Valuation date
+URL_PARCEL,Lursailaren URLa,URL de la parcela,Parcel URL
+BUILDING_N,Eraikinaren izena,Nombre del edificio,Building name
+CURRENTUSE,Erabilera egungoa,Uso actual,Current use
+DIRPOS_E,Helbidea euskaraz,Dirección en euskera,Address in Basque
+DIRPOS_C,Helbidea gaztelaniaz,Dirección en castellano,Address in Spanish
+URL_B5M,B5M webgunerako esteka,Enlace al portal B5M,B5M portal link
+LOCALID,Tokiko identifikatzailea,Identificador local,Local identifier
