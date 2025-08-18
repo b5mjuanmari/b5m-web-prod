@@ -256,7 +256,7 @@ def generate_shp(gpkg_file, destino, campos_csv):
                     if len(parts) >= 4:
                         f.write(f"{parts[0].upper()}: {parts[1].strip(chr(34))} / {parts[2].strip(chr(34))} / {parts[3].strip(chr(34))}\n")
 
-    zip_file = os.path.join(ruta2, f"{gpkg_dir}/{destino}_SHP.zip")
+    zip_file = os.path.join(ruta2, f"{destino}_SHP.zip")
     if os.path.exists(zip_file):
         os.remove(zip_file)
     with zipfile.ZipFile(zip_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
@@ -266,13 +266,6 @@ def generate_shp(gpkg_file, destino, campos_csv):
                 os.remove(shp_file)
         zipf.write(readme_file, os.path.basename(readme_file))
         os.remove(readme_file)
-
-    target_file = os.path.join(ruta2, f"{destino}.zip")
-    if os.path.exists(target_file):
-        os.remove(target_file)
-    shutil.copy2(zip_file, target_file)
-    if os.path.exists(zip_file):
-        os.remove(zip_file)
 
 def generate_kml(gpkg_file, destino, namefield, campos_csv):
     """Sortu KML fitxategia GPKG-tik eremu deskribapenekin"""
