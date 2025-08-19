@@ -1,5 +1,14 @@
-MUNI,Udalerri kodea,Código municipal,Municipal code
-CADASTRALZONINGCODE,Katastro zonaren kodea,Código de zona catastral,Cadastral zoning code
-NATIONALCADASTRALREFRERENCE,Katastro erreferentzia nazionala,Referencia catastral nacional,National cadastral reference
-NAME,Katastro erreferentzia,Referencia catastral,Cadastral reference
-URLINFO,Informazio URLa,URL de información,Information URL
+GFA_DST_CP_LAND
+nationalcadastralreference,Erregistro katastralaren erreferentzia,Referencia catastral nacional,National cadastral reference
+name,Lurraldearen izena,Nombre del terreno,Name of the land
+muni,Udalerriaren kodea,Código municipal,Municipality code
+urlinfo,Informazio gehiagorako URLa,URL para más información,URL for additional information
+GFA_DST_CP_URBAN
+nationalcadastralreference,Erregistro katastralaren erreferentzia,Referencia catastral nacional,National cadastral reference
+name,Lurraldearen izena,Nombre del terreno,Name of the land
+muni,Udalerriaren kodea,Código municipal,Municipality code
+cadastralzoningcode,Katastroko zonifikazio kodea,Código de zonificación catastral,Cadastral zoning code
+urlinfo,Informazio gehiagorako URLa,URL para más información,URL for additional information
+GFA_DST_CP_ZONING
+muni,Udalerriaren kodea,Código municipal,Municipality code
+cadastralzoningcode,Katastroko zonifikazio kodea,Código de zonificación catastral,Cadastral zoning code
