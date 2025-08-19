@@ -99,7 +99,7 @@ def kargatu_shapefile_gpkg(sfp, gpkgp, gpkgt, gpkgs):
     except subprocess.CalledProcessError as e:
         log(f"Errorea gertatu da {sfp} shapefile-a GPKG fitxategian kargatzean: {e}")
 
-def generate_gpkg_cadastre(origen, gpkg_file):
+def generate_gpkg_cadastre(origen, gpkg_file, campos_csv):
     """Sortu katastroko GPKG fitxategia"""
     origen_lerroak = origen.splitlines()
     origen_dir = ruta1 + "/" + origen_lerroak[0]
@@ -123,6 +123,45 @@ def generate_gpkg_cadastre(origen, gpkg_file):
         # Shapefile bat GPKG fitxategi batean kargatu
         kargatu_shapefile_gpkg(shapefile_path, gpkg_file, gpkg_tab, gpkg_sel)
 
+    # GPKG fitxategian eremu deskribapenak gehitu (campos_csv erabiliz)
+    if campos_csv:
+        conn2 = sqlite3.connect(gpkg_file)
+        conn2_c = conn2.cursor()
+
+        # gpkg_data_columns taula sortu (baldin ez badago)
+        conn2_c.execute("""
+        CREATE TABLE IF NOT EXISTS gpkg_data_columns (
+            table_name TEXT NOT NULL,
+            column_name TEXT NOT NULL,
+            name TEXT,
+            title TEXT,
+            description TEXT,
+            mime_type TEXT,
+            constraint_name TEXT,
+            PRIMARY KEY (table_name, column_name)
+        )
+        """)
+
+        # Eremu bakoitzaren deskribapena sartu comment moduan
+        for line in campos_csv.split('\n'):
+            line3 = line[:3]
+            if line3 == "GFA":
+                destino2 = line
+                continue
+            if line.strip():
+                parts = [part.strip() for part in line.split(',')]
+                if len(parts) >= 4:
+                    description = f"{parts[1].strip(chr(34))} / {parts[2].strip(chr(34))} / {parts[3].strip(chr(34))}"
+
+                    # gpkg_data_columns sartu / eguneratu
+                    conn2_c.execute("""
+                    INSERT OR REPLACE INTO gpkg_data_columns (table_name, column_name, description)
+                    VALUES (?, ?, ?)
+                    """, (destino2, parts[0], description))
+
+        conn2.commit()
+        conn2.close()
+
     return gpkg_file
 
 def generate_gpkg(origen, destino, campos_csv):
@@ -133,7 +172,7 @@ def generate_gpkg(origen, destino, campos_csv):
 
     if origen.split('/')[0].lower() == "catastro":
         # Katastroaren kasu berezia
-        generate_gpkg_cadastre(origen, gpkg_file)
+        generate_gpkg_cadastre(origen, gpkg_file, campos_csv)
     elif origen.strip().lower().startswith("with"):
         # SQL sententzia exekutatu eta behin behineko CSV fitxategia sortu
         csv_file = os.path.join(gpkg_dir, f"{destino}.csv")
@@ -194,7 +233,6 @@ def generate_gpkg(origen, destino, campos_csv):
 
     # GPKG fitxategian eremu deskribapenak gehitu (campos_csv erabiliz)
     if campos_csv:
-        #conn2 = sqlite3.connect(str(gpkg_file.resolve()))
         conn2 = sqlite3.connect(gpkg_file)
         conn2_c = conn2.cursor()
 
