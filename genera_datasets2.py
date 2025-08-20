@@ -311,7 +311,7 @@ def generate_shp(gpkg_file, destino, campos_csv):
     # README fitxategia sortu eremu deskribapenekin
     readme_file = os.path.join(gpkg_dir, f"README_{destino}.txt")
     with open(readme_file, 'w') as f:
-        f.write("Eremuen deskribapena / Descripción de los campos / Field Description:\n")
+        f.write("KODE: Eremuen deskribapena / Descripción de los campos / Field Description:\n")
         for field in field_descriptions:
             f.write(f"{field['field_name'].upper()}: {field['description_eu']} / {field['description_es']} / {field['description_en']}\n")
 
@@ -363,7 +363,7 @@ def generate_kml(gpkg_file, destino, namefield, campos_csv):
             # Sortu deskribapenak KML formatuan
             desc_lines = [
                 '<description><![CDATA[',
-                'Eremuen deskribapena / Descripción de los campos / Field Description:'
+                'KODE: Eremuen deskribapena / Descripción de los campos / Field Description:'
             ]
 
             for field in field_descriptions:
@@ -465,7 +465,7 @@ def generate_csv(gpkg_file, destino, campos_csv):
     # README fitxategia sortu eremu deskribapenekin
     readme_file = os.path.join(gpkg_dir, f"README_{destino}.txt")
     with open(readme_file, 'w') as f:
-        f.write("Eremuen deskribapena / Descripción de los campos / Field Description:\n")
+        f.write("KODE: Eremuen deskribapena / Descripción de los campos / Field Description:\n")
         for field in field_descriptions:
             f.write(f"{field['field_name'].upper()}: {field['description_eu']} / {field['description_es']} / {field['description_en']}\n")
 
