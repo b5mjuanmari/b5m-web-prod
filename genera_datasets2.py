@@ -80,7 +80,6 @@ def execute_sql(query):
 
 def kargatu_shapefile_gpkg(sfp, gpkgp, gpkgt, gpkgs):
     """Shapefile bat GPKG fitxategi batean kargatu."""
-    #"-sql", "select herria as MUNI from " + sft,
     command = [
         "ogr2ogr",
         "-f", "GPKG",
@@ -99,14 +98,46 @@ def kargatu_shapefile_gpkg(sfp, gpkgp, gpkgt, gpkgs):
     except subprocess.CalledProcessError as e:
         log(f"Errorea gertatu da {sfp} shapefile-a GPKG fitxategian kargatzean: {e}")
 
+def parse_campos_csv(campos_csv):
+    """Analizatu campos_csv edukia, goiburua kontuan hartuta."""
+    if not campos_csv:
+        return [], ""
+
+    lines = campos_csv.strip().split('\n')
+
+    # Lehenengo lerroa goiburua da (GFA, GFB, etab.)
+    if not lines:
+        return [], ""
+
+    header = lines[0].strip()
+    field_descriptions = []
+
+    # Bigarren lerrotik aurrera daude eremu deskribapenak
+    for line in lines[1:]:
+        if line.strip():
+            parts = [part.strip().strip('"') for part in line.split(',')]
+            if len(parts) >= 4:
+                field_descriptions.append({
+                    'field_name': parts[0],
+                    'description_eu': parts[1],
+                    'description_es': parts[2],
+                    'description_en': parts[3]
+                })
+
+    return field_descriptions, header
+
 def generate_gpkg_cadastre(origen, gpkg_file, campos_csv):
     """Sortu katastroko GPKG fitxategia"""
+    field_descriptions, destino2 = parse_campos_csv(campos_csv)
+
     origen_lerroak = origen.splitlines()
     origen_dir = ruta1 + "/" + origen_lerroak[0]
     shapefiles = [f for f in os.listdir(origen_dir) if f.endswith('.shp')]
+
     for index, fitx_shp in enumerate(shapefiles, start=1):
         shapefile_path = os.path.join(origen_dir, fitx_shp)
         fitx_shp_oin = fitx_shp.split('.')[0]
+
         # Bilatu katea eta hurrengo lerroaren berri eman
         lerroak = origen.splitlines()
         j = 0
@@ -123,8 +154,8 @@ def generate_gpkg_cadastre(origen, gpkg_file, campos_csv):
         # Shapefile bat GPKG fitxategi batean kargatu
         kargatu_shapefile_gpkg(shapefile_path, gpkg_file, gpkg_tab, gpkg_sel)
 
-    # GPKG fitxategian eremu deskribapenak gehitu (campos_csv erabiliz)
-    if campos_csv:
+    # GPKG fitxategian eremu deskribapenak gehitu
+    if field_descriptions:
         conn2 = sqlite3.connect(gpkg_file)
         conn2_c = conn2.cursor()
 
@@ -142,22 +173,15 @@ def generate_gpkg_cadastre(origen, gpkg_file, campos_csv):
         )
         """)
 
-        # Eremu bakoitzaren deskribapena sartu comment moduan
-        for line in campos_csv.split('\n'):
-            line3 = line[:3]
-            if line3 == "GFA":
-                destino2 = line
-                continue
-            if line.strip():
-                parts = [part.strip() for part in line.split(',')]
-                if len(parts) >= 4:
-                    description = f"{parts[1].strip(chr(34))} / {parts[2].strip(chr(34))} / {parts[3].strip(chr(34))}"
+        # Eremu bakoitzaren deskribapena sartu
+        for field in field_descriptions:
+            description = f"{field['description_eu']} / {field['description_es']} / {field['description_en']}"
 
-                    # gpkg_data_columns sartu / eguneratu
-                    conn2_c.execute("""
-                    INSERT OR REPLACE INTO gpkg_data_columns (table_name, column_name, description)
-                    VALUES (?, ?, ?)
-                    """, (destino2, parts[0], description))
+            # gpkg_data_columns sartu / eguneratu
+            conn2_c.execute("""
+            INSERT OR REPLACE INTO gpkg_data_columns (table_name, column_name, description)
+            VALUES (?, ?, ?)
+            """, (destino2, field['field_name'], description))
 
         conn2.commit()
         conn2.close()
@@ -169,6 +193,8 @@ def generate_gpkg(origen, destino, campos_csv):
     gpkg_file = os.path.join(gpkg_dir, f"{destino}.gpkg")
     if os.path.exists(gpkg_file):
         return gpkg_file
+
+    field_descriptions, _ = parse_campos_csv(campos_csv)
 
     if origen.split('/')[0].lower() == "catastro":
         # Katastroaren kasu berezia
@@ -231,8 +257,8 @@ def generate_gpkg(origen, destino, campos_csv):
             ogr2ogr_command.append(os.path.join(ruta1, f"{origen}.shp"))
         subprocess.run(ogr2ogr_command, check=True)
 
-    # GPKG fitxategian eremu deskribapenak gehitu (campos_csv erabiliz)
-    if campos_csv:
+    # GPKG fitxategian eremu deskribapenak gehitu
+    if field_descriptions:
         conn2 = sqlite3.connect(gpkg_file)
         conn2_c = conn2.cursor()
 
@@ -250,18 +276,15 @@ def generate_gpkg(origen, destino, campos_csv):
         )
         """)
 
-        # Eremu bakoitzaren deskribapena sartu comment moduan
-        for line in campos_csv.split('\n'):
-            if line.strip():
-                parts = [part.strip() for part in line.split(',')]
-                if len(parts) >= 4:
-                    description = f"{parts[1].strip(chr(34))} / {parts[2].strip(chr(34))} / {parts[3].strip(chr(34))}"
+        # Eremu bakoitzaren deskribapena sartu
+        for field in field_descriptions:
+            description = f"{field['description_eu']} / {field['description_es']} / {field['description_en']}"
 
-                    # gpkg_data_columns sartu / eguneratu
-                    conn2_c.execute("""
-                    INSERT OR REPLACE INTO gpkg_data_columns (table_name, column_name, description)
-                    VALUES (?, ?, ?)
-                    """, (destino, parts[0], description))
+            # gpkg_data_columns sartu / eguneratu
+            conn2_c.execute("""
+            INSERT OR REPLACE INTO gpkg_data_columns (table_name, column_name, description)
+            VALUES (?, ?, ?)
+            """, (destino, field['field_name'], description))
 
         conn2.commit()
         conn2.close()
@@ -283,16 +306,14 @@ def generate_shp(gpkg_file, destino, campos_csv):
     ]
     subprocess.run(shp_command, check=True)
 
+    field_descriptions, _ = parse_campos_csv(campos_csv)
+
     # README fitxategia sortu eremu deskribapenekin
     readme_file = os.path.join(gpkg_dir, f"README_{destino}.txt")
     with open(readme_file, 'w') as f:
         f.write("Eremuen deskribapena / Descripción de los campos / Field Description:\n")
-        if campos_csv:
-            for line in campos_csv.split('\n'):
-                if line.strip():
-                    parts = [part.strip() for part in line.split(',')]
-                    if len(parts) >= 4:
-                        f.write(f"{parts[0].upper()}: {parts[1].strip(chr(34))} / {parts[2].strip(chr(34))} / {parts[3].strip(chr(34))}\n")
+        for field in field_descriptions:
+            f.write(f"{field['field_name'].upper()}: {field['description_eu']} / {field['description_es']} / {field['description_en']}\n")
 
     zip_file = os.path.join(ruta2, f"{destino}_SHP.zip")
     if os.path.exists(zip_file):
@@ -311,6 +332,8 @@ def generate_kml(gpkg_file, destino, namefield, campos_csv):
     if os.path.exists(kml_file):
         os.remove(kml_file)
 
+    field_descriptions, _ = parse_campos_csv(campos_csv)
+
     # 1. Lehenik KML fitxategia sortu ogr2ogr-rekin
     kml_command = [
         ogr2ogr_bin,
@@ -323,7 +346,7 @@ def generate_kml(gpkg_file, destino, namefield, campos_csv):
     subprocess.run(kml_command, check=True)
 
     # 2. Eremu deskribapenak gehitu Document elementuaren barruan
-    if campos_csv:
+    if field_descriptions:
         with open(kml_file, 'r+', encoding='utf-8') as f:
             content = f.read()
 
@@ -343,14 +366,11 @@ def generate_kml(gpkg_file, destino, namefield, campos_csv):
                 'Eremuen deskribapena / Descripción de los campos / Field Description:'
             ]
 
-            for line in campos_csv.split('\n'):
-                if line.strip():
-                    parts = [part.strip().strip('"') for part in line.split(',')]
-                    if len(parts) >= 4:
-                        desc_lines.append(
-                            f'{parts[0].upper()}: '
-                            f'{parts[1]} / {parts[2]} / {parts[3]}'
-                        )
+            for field in field_descriptions:
+                desc_lines.append(
+                    f"{field['field_name'].upper()}: "
+                    f"{field['description_eu']} / {field['description_es']} / {field['description_en']}"
+                )
 
             desc_lines.extend([']]></description>'])
             descriptions = '\n    '.join(desc_lines)
@@ -379,6 +399,8 @@ def generate_geojson(gpkg_file, destino, campos_csv):
     if os.path.exists(geojson_file):
         os.remove(geojson_file)
 
+    field_descriptions, _ = parse_campos_csv(campos_csv)
+
     # 1. Lehenik GeoJSON fitxategia sortu ogr2ogr-rekin
     geojson_command = [
         ogr2ogr_bin,
@@ -389,27 +411,23 @@ def generate_geojson(gpkg_file, destino, campos_csv):
     subprocess.run(geojson_command, check=True)
 
     # 2. Eremu deskribapenak gehitu JSON-aren egitura egokian
-    if campos_csv:
+    if field_descriptions:
         with open(geojson_file, 'r+', encoding='utf-8') as f:
             data = json.load(f)
 
-            # Sortu eremu deskribapenak (eremu-izenak LARRIZ)
-            field_descriptions = {}
-            for line in campos_csv.split('\n'):
-                if line.strip():
-                    parts = [part.strip() for part in line.split(',')]
-                    if len(parts) >= 4:
-                        eremu_izena = parts[0].upper()  # Eremu-izena LARRIZ bihurtu
-                        field_descriptions[eremu_izena] = {
-                            "eu": parts[1].strip('"'),
-                            "es": parts[2].strip('"'),
-                            "en": parts[3].strip('"')
-                        }
+            # Sortu eremu deskribapenak
+            field_desc_dict = {}
+            for field in field_descriptions:
+                field_desc_dict[field['field_name'].upper()] = {
+                    "eu": field['description_eu'],
+                    "es": field['description_es'],
+                    "en": field['description_en']
+                }
 
             # Eguneratu JSON egitura
             updated_data = {
                 "type": "FeatureCollection",
-                "_fieldDescriptions": field_descriptions,
+                "_fieldDescriptions": field_desc_dict,
                 **{k: v for k, v in data.items() if k not in ["type"]}
             }
 
@@ -442,16 +460,14 @@ def generate_csv(gpkg_file, destino, campos_csv):
     ]
     subprocess.run(csv_command, check=True)
 
+    field_descriptions, _ = parse_campos_csv(campos_csv)
+
     # README fitxategia sortu eremu deskribapenekin
     readme_file = os.path.join(gpkg_dir, f"README_{destino}.txt")
     with open(readme_file, 'w') as f:
         f.write("Eremuen deskribapena / Descripción de los campos / Field Description:\n")
-        if campos_csv:
-            for line in campos_csv.split('\n'):
-                if line.strip():
-                    parts = [part.strip() for part in line.split(',')]
-                    if len(parts) >= 4:
-                        f.write(f"{parts[0].upper()}: {parts[1].strip(chr(34))} / {parts[2].strip(chr(34))} / {parts[3].strip(chr(34))}\n")
+        for field in field_descriptions:
+            f.write(f"{field['field_name'].upper()}: {field['description_eu']} / {field['description_es']} / {field['description_en']}\n")
 
     csv_file2 = os.path.join(ruta2, f"{destino}.csv")
     if os.path.exists(csv_file2):
@@ -483,10 +499,10 @@ def generate_datasets(sql):
         log(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {i}/{total_datasets} - {destino} - {name} - {formato} - ")
 
         try:
-            # 1. Lehenik eta behin GPKG fitxategia sortu (campos_csv parametroa gehitu da)
+            # 1. Lehenik eta behin GPKG fitxategia sortu
             intermediate_gpkg = generate_gpkg(origen, destino, campos_csv)
 
-            # 2. Formatuaren arabera prozesatu (campos_csv parametroa gehitu da funtzio guztietan)
+            # 2. Formatuaren arabera prozesatu
             if formato == "GPKG":
                 target_file = os.path.join(ruta2, f"{destino}.gpkg")
                 shutil.copy2(intermediate_gpkg, target_file)
