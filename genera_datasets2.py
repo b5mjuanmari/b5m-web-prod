@@ -331,7 +331,7 @@ def generate_shp(gpkg_file, destino, campos_csv):
     with open(readme_file, 'w', encoding='utf-8') as f:
         f.write("KODE: Eremuen deskribapena / Descripción de los campos / Field Description:\n")
         for field in field_descriptions:
-            f.write(f"{field['field_name'].upper()}: {field['description_eu']} / {field['description_es']} / {field['description_en']}\n")
+            f.write(f"{field['field_name'].upper()[:10]}: {field['description_eu']} / {field['description_es']} / {field['description_en']}\n")
 
     # ZIP fitxategia hasieratu
     with zipfile.ZipFile(zip_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
