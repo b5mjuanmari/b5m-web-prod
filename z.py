@@ -1,32 +1,29 @@
-import os
 import csv
 
-# Direktorioa zehaztu
-directorio = "csv"  # Zure CSV fitxategien direktorioa hemen jarri
-
-# Direktorioan dauden CSV fitxategien zerrenda lortu
-csv_files = [f for f in os.listdir(directorio) if f.endswith('.csv')]
-
-# Goiburuaren zutabeak definitu
-header = ['field', 'fieldname_eu', 'fieldname_es', 'fieldname_en']
-
-# CSV fitxategi bakoitzari goiburua gehitu
-for csv_file in csv_files:
-    file_path = os.path.join(directorio, csv_file)
-
-    # Datuak irakurri
-    rows = []
-    with open(file_path, 'r', encoding='utf-8') as f:
+def irakurri_blokeak(csv_fitxategia, motak):
+    # CSV fitxategia irakurri
+    with open(csv_fitxategia, newline='', encoding="utf-8") as f:
         reader = csv.reader(f)
-        for row in reader:
-            rows.append(row)
+        next(reader)  # lehenengo errenkada saltatu (header)
 
-    # Goiburua gehitu eta fitxategia berridatzi
-    with open(file_path, 'w', encoding='utf-8', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(header)
-        writer.writerows(rows)
+        # CSV lerro guztiak memorian gorde
+        lerroak = list(reader)
 
-    print(f"Goiburua gehitu da: {csv_file}")
+    # Blokeak bilatu eta inprimatu
+    for mota in motak:
+        print(f"\n=== {mota} ===")
+        inprimatu = False
+        for lerro in lerroak:
+            if lerro[0] == mota:
+                inprimatu = True
+            elif lerro[0] in motak and lerro[0] != mota and inprimatu:
+                # hurrengo blokean gaude, gelditu
+                break
 
-print("Prozesua amaitu da. CSV fitxategi guztiei goiburua gehitu zaie.")
+            if inprimatu:
+                print(",".join(lerro))
+
+
+# Adibidez erabilera:
+mota = ["GFA_DST_CP_LAND", "GFA_DST_CP_URBAN", "GFA_DST_CP_ZONING"]
+irakurri_blokeak("csv/GFA_DSET_CP.csv", mota)
