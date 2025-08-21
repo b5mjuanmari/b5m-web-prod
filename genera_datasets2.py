@@ -299,39 +299,84 @@ def generate_gpkg(origen, destino, campos_csv):
     return gpkg_file
 
 def generate_shp(gpkg_file, destino, campos_csv):
-    """Sortu SHP fitxategia GPKG-tik eremu deskribapenekin"""
-    shp_files = [f"{gpkg_dir}/{destino}.{ext}" for ext in ["shp", "shx", "dbf", "prj"]]
-    for shp_file in shp_files:
-        if os.path.exists(shp_file):
-            os.remove(shp_file)
-
-    shp_command = [
-        ogr2ogr_bin,
-        "-f", "ESRI Shapefile",
-        shp_files[0],
-        gpkg_file
-    ]
-    subprocess.run(shp_command, check=True)
-
+    """Sortu SHP fitxategia GPKG-tik eremu deskribapenekin (taula anitzak ZIP bakarrean)"""
     field_descriptions, _ = parse_campos_csv(campos_csv)
+
+    # GPKG fitxategiko taula guztien zerrenda lortu
+    try:
+        conn = sqlite3.connect(gpkg_file)
+        cursor = conn.cursor()
+
+        # Lortu taula guztien zerrenda (geometry taulak)
+        cursor.execute("""
+        SELECT table_name
+        FROM gpkg_contents
+        WHERE data_type IN ('features', 'attributes')
+        """)
+
+        tables = [row[0] for row in cursor.fetchall()]
+        conn.close()
+
+    except Exception as e:
+        log(f"Errorea GPKG taulak irakurtzean: {e}")
+        tables = [destino]  # Fallback: taula bakarra erabili
+
+    # ZIP fitxategia sortu
+    zip_file = os.path.join(ruta2, f"{destino}_SHP.zip")
+    if os.path.exists(zip_file):
+        os.remove(zip_file)
 
     # README fitxategia sortu eremu deskribapenekin
     readme_file = os.path.join(gpkg_dir, f"README_{destino}.txt")
-    with open(readme_file, 'w') as f:
+    with open(readme_file, 'w', encoding='utf-8') as f:
         f.write("KODE: Eremuen deskribapena / Descripción de los campos / Field Description:\n")
         for field in field_descriptions:
             f.write(f"{field['field_name'].upper()}: {field['description_eu']} / {field['description_es']} / {field['description_en']}\n")
 
-    zip_file = os.path.join(ruta2, f"{destino}_SHP.zip")
-    if os.path.exists(zip_file):
-        os.remove(zip_file)
+    # ZIP fitxategia hasieratu
     with zipfile.ZipFile(zip_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for shp_file in shp_files:
-            if os.path.exists(shp_file):
-                zipf.write(shp_file, os.path.basename(shp_file))
-                os.remove(shp_file)
+        # Gehitu README fitxategia
         zipf.write(readme_file, os.path.basename(readme_file))
-        os.remove(readme_file)
+
+        # Prozesatu taula bakoitza
+        for table_name in tables:
+            # Shapefile fitxategien izenak sortu
+            shp_base_name = table_name if len(tables) > 1 else destino
+            shp_files = [f"{gpkg_dir}/{shp_base_name}.{ext}" for ext in ["shp", "shx", "dbf", "prj", "cpg"]]
+
+            # Ezabatu existitzen badira
+            for shp_file in shp_files:
+                if os.path.exists(shp_file):
+                    os.remove(shp_file)
+
+            # Shapefile-a sortu ogr2ogr erabiliz (taula zehatz bat)
+            shp_command = [
+                ogr2ogr_bin,
+                "-f", "ESRI Shapefile",
+                shp_files[0],  # .shp fitxategia
+                gpkg_file,
+                table_name  # Taula zehatza
+            ]
+
+            try:
+                subprocess.run(shp_command, check=True)
+
+                # Gehitu shapefile fitxategi guztiak ZIP-era
+                for shp_file in shp_files:
+                    if os.path.exists(shp_file):
+                        zip_path = os.path.basename(shp_file)
+
+                        zipf.write(shp_file, zip_path)
+                        # Garbitu behin behineko fitxategia
+                        os.remove(shp_file)
+
+            except subprocess.CalledProcessError as e:
+                log(f"Errorea Shapefile sortzean {table_name}: {e}")
+                continue
+
+        # Garbitu README fitxategia
+        if os.path.exists(readme_file):
+            os.remove(readme_file)
 
 def generate_kml(gpkg_file, destino, namefield, campos_csv):
     """Sortu KML fitxategia GPKG-tik eremu deskribapenekin"""
