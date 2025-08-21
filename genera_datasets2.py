@@ -174,14 +174,21 @@ def generate_gpkg_cadastre(origen, gpkg_file, campos_csv):
         """)
 
         # Eremu bakoitzaren deskribapena sartu
-        for field in field_descriptions:
-            description = f"{field['description_eu']} / {field['description_es']} / {field['description_en']}"
+        for line in campos_csv.split('\n'):
+            line3 = line[:3]
+            if line3 == "GFA" or line == "field,fieldname_eu,fieldname_es,fieldname_en":
+                destino2 = line
+                continue
+            if line.strip():
+                parts = [part.strip() for part in line.split(',')]
+                if len(parts) >= 4:
+                    description = f"{parts[1].strip(chr(34))} / {parts[2].strip(chr(34))} / {parts[3].strip(chr(34))}"
 
-            # gpkg_data_columns sartu / eguneratu
-            conn2_c.execute("""
-            INSERT OR REPLACE INTO gpkg_data_columns (table_name, column_name, description)
-            VALUES (?, ?, ?)
-            """, (destino2, field['field_name'], description))
+                    # gpkg_data_columns sartu / eguneratu
+                    conn2_c.execute("""
+                    INSERT OR REPLACE INTO gpkg_data_columns (table_name, column_name, description)
+                    VALUES (?, ?, ?)
+                    """, (destino2, parts[0], description))
 
         conn2.commit()
         conn2.close()
