@@ -13,6 +13,7 @@ select
   trim(initcap(substr(a.subtipo, 1, instr(a.subtipo, ' / ') - 1))) as subtype_eu,
   trim(initcap(substr(a.subtipo, instr(a.subtipo, ' / ') + 3))) as subtype_es,
   a.nivel as "LEVEL",
+  a.oculto as hidden,
   a.idnomcuenca as b5midnamebasin,
   a.cuenca_e as basin_eu,
   a.cuenca_c as basin_es,
