@@ -1,0 +1,17 @@
+field,fieldname_en
+b5mcode,The catalogue item code
+name,River name
+name_eu,River name in Basque
+name_es,River name in Spanish
+b5midnameothers,Other name identifiers
+name_others_eu,Other names in Basque
+name_others_es,Other names in Spanish
+subtype_eu,River subtype in Basque
+subtype_es,River subtype in Spanish
+LEVEL,Level
+b5midnamebasin,Basin name identifier
+basin_eu,Basin name in Basque
+basin_es,Basin name in Spanish
+b5midut,B5M record identifier
+b5midname,B5M name identifier
+geom,Geometry (line)

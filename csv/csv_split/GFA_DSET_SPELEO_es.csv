@@ -1,0 +1,28 @@
+field,fieldname_es
+b5mcode,El código del elemento en el catálogo
+name,Nombre oficial
+name_eu,Nombre en euskera
+name_es,Nombre en castellano
+synomym,Sinónimo
+type_eu,Tipo en euskera
+type_es,Tipo en castellano
+type_en,Tipo en inglés
+class_eu,Nombre de la categoría en euskera
+class_es,Nombre de la categoría en castellano
+class_en,Nombre de la categoría en inglés
+origin_eu,Origen en euskera
+origin_es,Origen en castellano
+origin_en,Origen en inglés
+codmuni,Código municipal
+muni_eu,Nombre del municipio en euskera
+muni_es,Nombre del municipio en castellano
+heightdifference_m,Desnivel (en metros)
+length_m,Desarrollo (en metros)
+massif,Macizo
+zone,Zona
+x_etrs89utm30N,Coordenada X (ETRS89/UTM30N)
+y_etrs89utm30N,Coordenada Y (ETRS89/UTM30N)
+altitude_m,Altitud (en metros)
+url_eu,Enlace web en euskera
+url_es,Enlace web en castellano
+geom,Geometría (coordenadas espaciales)

@@ -1,0 +1,28 @@
+field,fieldname_eu
+b5mcode,Katalogoko elementuaren kodea
+name,Izen ofiziala
+name_eu,Izena euskaraz
+name_es,Izena gaztelaniaz
+synomym,Sinonimoa
+type_eu,Mota euskaraz
+type_es,Mota gaztelaniaz
+type_en,Mota ingelesez
+class_eu,Kategoriaren izena euskaraz
+class_es,Kategoriaren izena gaztelaniaz
+class_en,Kategoriaren izena ingelesez
+origin_eu,Jatorria euskaraz
+origin_es,Jatorria gaztelaniaz
+origin_en,Jatorria ingelesez
+codmuni,Udalerri kodea
+muni_eu,Udalerriaren izena euskaraz
+muni_es,Udalerriaren izena gaztelaniaz
+heightdifference_m,Desnibela (metroetan)
+length_m,Garapena (metroetan)
+massif,Mazisoa
+zone,Eremua
+x_etrs89utm30N,X koordenatua (ETRS89/UTM30N)
+y_etrs89utm30N,Y koordenatua (ETRS89/UTM30N)
+altitude_m,Altuera (metroetan)
+url_eu,Web esteka euskaraz
+url_es,Web esteka gaztelaniaz
+geom,Geometria (koordenatuak espazialak)

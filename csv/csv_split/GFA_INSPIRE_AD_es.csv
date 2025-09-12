@@ -1,0 +1,8 @@
+field,fieldname_es
+INSPIREID,Identificador INSPIRE de la dirección
+DIRPOS_E,Dirección en euskera
+DIRPOS_C,Dirección en castellano
+IDNOMBRE,Identificador numérico del nombre
+NOMBRE_C,Nombre en castellano
+NOMBRE_E,Nombre en euskera
+PORTAL,Número de portal

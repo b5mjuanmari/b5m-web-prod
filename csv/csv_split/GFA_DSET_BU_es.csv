@@ -1,0 +1,35 @@
+field,fieldname_es
+b5mcode,Código del edificio
+name,Dirección completa del edificio
+name_eu,Dirección del edificio en euskera
+name_es,Dirección del edificio en castellano
+type_eu,Tipo de edificio en euskera
+type_es,Tipo de edificio en castellano
+type_en,Tipo de edificio en inglés
+subtype_eu,Subtipo de edificio en euskera
+subtype_es,Subtipo de edificio en castellano
+subtype_en,Subtipo de edificio en inglés
+codmuni,Código municipal
+muni_eu,Nombre del municipio en euskera
+muni_es,Nombre del municipio en castellano
+codstreet,Código de calle
+street_eu,Nombre de la calle en euskera
+street_es,Nombre de la calle en castellano
+house_number,Número de portal
+bis,Código bis
+postcode,Código postal
+accessory,Accesorio
+block,Bloque
+coddistr,Código de distrito
+codsec,Código de sección
+b5midnamebuilding,Identificador del nombre del edificio
+name_building_eu,Nombre del edificio en euskera
+name_building_es,Nombre del edificio en castellano
+b5midnamebuilingothers,Otros identificadores de nombre del edificio
+name_building_others_eu,Otros nombres del edificio en euskera
+average_height,Altura media (m)
+max_height,Altura máxima (m)
+date_construction,Fecha de construcción
+b5midut,Identificador del registro B5M
+b5midaddress,Identificador de dirección
+geom,Geometría (polígono)

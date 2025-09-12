@@ -1,0 +1,21 @@
+field,fieldname_en
+INSPIREID,Building INSPIRE identifier
+ENDCONSTRU,Construction end date
+URL_CADAST,Cadastre URL
+ELEVATION,Elevation above sea level
+DWELLINGS,Number of dwellings
+HEIGHTABOG,Height of upper floors
+FLOORABOGR,Number of upper floors
+HEIGHTBELG,Height of lower floors
+FLOORBELGR,Number of lower floors
+URL_PHOTO,Photo URL
+OFFICIALVA,Official value
+REFPERCENT,Reference percentage
+VALUATIOND,Valuation date
+URL_PARCEL,Parcel URL
+BUILDING_N,Building name
+CURRENTUSE,Current use
+DIRPOS_E,Address in Basque
+DIRPOS_C,Address in Spanish
+URL_B5M,B5M portal link
+LOCALID,Local identifier

@@ -1,0 +1,6 @@
+field,fieldname_es
+INSPIREID,Identificador INSPIRE de la unidad administrativa
+NAME,Nombre de la unidad administrativa
+NLEVELNAME,Nombre del nivel de la unidad administrativa
+IDNOMBRE,Identificador numérico del nombre
+CODMUNI,Código municipal

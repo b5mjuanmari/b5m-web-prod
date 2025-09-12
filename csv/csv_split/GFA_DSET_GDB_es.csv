@@ -1,0 +1,8 @@
+field,fieldname_es
+name,Nombre del punto geodésico
+codmuni,Código municipal
+muni_eu,Nombre del municipio en euskera
+muni_es,Nombre del municipio en castellano
+type,Tipo de punto geodésico
+url,URL de información
+geom,Geometría (punto)

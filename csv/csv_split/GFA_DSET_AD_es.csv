@@ -1,0 +1,29 @@
+field,fieldname_es
+b5mcode,El código del elemento en el catálogo
+name,Dirección completa
+name_eu,Dirección en euskera
+name_es,Dirección en castellano
+type_eu,Tipo en euskera
+type_es,Tipo en castellano
+type_en,Tipo en inglés
+codmuni,Código municipal
+muni_eu,Nombre del municipio en euskera
+muni_es,Nombre del municipio en castellano
+codstreet,Código de calle
+street_eu,Nombre de la calle en euskera
+street_es,Nombre de la calle en castellano
+house_number,Número de portal
+bis,Código bis
+postcode,Código postal
+accessory,Accesorio
+block,Bloque
+coddistri,Código de distrito
+codsec,Código de sección
+name_building_eu,Nombre del edificio en euskera
+name_building_es,Nombre del edificio en castellano
+x_cen_etrs89,Coordenada X del centroide (ETRS89)
+y_cen_etrs89,Coordenada Y del centroide (ETRS89)
+cen_lonlat,Longitud/latitud del centroide (WGS84)
+bbox_lonlat,Coordenadas del bounding box (WGS84)
+b5midname,Identificador de nombre B5M
+geom,Geometría (punto central)

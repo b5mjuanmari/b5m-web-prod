@@ -1,0 +1,35 @@
+field,fieldname_eu
+b5mcode,Eraikinaren kodea
+name,Eraikinaren helbide osoa
+name_eu,Eraikinaren helbidea euskaraz
+name_es,Eraikinaren helbidea gaztelaniaz
+type_eu,Eraikin mota euskaraz
+type_es,Eraikin mota gaztelaniaz
+type_en,Eraikin mota ingelesez
+subtype_eu,Eraikin azpimota euskaraz
+subtype_es,Eraikin azpimota gaztelaniaz
+subtype_en,Eraikin azpimota ingelesez
+codmuni,Udalerri kodea
+muni_eu,Udalerriaren izena euskaraz
+muni_es,Udalerriaren izena gaztelaniaz
+codstreet,Kale kodea
+street_eu,Kalearen izena euskaraz
+street_es,Kalearen izena gaztelaniaz
+house_number,Etxe zenbakia
+bis,Bis kodea
+postcode,Posta kodea
+accessory,Osagarria
+block,Blokea
+coddistr,Barruti kodea
+codsec,Atal kodea
+b5midnamebuilding,Eraikinaren izen identifikadorea
+name_building_eu,Eraikinaren izena euskaraz
+name_building_es,Eraikinaren izena gaztelaniaz
+b5midnamebuilingothers,Eraikinaren beste izen identifikadoreak
+name_building_others_eu,Eraikinaren beste izenak euskaraz
+average_height,Altuera bataz bestekoa (m)
+max_height,Gehienezko altuera (m)
+date_construction,Eraikuntza data
+b5midut,B5M erregistroaren identifikadorea
+b5midaddress,Helbide identifikadorea
+geom,Geometria (poligonoa)

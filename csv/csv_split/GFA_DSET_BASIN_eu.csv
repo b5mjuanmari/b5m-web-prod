@@ -1,0 +1,8 @@
+field,fieldname_eu
+b5mcode,Katalogoko elementuaren kodea
+name,Arroaren izena
+name_eu,Arroaren izena euskaraz
+name_es,Arroaren izena gaztelaniaz
+b5midut,B5M erregistroaren identifikadorea
+b5midname,B5M izen identifikadorea
+geom,Geometria (poligonoa)

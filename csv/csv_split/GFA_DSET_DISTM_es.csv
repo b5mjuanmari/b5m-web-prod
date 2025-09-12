@@ -1,0 +1,16 @@
+field,fieldname_es
+b5mcode,Código B5M
+codmuni1,Código municipal (1)
+muni1_eu,Nombre del municipio en euskera (1)
+muni1_es,Nombre del municipio en castellano (1)
+codregion1,Código de región (1)
+region1_eu,Nombre de la región en euskera (1)
+region1_es,Nombre de la región en castellano (1)
+codmuni2,Código municipal (2)
+muni2_eu,Nombre del municipio en euskera (2)
+muni2_es,Nombre del municipio en castellano (2)
+codregion2,Código de región (2)
+region2_eu,Nombre de la región en euskera (2)
+region2_es,Nombre de la región en castellano (2)
+distance_km,Distancia (km)
+datecalculation,Fecha de cálculo

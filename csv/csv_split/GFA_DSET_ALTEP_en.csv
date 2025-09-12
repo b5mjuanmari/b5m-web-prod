@@ -1,0 +1,8 @@
+field,fieldname_en
+b5midut,B5M record identifier
+name,Altitude value
+altimetry_value,Altitude value
+type_eu,Altitude type in Basque
+type_es,Altitude type in Spanish
+type_en,Altitude type in English
+geom,Geometry (point)

@@ -1,0 +1,7 @@
+field,fieldname_es
+INSPIREID,Identificador INSPIRE de la parcela
+LABEL,Etiqueta o número de referencia
+NCADASTREF,Número de referencia catastral
+AREAVALUE,Área en metros cuadrados
+BEGINLIFES,Fecha de creación
+URL_CADAST,URL del catastro

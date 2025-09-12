@@ -1,0 +1,8 @@
+field,fieldname_en
+b5mcode,The catalogue item code
+name,Basin name
+name_eu,Basin name in Basque
+name_es,Basin name in Spanish
+b5midut,B5M record identifier
+b5midname,B5M name identifier
+geom,Geometry (polygon)

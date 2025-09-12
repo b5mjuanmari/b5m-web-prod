@@ -1,0 +1,9 @@
+field,fieldname_en
+b5mcode,The catalogue item code
+name,Railway name
+name_eu,Railway name in Basque
+name_es,Railway name in Spanish
+bridge_tunnel,Bridge/tunnel
+b5midut,B5M record identifier
+b5midname,B5M name identifier
+geom,Geometry (line)

@@ -1,0 +1,15 @@
+field,fieldname_eu
+GFA_DST_CP_LAND,Landalur
+nationalcadastralreference,Erregistro katastralaren erreferentzia
+name,Lurraldearen izena
+muni,Udalerriaren kodea
+urlinfo,Informazio gehiagorako URLa
+GFA_DST_CP_URBAN,Hirigune
+nationalcadastralreference,Erregistro katastralaren erreferentzia
+name,Lurraldearen izena
+muni,Udalerriaren kodea
+cadastralzoningcode,Katastroko zonifikazio kodea
+urlinfo,Informazio gehiagorako URLa
+GFA_DST_CP_ZONING,Eremuak
+muni,Udalerriaren kodea
+cadastralzoningcode,Katastroko zonifikazio kodea

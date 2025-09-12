@@ -1,0 +1,35 @@
+field,fieldname_en
+b5mcode,The catalogue item code
+name,Landmark name
+codetype,Code type
+type_eu,Type in Basque
+type_es,Type in Spanish
+type_en,Type in English
+codeprecission,Precision code
+precission_eu,Precision in Basque
+precissioncomment_eu,Precision comment in Basque
+precission_es,Precision in Spanish
+precissioncomment_es,Precision comment in Spanish
+precission_en,Precision in English
+precissioncomment_en,Precision comment in English
+location,Location
+locationcomment_eu,Location comment in Basque
+locationcomment_es,Location comment in Spanish
+codecondition,Condition code
+condition_eu,Condition in Basque
+condition_es,Condition in Spanish
+condition_en,Condition in English
+codetypology,Typology code
+typology_eu,Typology in Basque
+typology_es,Typology in Spanish
+typology_en,Typology in English
+inspectiondate,Inspection date
+codenclaves,Enclave codes
+enclaves,Enclaves
+municipalities,Municipalities
+b5midacts,Acts
+landmarknumber,Landmark number
+boundaryline_eu,Boundary line in Basque
+boundaryline_es,Boundary line in Spanish
+b5midut,B5M record identifier
+wkt,Geometry (WKT format)

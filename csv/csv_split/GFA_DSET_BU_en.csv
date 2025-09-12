@@ -1,0 +1,35 @@
+field,fieldname_en
+b5mcode,Building code
+name,Full building address
+name_eu,Building address in Basque
+name_es,Building address in Spanish
+type_eu,Building type in Basque
+type_es,Building type in Spanish
+type_en,Building type in English
+subtype_eu,Building subtype in Basque
+subtype_es,Building subtype in Spanish
+subtype_en,Building subtype in English
+codmuni,Municipal code
+muni_eu,Municipality name in Basque
+muni_es,Municipality name in Spanish
+codstreet,Street code
+street_eu,Street name in Basque
+street_es,Street name in Spanish
+house_number,House number
+bis,Bis code
+postcode,Postal code
+accessory,Accessory
+block,Block
+coddistr,District code
+codsec,Section code
+b5midnamebuilding,Building name identifier
+name_building_eu,Building name in Basque
+name_building_es,Building name in Spanish
+b5midnamebuilingothers,Other building name identifiers
+name_building_others_eu,Other building names in Basque
+average_height,Average height (m)
+max_height,Maximum height (m)
+date_construction,Construction date
+b5midut,B5M record identifier
+b5midaddress,Address identifier
+geom,Geometry (polygon)

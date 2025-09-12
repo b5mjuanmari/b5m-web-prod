@@ -1,0 +1,15 @@
+field,fieldname_es
+GFA_DST_CP_LAND,Rural
+nationalcadastralreference,Referencia catastral nacional
+name,Nombre del terreno
+muni,Código municipal
+urlinfo,URL para más información
+GFA_DST_CP_URBAN,Urbano
+nationalcadastralreference,Referencia catastral nacional
+name,Nombre del terreno
+muni,Código municipal
+cadastralzoningcode,Código de zonificación catastral
+urlinfo,URL para más información
+GFA_DST_CP_ZONING,Zonas
+muni,Código municipal
+cadastralzoningcode,Código de zonificación catastral

@@ -1,0 +1,35 @@
+field,fieldname_eu
+b5mcode,Katalogoko elementuaren kodea
+name,Mugaren izena
+codetype,Kode mota
+type_eu,Mota euskaraz
+type_es,Mota gaztelaniaz
+type_en,Mota ingelesez
+codeprecission,Doitasun kodea
+precission_eu,Doitasuna euskaraz
+precissioncomment_eu,Doitasunaren iruzkina euskaraz
+precission_es,Doitasuna gaztelaniaz
+precissioncomment_es,Doitasunaren iruzkina gaztelaniaz
+precission_en,Doitasuna ingelesez
+precissioncomment_en,Doitasunaren iruzkina ingelesez
+location,Kokalekua
+locationcomment_eu,Kokalekuaren iruzkina euskaraz
+locationcomment_es,Kokalekuaren iruzkina gaztelaniaz
+codecondition,Egoera kodea
+condition_eu,Egoera euskaraz
+condition_es,Egoera gaztelaniaz
+condition_en,Egoera ingelesez
+codetypology,Tipologia kodea
+typology_eu,Tipologia euskaraz
+typology_es,Tipologia gaztelaniaz
+typology_en,Tipologia ingelesez
+inspectiondate,Azterketa data
+codenclaves,Enklabe kodeak
+enclaves,Enklabeak
+municipalities,Udalerriak
+b5midacts,Aktak
+landmarknumber,Muga zenbakia
+boundaryline_eu,Muga-lerroa euskaraz
+boundaryline_es,Muga-lerroa gaztelaniaz
+b5midut,B5M erregistroaren identifikadorea
+wkt,Geometria (WKT formatuan)

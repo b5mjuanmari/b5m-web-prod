@@ -1,0 +1,21 @@
+field,fieldname_es
+INSPIREID,Identificador INSPIRE del edificio
+ENDCONSTRU,Fecha de finalización de la construcción
+URL_CADAST,URL del catastro
+ELEVATION,Altitud sobre el nivel del mar
+DWELLINGS,Número de viviendas
+HEIGHTABOG,Altura de las plantas superiores
+FLOORABOGR,Número de plantas superiores
+HEIGHTBELG,Altura de las plantas inferiores
+FLOORBELGR,Número de plantas inferiores
+URL_PHOTO,URL de la foto
+OFFICIALVA,Valor oficial
+REFPERCENT,Porcentaje de referencia
+VALUATIOND,Fecha de valoración
+URL_PARCEL,URL de la parcela
+BUILDING_N,Nombre del edificio
+CURRENTUSE,Uso actual
+DIRPOS_E,Dirección en euskera
+DIRPOS_C,Dirección en castellano
+URL_B5M,Enlace al portal B5M
+LOCALID,Identificador local

@@ -1,0 +1,18 @@
+field,fieldname_es
+b5mcode,El código del elemento en el catálogo
+name,Nombre del punto kilométrico
+name_eu,Nombre del punto kilométrico en euskera
+name_es,Nombre del punto kilométrico en castellano
+kp,Punto kilométrico
+b5code_road,Código de la carretera
+road_name_eu,Nombre de la carretera en euskera
+road_name_es,Nombre de la carretera en castellano
+way_eu,Dirección en euskera
+way_es,Dirección en castellano
+way_en,Dirección en inglés
+codmuni,Código municipal
+muni_eu,Nombre del municipio en euskera
+muni_es,Nombre del municipio en castellano
+b5midut,Identificador del registro B5M
+b5midname,Identificador de nombre B5M
+geom,Geometría (punto)

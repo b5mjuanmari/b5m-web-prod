@@ -1,0 +1,21 @@
+field,fieldname_eu
+b5mcode,Katalogoko elementuaren kodea
+name,Muga-lerroaren izena
+name_eu,Muga-lerroaren izena euskaraz
+name_es,Muga-lerroaren izena gaztelaniaz
+codenclave1,Enklabe kodea (1)
+enclave1,Enklabea (1)
+muni1,Udalerria (1)
+codenclave2,Enklabe kodea (2)
+enclave2,Enklabea (2)
+muni2,Udalerria (2)
+linkact,Aktaren esteka
+linkfieldlog,Egunerokoaren esteka
+numlandmarks,Muga kopurua
+comment_eu,Iruzkina euskaraz
+comment_es,Iruzkina gaztelaniaz
+validation_date,Balioztatze data
+b5midact,Aktaren identifikadorea
+b5middocact,Aktaren dokumentu identifikadorea
+b5midfieldlog,Egunerokoaren identifikadorea
+geom,Geometria (lerroa)

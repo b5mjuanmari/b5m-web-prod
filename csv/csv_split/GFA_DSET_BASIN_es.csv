@@ -1,0 +1,8 @@
+field,fieldname_es
+b5mcode,El código del elemento en el catálogo
+name,Nombre de la cuenca
+name_eu,Nombre de la cuenca en euskera
+name_es,Nombre de la cuenca en castellano
+b5midut,Identificador del registro B5M
+b5midname,Identificador de nombre B5M
+geom,Geometría (polígono)

@@ -1,0 +1,18 @@
+field,fieldname_es
+b5mcode,Código del edificio
+name,Nombre del ayuntamiento
+name_eu,Nombre del ayuntamiento en euskera
+name_es,Nombre del ayuntamiento en castellano
+codmuni,Código municipal
+muni_eu,Nombre del municipio en euskera
+muni_es,Nombre del municipio en castellano
+codstreet,Código de calle
+street_eu,Nombre de la calle en euskera
+street_es,Nombre de la calle en castellano
+house_number,Número de portal
+bis,Código bis
+postcode,Código postal
+b5midnamebuilding,Identificador del nombre del edificio
+b5midut,Identificador del registro B5M
+b5midaddress,Identificador de dirección
+geom,Geometría (punto central)

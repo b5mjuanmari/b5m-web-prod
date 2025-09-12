@@ -1,0 +1,14 @@
+field,fieldname_en
+b5mcode,The catalogue item code
+name,Beach name
+name_eu,Beach name in Basque
+name_es,Beach name in Spanish
+codmuni,Municipal code
+munis_eu,Municipality name in Basque
+munis_es,Municipality name in Spanish
+type_eu,Beach type in Basque
+type_es,Beach type in Spanish
+type_en,Beach type in English
+b5midut,B5M record identifier
+b5midname,B5M name identifier
+geom,Geometry (polygon)

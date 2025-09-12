@@ -1,0 +1,28 @@
+field,fieldname_en
+b5mcode,The catalogue item code
+name,Official name
+name_eu,Name in Basque
+name_es,Name in Spanish
+synomym,Synonym
+type_eu,Type in Basque
+type_es,Type in Spanish
+type_en,Type in English
+class_eu,Category name in Basque
+class_es,Category name in Spanish
+class_en,Category name in English
+origin_eu,Origin in Basque
+origin_es,Origin in Spanish
+origin_en,Origin in English
+codmuni,Municipal code
+muni_eu,Municipality name in Basque
+muni_es,Municipality name in Spanish
+heightdifference_m,Height difference (in meters)
+length_m,Length (in meters)
+massif,Massif
+zone,Zone
+x_etrs89utm30N,X coordinate (ETRS89/UTM30N)
+y_etrs89utm30N,Y coordinate (ETRS89/UTM30N)
+altitude_m,Altitude (in meters)
+url_eu,Web link in Basque
+url_es,Web link in Spanish
+geom,Geometry (spatial coordinates)

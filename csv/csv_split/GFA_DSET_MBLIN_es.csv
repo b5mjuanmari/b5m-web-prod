@@ -1,0 +1,21 @@
+field,fieldname_es
+b5mcode,El código del elemento en el catálogo
+name,Nombre de la línea de límite
+name_eu,Nombre de la línea de límite en euskera
+name_es,Nombre de la línea de límite en castellano
+codenclave1,Código de enclave (1)
+enclave1,Enclave (1)
+muni1,Municipio (1)
+codenclave2,Código de enclave (2)
+enclave2,Enclave (2)
+muni2,Municipio (2)
+linkact,Enlace al acta
+linkfieldlog,Enlace al cuaderno de campo
+numlandmarks,Número de mojones
+comment_eu,Comentario en euskera
+comment_es,Comentario en castellano
+validation_date,Fecha de validación
+b5midact,Identificador del acta
+b5middocact,Identificador del documento del acta
+b5midfieldlog,Identificador del cuaderno de campo
+geom,Geometría (línea)

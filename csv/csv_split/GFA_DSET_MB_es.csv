@@ -1,0 +1,14 @@
+field,fieldname_es
+b5mcode,El código del elemento en el catálogo
+codmuni,Código municipal
+codmuniine,Código INE
+name,Nombre del municipio
+name_eu,Nombre del municipio en euskera
+name_es,Nombre del municipio en castellano
+enclave_eu,Nombre del enclave en euskera
+enclave_es,Nombre del enclave en castellano
+region_eu,Nombre de la región en euskera
+region_es,Nombre de la región en castellano
+b5midut,Identificador del registro B5M
+b5midname,Identificador de nombre B5M
+geom,Geometría (polígono)

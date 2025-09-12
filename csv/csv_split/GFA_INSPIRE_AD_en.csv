@@ -1,0 +1,8 @@
+field,fieldname_en
+INSPIREID,Address INSPIRE identifier
+DIRPOS_E,Address in Basque
+DIRPOS_C,Address in Spanish
+IDNOMBRE,Numerical name identifier
+NOMBRE_C,Name in Spanish
+NOMBRE_E,Name in Basque
+PORTAL,Portal number

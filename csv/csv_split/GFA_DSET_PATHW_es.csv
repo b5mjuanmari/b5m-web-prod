@@ -1,0 +1,17 @@
+field,fieldname_es
+b5mcode,El código del elemento en el catálogo
+name,Nombre del vial
+name_eu,Nombre del vial en euskera
+name_es,Nombre del vial en castellano
+type_eu,Tipo de vial en euskera
+type_es,Tipo de vial en castellano
+codmuni,Código municipal
+codvial,Código de vial
+bridge_tunnel,Puente/túnel
+description_eu,Descripción en euskera
+description_es,Descripción en castellano
+observation_eu,Observación en euskera
+observation_es,Observación en castellano
+b5midut,Identificador del registro B5M
+b5midname,Identificador de nombre B5M
+geom,Geometría (línea)

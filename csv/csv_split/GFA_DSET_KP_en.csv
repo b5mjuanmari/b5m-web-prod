@@ -1,0 +1,18 @@
+field,fieldname_en
+b5mcode,The catalogue item code
+name,Kilometer point name
+name_eu,Kilometer point name in Basque
+name_es,Kilometer point name in Spanish
+kp,Kilometer point
+b5code_road,Road code
+road_name_eu,Road name in Basque
+road_name_es,Road name in Spanish
+way_eu,Direction in Basque
+way_es,Direction in Spanish
+way_en,Direction in English
+codmuni,Municipal code
+muni_eu,Municipality name in Basque
+muni_es,Municipality name in Spanish
+b5midut,B5M record identifier
+b5midname,B5M name identifier
+geom,Geometry (point)

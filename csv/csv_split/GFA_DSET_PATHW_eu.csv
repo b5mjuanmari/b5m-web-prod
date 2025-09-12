@@ -1,0 +1,17 @@
+field,fieldname_eu
+b5mcode,Katalogoko elementuaren kodea
+name,Bidearen izena
+name_eu,Bidearen izena euskaraz
+name_es,Bidearen izena gaztelaniaz
+type_eu,Bide mota euskaraz
+type_es,Bide mota gaztelaniaz
+codmuni,Udalerri kodea
+codvial,Bide kodea
+bridge_tunnel,Zubia/tunela
+description_eu,Deskribapena euskaraz
+description_es,Deskribapena gaztelaniaz
+observation_eu,Oharra euskaraz
+observation_es,Oharra gaztelaniaz
+b5midut,B5M erregistroaren identifikadorea
+b5midname,B5M izen identifikadorea
+geom,Geometria (lerroa)

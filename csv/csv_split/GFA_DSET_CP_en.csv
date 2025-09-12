@@ -1,0 +1,15 @@
+field,fieldname_en
+GFA_DST_CP_LAND,Land
+nationalcadastralreference,National cadastral reference
+name,Name of the land
+muni,Municipality code
+urlinfo,URL for additional information
+GFA_DST_CP_URBAN,Urban
+nationalcadastralreference,National cadastral reference
+name,Name of the land
+muni,Municipality code
+cadastralzoningcode,Cadastral zoning code
+urlinfo,URL for additional information
+GFA_DST_CP_ZONING,Zoning
+muni,Municipality code
+cadastralzoningcode,Cadastral zoning code

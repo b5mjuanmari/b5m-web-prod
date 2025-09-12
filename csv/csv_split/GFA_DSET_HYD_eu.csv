@@ -1,0 +1,17 @@
+field,fieldname_eu
+b5mcode,Katalogoko elementuaren kodea
+name,Ibaiaren izena
+name_eu,Ibaiaren izena euskaraz
+name_es,Ibaiaren izena gaztelaniaz
+b5midnameothers,Beste izen identifikadoreak
+name_others_eu,Beste izenak euskaraz
+name_others_es,Beste izenak gaztelaniaz
+subtype_eu,Ibai azpimota euskaraz
+subtype_es,Ibai azpimota gaztelaniaz
+LEVEL,Maila
+b5midnamebasin,Arroaren izen identifikadorea
+basin_eu,Arroaren izena euskaraz
+basin_es,Arroaren izena gaztelaniaz
+b5midut,B5M erregistroaren identifikadorea
+b5midname,B5M izen identifikadorea
+geom,Geometria (lerroa)

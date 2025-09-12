@@ -1,0 +1,34 @@
+field,fieldname_eu
+b5mcode,POI kodea
+name,POIaren izena
+name_eu,POIaren izena euskaraz
+name_es,POIaren izena gaztelaniaz
+type_eu,POI mota euskaraz
+type_es,POI mota gaztelaniaz
+type_en,POI mota ingelesez
+class_eu,POI klasea euskaraz
+class_es,POI klasea gaztelaniaz
+class_en,POI klasea ingelesez
+class_description_eu,Klasearen deskribapena euskaraz
+class_description_es,Klasearen deskribapena gaztelaniaz
+class_description_en,Klasearen deskribapena ingelesez
+class_icon,Klasearen ikonoa
+category_eu,Kategoria euskaraz
+category_es,Kategoria gaztelaniaz
+category_en,Kategoria ingelesez
+category_description_eu,Kategoriaren deskribapena euskaraz
+category_description_es,Kategoriaren deskribapena gaztelaniaz
+category_description_en,Kategoriaren deskribapena ingelesez
+category_icon,Kategoriaren ikonoa
+b5mcode_d,Helbide kodea
+codmuni,Udalerri kodea
+muni_eu,Udalerriaren izena euskaraz
+muni_es,Udalerriaren izena gaztelaniaz
+codstreet,Kale kodea
+street_eu,Kalearen izena euskaraz
+street_es,Kalearen izena gaztelaniaz
+house_number,Etxe zenbakia
+bis,Bis kodea
+postal_code,Posta kodea
+b5midpoi,POI identifikadorea
+geom,Geometria (puntua)

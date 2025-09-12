@@ -1,0 +1,16 @@
+field,fieldname_en
+b5mcode,B5M code
+codmuni1,Municipal code (1)
+muni1_eu,Municipality name in Basque (1)
+muni1_es,Municipality name in Spanish (1)
+codregion1,Region code (1)
+region1_eu,Region name in Basque (1)
+region1_es,Region name in Spanish (1)
+codmuni2,Municipal code (2)
+muni2_eu,Municipality name in Basque (2)
+muni2_es,Municipality name in Spanish (2)
+codregion2,Region code (2)
+region2_eu,Region name in Basque (2)
+region2_es,Region name in Spanish (2)
+distance_km,Distance (km)
+datecalculation,Calculation date

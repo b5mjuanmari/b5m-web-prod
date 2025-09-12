@@ -1,0 +1,17 @@
+field,fieldname_es
+b5mcode,El código del elemento en el catálogo
+name,Nombre del río
+name_eu,Nombre del río en euskera
+name_es,Nombre del río en castellano
+b5midnameothers,Otros identificadores de nombre
+name_others_eu,Otros nombres en euskera
+name_others_es,Otros nombres en castellano
+subtype_eu,Subtipo de río en euskera
+subtype_es,Subtipo de río en castellano
+LEVEL,Nivel
+b5midnamebasin,Identificador del nombre de la cuenca
+basin_eu,Nombre de la cuenca en euskera
+basin_es,Nombre de la cuenca en castellano
+b5midut,Identificador del registro B5M
+b5midname,Identificador de nombre B5M
+geom,Geometría (línea)

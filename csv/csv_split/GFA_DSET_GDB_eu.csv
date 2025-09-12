@@ -1,0 +1,8 @@
+field,fieldname_eu
+name,Puntu geodesikoaren izena
+codmuni,Udalerri kodea
+muni_eu,Udalerriaren izena euskaraz
+muni_es,Udalerriaren izena gaztelaniaz
+type,Puntu geodesiko mota
+url,Informazio URLa
+geom,Geometria (puntua)

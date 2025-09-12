@@ -1,0 +1,21 @@
+field,fieldname_eu
+INSPIREID,Eraikinaren INSPIRE identifikatzailea
+ENDCONSTRU,Eraikuntzaren amaiera-data
+URL_CADAST,Kadastroaren URLa
+ELEVATION,Altuera itsas mailarekiko
+DWELLINGS,Etxebizitza kopurua
+HEIGHTABOG,Goiko solairuen altuera
+FLOORABOGR,Goiko solairu kopurua
+HEIGHTBELG,Beheko solairuen altuera
+FLOORBELGR,Beheko solairu kopurua
+URL_PHOTO,Argazkiaren URLa
+OFFICIALVA,Balio ofiziala
+REFPERCENT,Erreferentzia ehunekoa
+VALUATIOND,Balorazio-data
+URL_PARCEL,Lursailaren URLa
+BUILDING_N,Eraikinaren izena
+CURRENTUSE,Erabilera egungoa
+DIRPOS_E,Helbidea euskaraz
+DIRPOS_C,Helbidea gaztelaniaz
+URL_B5M,B5M webgunerako esteka
+LOCALID,Tokiko identifikatzailea

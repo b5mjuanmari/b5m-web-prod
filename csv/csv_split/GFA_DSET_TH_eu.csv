@@ -1,0 +1,18 @@
+field,fieldname_eu
+b5mcode,Eraikinaren kodea
+name,Udaletxearen izena
+name_eu,Udaletxearen izena euskaraz
+name_es,Udaletxearen izena gaztelaniaz
+codmuni,Udalerri kodea
+muni_eu,Udalerriaren izena euskaraz
+muni_es,Udalerriaren izena gaztelaniaz
+codstreet,Kale kodea
+street_eu,Kalearen izena euskaraz
+street_es,Kalearen izena gaztelaniaz
+house_number,Etxe zenbakia
+bis,Bis kodea
+postcode,Posta kodea
+b5midnamebuilding,Eraikinaren izen identifikadorea
+b5midut,B5M erregistroaren identifikadorea
+b5midaddress,Helbide identifikadorea
+geom,Geometria (erdiguneko puntua)

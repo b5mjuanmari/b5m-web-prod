@@ -1,0 +1,18 @@
+field,fieldname_eu
+b5mcode,Katalogoko elementuaren kodea
+name,Kilometro puntuaren izena
+name_eu,Kilometro puntuaren izena euskaraz
+name_es,Kilometro puntuaren izena gaztelaniaz
+kp,Kilometro puntua
+b5code_road,Errepidearen kodea
+road_name_eu,Errepidearen izena euskaraz
+road_name_es,Errepidearen izena gaztelaniaz
+way_eu,Norabidea euskaraz
+way_es,Norabidea gaztelaniaz
+way_en,Norabidea ingelesez
+codmuni,Udalerri kodea
+muni_eu,Udalerriaren izena euskaraz
+muni_es,Udalerriaren izena gaztelaniaz
+b5midut,B5M erregistroaren identifikadorea
+b5midname,B5M izen identifikadorea
+geom,Geometria (puntua)

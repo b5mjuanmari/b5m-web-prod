@@ -1,0 +1,14 @@
+field,fieldname_en
+b5mcode,The catalogue item code
+codmuni,Municipal code
+codmuniine,INE code
+name,Municipality name
+name_eu,Municipality name in Basque
+name_es,Municipality name in Spanish
+enclave_eu,Enclave name in Basque
+enclave_es,Enclave name in Spanish
+region_eu,Region name in Basque
+region_es,Region name in Spanish
+b5midut,B5M record identifier
+b5midname,B5M name identifier
+geom,Geometry (polygon)

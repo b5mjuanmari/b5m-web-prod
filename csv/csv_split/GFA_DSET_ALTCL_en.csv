@@ -1,0 +1,8 @@
+field,fieldname_en
+b5midut,B5M record identifier
+name,Contour line label
+altimetry_value,Altitude value
+type_eu,Type in Basque
+type_es,Type in Spanish
+type_en,Type in English
+geom,Geometry (line)

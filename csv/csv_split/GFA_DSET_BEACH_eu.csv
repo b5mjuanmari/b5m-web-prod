@@ -1,0 +1,14 @@
+field,fieldname_eu
+b5mcode,Katalogoko elementuaren kodea
+name,Hondartzaren izena
+name_eu,Hondartzaren izena euskaraz
+name_es,Hondartzaren izena gaztelaniaz
+codmuni,Udalerri kodea
+munis_eu,Udalerriaren izena euskaraz
+munis_es,Udalerriaren izena gaztelaniaz
+type_eu,Hondartzaren mota euskaraz
+type_es,Hondartzaren mota gaztelaniaz
+type_en,Hondartzaren mota ingelesez
+b5midut,B5M erregistroaren identifikadorea
+b5midname,B5M izen identifikadorea
+geom,Geometria (poligonoa)

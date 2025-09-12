@@ -1,0 +1,8 @@
+field,fieldname_en
+name,Geodetic point name
+codmuni,Municipal code
+muni_eu,Municipality name in Basque
+muni_es,Municipality name in Spanish
+type,Geodetic point type
+url,Information URL
+geom,Geometry (point)

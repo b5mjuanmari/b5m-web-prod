@@ -1,0 +1,7 @@
+field,fieldname_en
+INSPIREID,Parcel INSPIRE identifier
+LABEL,Label or reference number
+NCADASTREF,Cadastral reference number
+AREAVALUE,Area in square meters
+BEGINLIFES,Creation date
+URL_CADAST,Cadastre URL

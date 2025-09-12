@@ -1,0 +1,7 @@
+field,fieldname_es
+b5midut,Identificador del registro B5M
+b5midutagr,Identificador del conjunto de registros B5M
+name,Nombre del área
+name_eu,Nombre del área en euskera
+name_es,Nombre del área en castellano
+geom,Geometría (línea)

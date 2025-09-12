@@ -1,0 +1,21 @@
+field,fieldname_en
+b5mcode,The catalogue item code
+name,Boundary line name
+name_eu,Boundary line name in Basque
+name_es,Boundary line name in Spanish
+codenclave1,Enclave code (1)
+enclave1,Enclave (1)
+muni1,Municipality (1)
+codenclave2,Enclave code (2)
+enclave2,Enclave (2)
+muni2,Municipality (2)
+linkact,Act link
+linkfieldlog,Field log link
+numlandmarks,Number of landmarks
+comment_eu,Comment in Basque
+comment_es,Comment in Spanish
+validation_date,Validation date
+b5midact,Act identifier
+b5middocact,Act document identifier
+b5midfieldlog,Field log identifier
+geom,Geometry (line)

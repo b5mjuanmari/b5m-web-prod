@@ -1,0 +1,18 @@
+field,fieldname_en
+b5mcode,Fire station code
+name,Fire station name
+name_eu,Fire station name in Basque
+name_es,Fire station name in Spanish
+codmuni,Municipal code
+muni_eu,Municipality name in Basque
+muni_es,Municipality name in Spanish
+codstreet,Street code
+street_eu,Street name in Basque
+street_es,Street name in Spanish
+house_number,House number
+bis,Bis code
+postcode,Postal code
+b5midnamebuilding,Building name identifier
+b5midut,B5M record identifier
+b5midaddress,Address identifier
+geom,Geometry (centroid point)

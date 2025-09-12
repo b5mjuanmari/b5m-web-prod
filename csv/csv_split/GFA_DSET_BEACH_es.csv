@@ -1,0 +1,14 @@
+field,fieldname_es
+b5mcode,El código del elemento en el catálogo
+name,Nombre de la playa
+name_eu,Nombre de la playa en euskera
+name_es,Nombre de la playa en castellano
+codmuni,Código municipal
+munis_eu,Nombre del municipio en euskera
+munis_es,Nombre del municipio en castellano
+type_eu,Tipo de playa en euskera
+type_es,Tipo de playa en castellano
+type_en,Tipo de playa en inglés
+b5midut,Identificador del registro B5M
+b5midname,Identificador de nombre B5M
+geom,Geometría (polígono)

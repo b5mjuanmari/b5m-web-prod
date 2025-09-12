@@ -1,0 +1,8 @@
+field,fieldname_es
+b5midut,Identificador del registro B5M
+name,Etiqueta de la curva de nivel
+altimetry_value,Valor de altitud
+type_eu,Tipo en euskera
+type_es,Tipo en castellano
+type_en,Tipo en inglés
+geom,Geometría (línea)

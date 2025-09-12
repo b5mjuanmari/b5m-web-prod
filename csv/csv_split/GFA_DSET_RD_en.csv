@@ -1,0 +1,15 @@
+field,fieldname_en
+b5mcode,The catalogue item code
+name,Road name
+name_eu,Road name in Basque
+name_es,Road name in Spanish
+type_eu,Road type in Basque
+type_es,Road type in Spanish
+bridge_tunnel,Bridge/tunnel
+description_eu,Description in Basque
+description_es,Description in Spanish
+observation_eu,Observation in Basque
+observation_es,Observation in Spanish
+b5midut,B5M record identifier
+b5midname,B5M name identifier
+geom,Geometry (line)

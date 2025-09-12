@@ -1,0 +1,34 @@
+field,fieldname_en
+b5mcode,POI code
+name,POI name
+name_eu,POI name in Basque
+name_es,POI name in Spanish
+type_eu,POI type in Basque
+type_es,POI type in Spanish
+type_en,POI type in English
+class_eu,POI class in Basque
+class_es,POI class in Spanish
+class_en,POI class in English
+class_description_eu,Class description in Basque
+class_description_es,Class description in Spanish
+class_description_en,Class description in English
+class_icon,Class icon
+category_eu,Category in Basque
+category_es,Category in Spanish
+category_en,Category in English
+category_description_eu,Category description in Basque
+category_description_es,Category description in Spanish
+category_description_en,Category description in English
+category_icon,Category icon
+b5mcode_d,Address code
+codmuni,Municipal code
+muni_eu,Municipality name in Basque
+muni_es,Municipality name in Spanish
+codstreet,Street code
+street_eu,Street name in Basque
+street_es,Street name in Spanish
+house_number,House number
+bis,Bis code
+postal_code,Postal code
+b5midpoi,POI identifier
+geom,Geometry (point)

@@ -1,0 +1,35 @@
+field,fieldname_es
+b5mcode,El código del elemento en el catálogo
+name,Nombre del mojón
+codetype,Tipo de código
+type_eu,Tipo en euskera
+type_es,Tipo en castellano
+type_en,Tipo en inglés
+codeprecission,Código de precisión
+precission_eu,Precisión en euskera
+precissioncomment_eu,Comentario de precisión en euskera
+precission_es,Precisión en castellano
+precissioncomment_es,Comentario de precisión en castellano
+precission_en,Precisión en inglés
+precissioncomment_en,Comentario de precisión en inglés
+location,Localización
+locationcomment_eu,Comentario de localización en euskera
+locationcomment_es,Comentario de localización en castellano
+codecondition,Código de condición
+condition_eu,Condición en euskera
+condition_es,Condición en castellano
+condition_en,Condición en inglés
+codetypology,Código de tipología
+typology_eu,Tipología en euskera
+typology_es,Tipología en castellano
+typology_en,Tipología en inglés
+inspectiondate,Fecha de inspección
+codenclaves,Códigos de enclaves
+enclaves,Enclaves
+municipalities,Municipios
+b5midacts,Actas
+landmarknumber,Número de mojón
+boundaryline_eu,Línea de límite en euskera
+boundaryline_es,Línea de límite en castellano
+b5midut,Identificador del registro B5M
+wkt,Geometría (formato WKT)

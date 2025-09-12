@@ -1,0 +1,9 @@
+field,fieldname_eu
+b5mcode,Katalogoko elementuaren kodea
+name,Trenbidearen izena
+name_eu,Trenbidearen izena euskaraz
+name_es,Trenbidearen izena gaztelaniaz
+bridge_tunnel,Zubia/tunela
+b5midut,B5M erregistroaren identifikadorea
+b5midname,B5M izen identifikadorea
+geom,Geometria (lerroa)

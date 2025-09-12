@@ -1,0 +1,7 @@
+field,fieldname_en
+b5midut,B5M record identifier
+b5midutagr,B5M record set identifier
+name,Area name
+name_eu,Area name in Basque
+name_es,Area name in Spanish
+geom,Geometry (line)

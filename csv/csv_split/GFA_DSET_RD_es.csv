@@ -1,0 +1,15 @@
+field,fieldname_es
+b5mcode,El código del elemento en el catálogo
+name,Nombre de la carretera
+name_eu,Nombre de la carretera en euskera
+name_es,Nombre de la carretera en castellano
+type_eu,Tipo de carretera en euskera
+type_es,Tipo de carretera en castellano
+bridge_tunnel,Puente/túnel
+description_eu,Descripción en euskera
+description_es,Descripción en castellano
+observation_eu,Observación en euskera
+observation_es,Observación en castellano
+b5midut,Identificador del registro B5M
+b5midname,Identificador de nombre B5M
+geom,Geometría (línea)

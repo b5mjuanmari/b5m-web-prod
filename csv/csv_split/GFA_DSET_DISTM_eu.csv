@@ -1,0 +1,16 @@
+field,fieldname_eu
+b5mcode,B5M kodea
+codmuni1,Udalerri kodea (1)
+muni1_eu,Udalerriaren izena euskaraz (1)
+muni1_es,Udalerriaren izena gaztelaniaz (1)
+codregion1,Eskualde kodea (1)
+region1_eu,Eskualdearen izena euskaraz (1)
+region1_es,Eskualdearen izena gaztelaniaz (1)
+codmuni2,Udalerri kodea (2)
+muni2_eu,Udalerriaren izena euskaraz (2)
+muni2_es,Udalerriaren izena gaztelaniaz (2)
+codregion2,Eskualde kodea (2)
+region2_eu,Eskualdearen izena euskaraz (2)
+region2_es,Eskualdearen izena gaztelaniaz (2)
+distance_km,Distantzia (km)
+datecalculation,Kalkulu data
