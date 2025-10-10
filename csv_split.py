@@ -3,6 +3,11 @@
 Script honek direktorio bateko CSV fitxategi guztiak prozesatzen ditu, hizkuntzaka bananduz.
 Jatorrizko CSV fitxategiak field, fieldname_eu, fieldname_es, fieldname_en eremuak izan behar ditu.
 Emaitzak 'csv_split' azpikarpeta batean gordetzen ditu.
+
+CSVak hemendik datoz (AA / DS):
+Aztertu Oracle SQL sententzia hau. Egin sententzia horren eremuen txosten bat CSV formatuan —goibururik gabe—. CSV horren errenkada bakoitzak lau eremu izango ditu: 1. Eremuaren izena, 2. Eremuaren deskribapena euskaraz, 3. Eremuaren deskribapena gaztelaniaz, 4. Eremuaren deskribapena Britania Handiko ingelesez. Deskribapenak zeuk asmatu eremuaren izenean oinarrituta —eremuaren izenak ingelesez daude—. CSV eremuek kakotxik izango dute soilik komaren bat ez badute.
+
+Hemen duzu SQL sententzia:
 """
 
 import csv
