@@ -81,7 +81,7 @@ def execute_sql(query):
 def kargatu_shapefile_gpkg(sfp, gpkgp, gpkgt, gpkgs):
     """Shapefile bat GPKG fitxategi batean kargatu."""
     command = [
-        "ogr2ogr",
+        ogr2ogr_bin,
         "-f", "GPKG",
         "-update",
         "-append",
@@ -364,7 +364,6 @@ def generate_shp(gpkg_file, destino, campos_csv):
                             elif field['field_name'] in tables and field['field_name'] != shp_base_name and inprimatu:
                                 break
 
-                            #print(f"KK1: {field['field_name']} --- {shp_base_name} --- {len(tables)} -- {i}")
                             if inprimatu:
                                 f.write(f"{field['field_name'].upper()[:10]}: {field['description_eu']} / {field['description_es']} / {field['description_en']}\n")
 
