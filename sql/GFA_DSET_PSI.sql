@@ -1,6 +1,6 @@
 select
-  ogr_fid as psicode,
-  code2 as psicode2,
+  'PS_EW_' || ogr_fid as b5mcode,
+  'https://b5m.gipuzkoa.eus/api/2.0/psi/ew/id_' || ogr_fid as url_graphics_psi,
   utm_x,
   utm_y,
   height,
