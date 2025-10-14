@@ -10,6 +10,7 @@ import shutil
 import sys
 import sqlite3
 import json
+import re
 
 # NLS_LANG aldagaia konfiguratu Oracle-rentzat
 os.environ["NLS_LANG"] = "SPANISH_SPAIN.UTF8"
@@ -62,6 +63,11 @@ def format_duration(seconds):
     minutes = (seconds % 3600) // 60
     seconds = seconds % 60
     return f"{int(hours)}:{int(minutes):02d}:{int(seconds):02d}"
+
+def contains_multi(text):
+    # 'multi' katea, letra xehez edo larriz, iruzkietan dagoen begiratzen du
+    pattern = r'--\s*[Mm][Uu][Ll][Tt][Ii]\b'
+    return bool(re.search(pattern, text))
 
 def execute_sql(query):
     """Exekutatzen du SQL kontsulta bat eta emaitzak itzultzen ditu."""
@@ -131,7 +137,7 @@ def generate_gpkg_cadastre(origen, gpkg_file, campos_csv):
     field_descriptions, destino2 = parse_campos_csv(campos_csv)
 
     origen_lerroak = origen.splitlines()
-    origen_dir = ruta1 + "/" + origen_lerroak[0]
+    origen_dir = ruta1 + "/" + origen_lerroak[1].replace("-- ", "").replace("--", "")
     shapefiles = [f for f in os.listdir(origen_dir) if f.endswith('.shp')]
 
     for index, fitx_shp in enumerate(shapefiles, start=1):
@@ -142,9 +148,9 @@ def generate_gpkg_cadastre(origen, gpkg_file, campos_csv):
         lerroak = origen.splitlines()
         j = 0
         for i, lerroa in enumerate(lerroak):
-            if "-- " + fitx_shp_oin in lerroa:
+            if ("--" + fitx_shp_oin in lerroa) or ("-- " + fitx_shp_oin in lerroa):
                 if i + 1 < len(lerroak):
-                    gpkg_tab = lerroak[i + 1].split('-- ')[1]
+                    gpkg_tab = lerroak[i + 1].replace("-- ", "").replace("--", "")
                     gpkg_sel = lerroak[i + 2]
                     j = 1
 
@@ -202,8 +208,8 @@ def generate_gpkg(origen, destino, campos_csv):
 
     field_descriptions, _ = parse_campos_csv(campos_csv)
 
-    if origen.split('/')[0].lower() == "catastro":
-        # Katastroaren kasu berezia
+    if contains_multi(origen.splitlines()[0]):
+        # Katastroaren edo PSIaren kasu berezia
         generate_gpkg_cadastre(origen, gpkg_file, campos_csv)
     elif origen.strip().lower().startswith("with"):
         # SQL sententzia exekutatu eta behin behineko CSV fitxategia sortu
