@@ -156,15 +156,15 @@ def parse_campos_csv(campos_csv):
 
     return field_descriptions, header
 
-def generate_gpkg_cadastre(origen, gpkg_file, campos_csv):
-    """Sortu katastroko GPKG fitxategia"""
+def generate_gpkg_multi(origen, gpkg_file, campos_csv):
+    """Sortu multi GPKG fitxategia"""
     field_descriptions, destino2 = parse_campos_csv(campos_csv)
 
     origen_lerroak = origen.splitlines()
     origen_dir = ruta1 + "/" + origen_lerroak[1].replace("-- ", "").replace("--", "")
     shapefiles = [f for f in os.listdir(origen_dir) if f.endswith('.shp')]
 
-    # Detektatu "multi2" kodea
+    # Detektatu "multi2" kodea (Oracle kasua)
     has_multi2 = 'multi2' in origen_lerroak[0].lower() if origen_lerroak else False
 
     for index, fitx_shp in enumerate(shapefiles, start=1):
@@ -256,8 +256,8 @@ def generate_gpkg(origen, destino, campos_csv):
     field_descriptions, _ = parse_campos_csv(campos_csv)
 
     if contains_multi(origen.splitlines()[0]):
-        # Katastroaren edo PSIaren kasu berezia
-        generate_gpkg_cadastre(origen, gpkg_file, campos_csv)
+        # Multi kasu berezia (SQL multilerroak taula bat baino gehiago eskatzen du)
+        generate_gpkg_multi(origen, gpkg_file, campos_csv)
     elif origen.strip().lower().startswith("with"):
         # Azkeneko puntu eta koma kendu
         origen = remove_semicolon(origen);
