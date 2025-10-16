@@ -64,6 +64,10 @@ def format_duration(seconds):
     seconds = seconds % 60
     return f"{int(hours)}:{int(minutes):02d}:{int(seconds):02d}"
 
+def remove_semicolon(string):
+    """Katea puntu eta koma batekin amaitzen bada, kendu egiten du"""
+    return string.rstrip()[:-1] if string and string.strip().endswith(';') else string
+
 def contains_multi(text):
     # 'multi' edo 'multi2' katea, letra xehez edo larriz, iruzkietan dagoen begiratzen du
     pattern = r'--\s*[Mm][Uu][Ll][Tt][Ii]2?\b'
@@ -189,8 +193,7 @@ def generate_gpkg_cadastre(origen, gpkg_file, campos_csv):
                     # SELECT sententzia osoa batu
                     gpkg_sel = " ".join(select_lerroak)
                     # Azkeneko puntu eta koma kendu
-                    if gpkg_sel.endswith(';'):
-                        gpkg_sel = gpkg_sel[:-1]
+                    gpkg_sel = remove_semicolon(gpkg_sel);
                     j = 1
                     break  # Aurkitu dugunean, loopetik irten
 
@@ -256,6 +259,8 @@ def generate_gpkg(origen, destino, campos_csv):
         # Katastroaren edo PSIaren kasu berezia
         generate_gpkg_cadastre(origen, gpkg_file, campos_csv)
     elif origen.strip().lower().startswith("with"):
+        # Azkeneko puntu eta koma kendu
+        origen = remove_semicolon(origen);
         # SQL sententzia exekutatu eta behin behineko CSV fitxategia sortu
         csv_file = os.path.join(gpkg_dir, f"{destino}.csv")
         if os.path.exists(csv_file):
@@ -307,6 +312,8 @@ def generate_gpkg(origen, destino, campos_csv):
             "-lco", "FID=FID",
             gpkg_file
         ]
+        # Azkeneko puntu eta koma kendu
+        origen = remove_semicolon(origen);
         if origen.strip().lower().startswith("select"):
             ogr2ogr_command.extend(["-sql", origen, f"OCI:{db_user2}/{db_pass}@{db_dsn}:{db_tab}"])
         else:
