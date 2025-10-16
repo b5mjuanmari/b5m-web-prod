@@ -65,8 +65,8 @@ def format_duration(seconds):
     return f"{int(hours)}:{int(minutes):02d}:{int(seconds):02d}"
 
 def contains_multi(text):
-    # 'multi' katea, letra xehez edo larriz, iruzkietan dagoen begiratzen du
-    pattern = r'--\s*[Mm][Uu][Ll][Tt][Ii]\b'
+    # 'multi' edo 'multi2' katea, letra xehez edo larriz, iruzkietan dagoen begiratzen du
+    pattern = r'--\s*[Mm][Uu][Ll][Tt][Ii]2?\b'
     return bool(re.search(pattern, text))
 
 def execute_sql(query):
@@ -104,6 +104,26 @@ def kargatu_shapefile_gpkg(sfp, gpkgp, gpkgt, gpkgs):
     except subprocess.CalledProcessError as e:
         log(f"Errorea gertatu da {sfp} shapefile-a GPKG fitxategian kargatzean: {e}")
 
+def kargatu_oracle_table_gpkg(sql_sententzia, gpkgp, gpkgt):
+    """Oracle taula bat GPKG fitxategi batean kargatu SQL sententzia erabiliz."""
+    command = [
+        ogr2ogr_bin,
+        "-f", "GPKG",
+        "-update",
+        "-append",
+        "-nln", gpkgt,
+        "-lco", "GEOMETRY_NAME=geom",
+        "-lco", "FID=FID",
+        gpkgp,
+        f"OCI:{db_user2}/{db_pass}@{db_dsn}:{db_tab}",
+        "-sql", sql_sententzia
+    ]
+    try:
+        subprocess.run(command, check=True)
+        log(f"Oracle kontsulta GPKG fitxategian kargatu da: {gpkgt}\n")
+    except subprocess.CalledProcessError as e:
+        log(f"Errorea gertatu da Oracle kontsulta GPKG fitxategian kargatzean: {e}\n")
+
 def parse_campos_csv(campos_csv):
     """Analizatu campos_csv edukia, goiburua kontuan hartuta."""
     if not campos_csv:
@@ -140,25 +160,49 @@ def generate_gpkg_cadastre(origen, gpkg_file, campos_csv):
     origen_dir = ruta1 + "/" + origen_lerroak[1].replace("-- ", "").replace("--", "")
     shapefiles = [f for f in os.listdir(origen_dir) if f.endswith('.shp')]
 
+    # Detektatu "multi2" kodea
+    has_multi2 = 'multi2' in origen_lerroak[0].lower() if origen_lerroak else False
+
     for index, fitx_shp in enumerate(shapefiles, start=1):
         shapefile_path = os.path.join(origen_dir, fitx_shp)
         fitx_shp_oin = fitx_shp.split('.')[0]
 
         # Bilatu katea eta hurrengo lerroaren berri eman
-        lerroak = origen.splitlines()
         j = 0
-        for i, lerroa in enumerate(lerroak):
+        for i, lerroa in enumerate(origen_lerroak):
             if ("--" + fitx_shp_oin in lerroa) or ("-- " + fitx_shp_oin in lerroa):
-                if i + 1 < len(lerroak):
-                    gpkg_tab = lerroak[i + 1].replace("-- ", "").replace("--", "")
-                    gpkg_sel = lerroak[i + 2]
+                if i + 1 < len(origen_lerroak):
+                    gpkg_tab = origen_lerroak[i + 1].replace("-- ", "").replace("--", "")
+
+                    # SELECT sententzia osoa bilatu
+                    select_lerroak = []
+                    k = i + 2
+                    while k < len(origen_lerroak):
+                        lerroa_actual = origen_lerroak[k].strip()
+                        if lerroa_actual and not lerroa_actual.startswith("--"):
+                            select_lerroak.append(lerroa_actual)
+                            # Sententzia puntu eta koma batekin amaitzen den begiratu
+                            if ";" in lerroa_actual:
+                                break
+                        k += 1
+
+                    # SELECT sententzia osoa batu
+                    gpkg_sel = " ".join(select_lerroak)
+                    # Azkeneko puntu eta koma kendu
+                    if gpkg_sel.endswith(';'):
+                        gpkg_sel = gpkg_sel[:-1]
                     j = 1
+                    break  # Aurkitu dugunean, loopetik irten
 
         if j == 0:
             gpkg_tab = fitx_shp_oin
 
-        # Shapefile bat GPKG fitxategi batean kargatu
-        kargatu_shapefile_gpkg(shapefile_path, gpkg_file, gpkg_tab, gpkg_sel)
+        # "multi2" kodea bada, Oracle kontsulta kargatu
+        if has_multi2 and gpkg_sel:
+            kargatu_oracle_table_gpkg(gpkg_sel, gpkg_file, gpkg_tab)
+        else:
+            # Bestela, shapefile bat GPKG fitxategi batean kargatu
+            kargatu_shapefile_gpkg(shapefile_path, gpkg_file, gpkg_tab, gpkg_sel)
 
     # GPKG fitxategian eremu deskribapenak gehitu
     if field_descriptions:
