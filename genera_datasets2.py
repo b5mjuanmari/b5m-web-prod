@@ -113,6 +113,8 @@ def kargatu_oracle_table_gpkg(sql_sententzia, gpkgp, gpkgt):
     command = [
         ogr2ogr_bin,
         "-f", "GPKG",
+        "-s_srs", "EPSG:25830",
+        "-t_srs", "EPSG:25830",
         "-update",
         "-append",
         "-nln", gpkgt,
@@ -124,7 +126,6 @@ def kargatu_oracle_table_gpkg(sql_sententzia, gpkgp, gpkgt):
     ]
     try:
         subprocess.run(command, check=True)
-        log(f"Oracle kontsulta GPKG fitxategian kargatu da: {gpkgt}\n")
     except subprocess.CalledProcessError as e:
         log(f"Errorea gertatu da Oracle kontsulta GPKG fitxategian kargatzean: {e}\n")
 
