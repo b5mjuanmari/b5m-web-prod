@@ -1,5 +1,139 @@
 field,fieldname_eu,fieldname_es,fieldname_en
-b5mcode,POI kodea,Código POI,POI code
+GFA_DST_PSI_EW,PSI neurri horizontalak,PSI medidas horizontales,PSI horizontal measurements
+b5mcode,PSI kodea,Código PSI,PSI code
+url_graphics_psi,PSI grafikoaren URLa,URL de la gráfica PSI,PSI Chart URL
+code,Puntuaren kodea edo identifikadorea,Código o identificador del punto,Point code or identifier
+utm_x,UTM X koordenatuaren balioa,Valor de la coordenada UTM X,UTM X coordinate value
+utm_y,UTM Y koordenatuaren balioa,Valor de la coordenada UTM Y,UTM Y coordinate value
+height,Puntuaren altuera,Altura del punto,Point height
+autocorr,Autokorrelazioaren balioa,Valor de la autocorrelación,Autocorrelation value
+vel,Abiaduraren balioa,Valor de la velocidad,Velocity value
+ts_stdev,Denbora-serien desbiderapen estandarra,Desviación estándar de la serie temporal,Time series standard deviation
+d20160111,2016ko urtarrilaren 11ko datua,Dato del 11 de enero de 2016,Data from January 11 2016
+d20160123,2016ko urtarrilaren 23ko datua,Dato del 23 de enero de 2016,Data from January 23 2016
+d20160204,2016ko otsailaren 4ko datua,Dato del 4 de febrero de 2016,Data from February 4 2016
+d20160216,2016ko otsailaren 16ko datua,Dato del 16 de febrero de 2016,Data from February 16 2016
+d20160228,2016ko otsailaren 28ko datua,Dato del 28 de febrero de 2016,Data from February 28 2016
+d20160311,2016ko martxoaren 11ko datua,Dato del 11 de marzo de 2016,Data from March 11 2016
+d20160323,2016ko martxoaren 23ko datua,Dato del 23 de marzo de 2016,Data from March 23 2016
+d20160404,2016ko apirilaren 4ko datua,Dato del 4 de abril de 2016,Data from April 4 2016
+d20160416,2016ko apirilaren 16ko datua,Dato del 16 de abril de 2016,Data from April 16 2016
+d20160428,2016ko apirilaren 28ko datua,Dato del 28 de abril de 2016,Data from April 28 2016
+d20160510,2016ko maiatzaren 10eko datua,Dato del 10 de mayo de 2016,Data from May 10 2016
+d20160603,2016ko ekainaren 3ko datua,Dato del 3 de junio de 2016,Data from June 3 2016
+d20160615,2016ko ekainaren 15eko datua,Dato del 15 de junio de 2016,Data from June 15 2016
+d20160627,2016ko ekainaren 27ko datua,Dato del 27 de junio de 2016,Data from June 27 2016
+d20160709,2016ko uztailaren 9ko datua,Dato del 9 de julio de 2016,Data from July 9 2016
+d20160721,2016ko uztailaren 21eko datua,Dato del 21 de julio de 2016,Data from July 21 2016
+d20160802,2016ko abuztuaren 2ko datua,Dato del 2 de agosto de 2016,Data from August 2 2016
+d20160814,2016ko abuztuaren 14ko datua,Dato del 14 de agosto de 2016,Data from August 14 2016
+d20160826,2016ko abuztuaren 26ko datua,Dato del 26 de agosto de 2016,Data from August 26 2016
+d20160907,2016ko irailaren 7ko datua,Dato del 7 de septiembre de 2016,Data from September 7 2016
+d20160919,2016ko irailaren 19ko datua,Dato del 19 de septiembre de 2016,Data from September 19 2016
+d20161001,2016ko urriaren 1eko datua,Dato del 1 de octubre de 2016,Data from October 1 2016
+d20161013,2016ko urriaren 13ko datua,Dato del 13 de octubre de 2016,Data from October 13 2016
+d20161025,2016ko urriaren 25eko datua,Dato del 25 de octubre de 2016,Data from October 25 2016
+d20161106,2016ko azaroaren 6ko datua,Dato del 6 de noviembre de 2016,Data from November 6 2016
+d20161118,2016ko azaroaren 18ko datua,Dato del 18 de noviembre de 2016,Data from November 18 2016
+d20161130,2016ko azaroaren 30eko datua,Dato del 30 de noviembre de 2016,Data from November 30 2016
+d20161212,2016ko abenduaren 12ko datua,Dato del 12 de diciembre de 2016,Data from December 12 2016
+d20161224,2016ko abenduaren 24ko datua,Dato del 24 de diciembre de 2016,Data from December 24 2016
+d20170105,2017ko urtarrilaren 5eko datua,Dato del 5 de enero de 2017,Data from January 5 2017
+d20170117,2017ko urtarrilaren 17ko datua,Dato del 17 de enero de 2017,Data from January 17 2017
+d20170129,2017ko urtarrilaren 29ko datua,Dato del 29 de enero de 2017,Data from January 29 2017
+d20170210,2017ko otsailaren 10eko datua,Dato del 10 de febrero de 2017,Data from February 10 2017
+d20170222,2017ko otsailaren 22ko datua,Dato del 22 de febrero de 2017,Data from February 22 2017
+d20170306,2017ko martxoaren 6ko datua,Dato del 6 de marzo de 2017,Data from March 6 2017
+d20170318,2017ko martxoaren 18ko datua,Dato del 18 de marzo de 2017,Data from March 18 2017
+d20170330,2017ko martxoaren 30eko datua,Dato del 30 de marzo de 2017,Data from March 30 2017
+d20170411,2017ko apirilaren 11ko datua,Dato del 11 de abril de 2017,Data from April 11 2017
+d20170423,2017ko apirilaren 23ko datua,Dato del 23 de abril de 2017,Data from April 23 2017
+d20170505,2017ko maiatzaren 5eko datua,Dato del 5 de mayo de 2017,Data from May 5 2017
+d20170517,2017ko maiatzaren 17ko datua,Dato del 17 de mayo de 2017,Data from May 17 2017
+d20170529,2017ko maiatzaren 29ko datua,Dato del 29 de mayo de 2017,Data from May 29 2017
+d20170610,2017ko ekainaren 10eko datua,Dato del 10 de junio de 2017,Data from June 10 2017
+d20170622,2017ko ekainaren 22ko datua,Dato del 22 de junio de 2017,Data from June 22 2017
+d20170704,2017ko uztailaren 4ko datua,Dato del 4 de julio de 2017,Data from July 4 2017
+d20170716,2017ko uztailaren 16ko datua,Dato del 16 de julio de 2017,Data from July 16 2017
+d20170728,2017ko uztailaren 28ko datua,Dato del 28 de julio de 2017,Data from July 28 2017
+d20170809,2017ko abuztuaren 9ko datua,Dato del 9 de agosto de 2017,Data from August 9 2017
+d20170821,2017ko abuztuaren 21eko datua,Dato del 21 de agosto de 2017,Data from August 21 2017
+d20170902,2017ko irailaren 2ko datua,Dato del 2 de septiembre de 2017,Data from September 2 2017
+d20170914,2017ko irailaren 14ko datua,Dato del 14 de septiembre de 2017,Data from September 14 2017
+d20170926,2017ko irailaren 26ko datua,Dato del 26 de septiembre de 2017,Data from September 26 2017
+d20171008,2017ko urriaren 8ko datua,Dato del 8 de octubre de 2017,Data from October 8 2017
+d20171020,2017ko urriaren 20ko datua,Dato del 20 de octubre de 2017,Data from October 20 2017
+d20171101,2017ko azaroaren 1eko datua,Dato del 1 de noviembre de 2017,Data from November 1 2017
+d20171113,2017ko azaroaren 13ko datua,Dato del 13 de noviembre de 2017,Data from November 13 2017
+d20171125,2017ko azaroaren 25eko datua,Dato del 25 de noviembre de 2017,Data from November 25 2017
+d20171207,2017ko abenduaren 7ko datua,Dato del 7 de diciembre de 2017,Data from December 7 2017
+d20171219,2017ko abenduaren 19ko datua,Dato del 19 de diciembre de 2017,Data from December 19 2017
+d20171231,2017ko abenduaren 31ko datua,Dato del 31 de diciembre de 2017,Data from December 31 2017
+d20180112,2018ko urtarrilaren 12ko datua,Dato del 12 de enero de 2018,Data from January 12 2018
+d20180124,2018ko urtarrilaren 24ko datua,Dato del 24 de enero de 2018,Data from January 24 2018
+d20180205,2018ko otsailaren 5eko datua,Dato del 5 de febrero de 2018,Data from February 5 2018
+d20180217,2018ko otsailaren 17ko datua,Dato del 17 de febrero de 2018,Data from February 17 2018
+d20180301,2018ko martxoaren 1eko datua,Dato del 1 de marzo de 2018,Data from March 1 2018
+d20180313,2018ko martxoaren 13ko datua,Dato del 13 de marzo de 2018,Data from March 13 2018
+d20180325,2018ko martxoaren 25eko datua,Dato del 25 de marzo de 2018,Data from March 25 2018
+d20180406,2018ko apirilaren 6ko datua,Dato del 6 de abril de 2018,Data from April 6 2018
+d20180412,2018ko apirilaren 12ko datua,Dato del 12 de abril de 2018,Data from April 12 2018
+d20180424,2018ko apirilaren 24ko datua,Dato del 24 de abril de 2018,Data from April 24 2018
+d20180506,2018ko maiatzaren 6ko datua,Dato del 6 de mayo de 2018,Data from May 6 2018
+d20180518,2018ko maiatzaren 18ko datua,Dato del 18 de mayo de 2018,Data from May 18 2018
+d20180530,2018ko maiatzaren 30eko datua,Dato del 30 de mayo de 2018,Data from May 30 2018
+d20180611,2018ko ekainaren 11ko datua,Dato del 11 de junio de 2018,Data from June 11 2018
+d20180623,2018ko ekainaren 23ko datua,Dato del 23 de junio de 2018,Data from June 23 2018
+d20180705,2018ko uztailaren 5eko datua,Dato del 5 de julio de 2018,Data from July 5 2018
+d20180717,2018ko uztailaren 17ko datua,Dato del 17 de julio de 2018,Data from July 17 2018
+d20180729,2018ko uztailaren 29ko datua,Dato del 29 de julio de 2018,Data from July 29 2018
+d20180810,2018ko abuztuaren 10eko datua,Dato del 10 de agosto de 2018,Data from August 10 2018
+d20180822,2018ko abuztuaren 22ko datua,Dato del 22 de agosto de 2018,Data from August 22 2018
+d20180903,2018ko irailaren 3ko datua,Dato del 3 de septiembre de 2018,Data from September 3 2018
+d20180915,2018ko irailaren 15eko datua,Dato del 15 de septiembre de 2018,Data from September 15 2018
+d20180927,2018ko irailaren 27ko datua,Dato del 27 de septiembre de 2018,Data from September 27 2018
+d20181009,2018ko urriaren 9ko datua,Dato del 9 de octubre de 2018,Data from October 9 2018
+d20181021,2018ko urriaren 21eko datua,Dato del 21 de octubre de 2018,Data from October 21 2018
+d20181102,2018ko azaroaren 2ko datua,Dato del 2 de noviembre de 2018,Data from November 2 2018
+d20181114,2018ko azaroaren 14ko datua,Dato del 14 de noviembre de 2018,Data from November 14 2018
+d20181126,2018ko azaroaren 26ko datua,Dato del 26 de noviembre de 2018,Data from November 26 2018
+d20181208,2018ko abenduaren 8ko datua,Dato del 8 de diciembre de 2018,Data from December 8 2018
+d20181220,2018ko abenduaren 20ko datua,Dato del 20 de diciembre de 2018,Data from December 20 2018
+d20190101,2019ko urtarrilaren 1eko datua,Dato del 1 de enero de 2019,Data from January 1 2019
+d20190113,2019ko urtarrilaren 13ko datua,Dato del 13 de enero de 2019,Data from January 13 2019
+d20190125,2019ko urtarrilaren 25eko datua,Dato del 25 de enero de 2019,Data from January 25 2019
+d20190218,2019ko otsailaren 18ko datua,Dato del 18 de febrero de 2019,Data from February 18 2019
+d20190302,2019ko martxoaren 2ko datua,Dato del 2 de marzo de 2019,Data from March 2 2019
+d20190326,2019ko martxoaren 26ko datua,Dato del 26 de marzo de 2019,Data from March 26 2019
+d20190407,2019ko apirilaren 7ko datua,Dato del 7 de abril de 2019,Data from April 7 2019
+d20190419,2019ko apirilaren 19ko datua,Dato del 19 de abril de 2019,Data from April 19 2019
+d20190501,2019ko maiatzaren 1eko datua,Dato del 1 de mayo de 2019,Data from May 1 2019
+d20190525,2019ko maiatzaren 25eko datua,Dato del 25 de mayo de 2019,Data from May 25 2019
+d20190606,2019ko ekainaren 6ko datua,Dato del 6 de junio de 2019,Data from June 6 2019
+d20190618,2019ko ekainaren 18ko datua,Dato del 18 de junio de 2019,Data from June 18 2019
+d20190630,2019ko ekainaren 30eko datua,Dato del 30 de junio de 2019,Data from June 30 2019
+d20190724,2019ko uztailaren 24ko datua,Dato del 24 de julio de 2019,Data from July 24 2019
+d20190805,2019ko abuztuaren 5eko datua,Dato del 5 de agosto de 2019,Data from August 5 2019
+d20190817,2019ko abuztuaren 17ko datua,Dato del 17 de agosto de 2019,Data from August 17 2019
+d20190829,2019ko abuztuaren 29ko datua,Dato del 29 de agosto de 2019,Data from August 29 2019
+d20190922,2019ko irailaren 22ko datua,Dato del 22 de septiembre de 2019,Data from September 22 2019
+d20191004,2019ko urriaren 4ko datua,Dato del 4 de octubre de 2019,Data from October 4 2019
+d20191016,2019ko urriaren 16ko datua,Dato del 16 de octubre de 2019,Data from October 16 2019
+d20191028,2019ko urriaren 28ko datua,Dato del 28 de octubre de 2019,Data from October 28 2019
+d20191121,2019ko azaroaren 21eko datua,Dato del 21 de noviembre de 2019,Data from November 21 2019
+d20191203,2019ko abenduaren 3ko datua,Dato del 3 de diciembre de 2019,Data from December 3 2019
+d20191215,2019ko abenduaren 15eko datua,Dato del 15 de diciembre de 2019,Data from December 15 2019
+d20191221,2019ko abenduaren 21eko datua,Dato del 21 de diciembre de 2019,Data from December 21 2019
+d20200102,2020ko urtarrilaren 2ko datua,Dato del 2 de enero de 2020,Data from January 2 2020
+d20200114,2020ko urtarrilaren 14ko datua,Dato del 14 de enero de 2020,Data from January 14 2020
+d20200126,2020ko urtarrilaren 26ko datua,Dato del 26 de enero de 2020,Data from January 26 2020
+d20200207,2020ko otsailaren 7ko datua,Dato del 7 de febrero de 2020,Data from February 7 2020
+d20200219,2020ko otsailaren 19ko datua,Dato del 19 de febrero de 2020,Data from February 19 2020
+d20200302,2020ko martxoaren 2ko datua,Dato del 2 de marzo de 2020,Data from March 2 2020
+d20200314,2020ko martxoaren 14ko datua,Dato del 14 de marzo de 2020,Data from March 14 2020
+geom,Puntuaren geometria espaziala,Geometría espacial del punto,Spatial geometry of the point
+GFA_DST_PSI_UD,PSI neurri bertikalak,PSI medidas verticales,PSI vertical measurements
+b5mcode,PSI kodea,Código PSI,PSI code
 url_graphics_psi,PSI grafikoaren URLa,URL de la gráfica PSI,PSI Chart URL
 code,Puntuaren kodea edo identifikadorea,Código o identificador del punto,Point code or identifier
 utm_x,UTM X koordenatuaren balioa,Valor de la coordenada UTM X,UTM X coordinate value
