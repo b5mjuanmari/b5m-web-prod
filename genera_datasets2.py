@@ -157,55 +157,96 @@ def parse_campos_csv(campos_csv):
     return field_descriptions, header
 
 def generate_gpkg_multi(origen, gpkg_file, campos_csv):
-    """Sortu multi GPKG fitxategia"""
-    field_descriptions, destino2 = parse_campos_csv(campos_csv)
-
     origen_lerroak = origen.splitlines()
-    origen_dir = ruta1 + "/" + origen_lerroak[1].replace("-- ", "").replace("--", "")
-    shapefiles = [f for f in os.listdir(origen_dir) if f.endswith('.shp')]
-
     # Detektatu "multi2" kodea (Oracle kasua)
     has_multi2 = 'multi2' in origen_lerroak[0].lower() if origen_lerroak else False
 
-    for index, fitx_shp in enumerate(shapefiles, start=1):
-        shapefile_path = os.path.join(origen_dir, fitx_shp)
-        fitx_shp_oin = fitx_shp.split('.')[0]
+    """Sortu multi GPKG fitxategia"""
+    field_descriptions, destino2 = parse_campos_csv(campos_csv)
 
-        # Bilatu katea eta hurrengo lerroaren berri eman
-        j = 0
-        for i, lerroa in enumerate(origen_lerroak):
-            if ("--" + fitx_shp_oin in lerroa) or ("-- " + fitx_shp_oin in lerroa):
-                if i + 1 < len(origen_lerroak):
-                    gpkg_tab = origen_lerroak[i + 1].replace("-- ", "").replace("--", "")
+    if not has_multi2:
+        origen_dir = ruta1 + "/" + origen_lerroak[1].replace("-- ", "").replace("--", "")
+        shapefiles = [f for f in os.listdir(origen_dir) if f.endswith('.shp')]
 
-                    # SELECT sententzia osoa bilatu
-                    select_lerroak = []
-                    k = i + 2
-                    while k < len(origen_lerroak):
-                        lerroa_actual = origen_lerroak[k].strip()
-                        if lerroa_actual and not lerroa_actual.startswith("--"):
-                            select_lerroak.append(lerroa_actual)
-                            # Sententzia puntu eta koma batekin amaitzen den begiratu
-                            if ";" in lerroa_actual:
-                                break
-                        k += 1
+        for index, fitx_shp in enumerate(shapefiles, start=1):
+            shapefile_path = os.path.join(origen_dir, fitx_shp)
+            fitx_shp_oin = fitx_shp.split('.')[0]
 
-                    # SELECT sententzia osoa batu
-                    gpkg_sel = " ".join(select_lerroak)
-                    # Azkeneko puntu eta koma kendu
-                    gpkg_sel = remove_semicolon(gpkg_sel);
-                    j = 1
-                    break  # Aurkitu dugunean, loopetik irten
+            # Bilatu katea eta hurrengo lerroaren berri eman
+            j = 0
+            for i, lerroa in enumerate(origen_lerroak):
+                if ("--" + fitx_shp_oin in lerroa) or ("-- " + fitx_shp_oin in lerroa):
+                    if i + 1 < len(origen_lerroak):
+                        gpkg_tab = origen_lerroak[i + 1].replace("-- ", "").replace("--", "")
 
-        if j == 0:
-            gpkg_tab = fitx_shp_oin
+                        # SELECT sententzia osoa bilatu
+                        select_lerroak = []
+                        k = i + 2
+                        while k < len(origen_lerroak):
+                            lerroa_actual = origen_lerroak[k].strip()
+                            if lerroa_actual and not lerroa_actual.startswith("--"):
+                                select_lerroak.append(lerroa_actual)
+                                # Sententzia puntu eta koma batekin amaitzen den begiratu
+                                if ";" in lerroa_actual:
+                                    break
+                            k += 1
 
-        # "multi2" kodea bada, Oracle kontsulta kargatu
-        if has_multi2 and gpkg_sel:
-            kargatu_oracle_table_gpkg(gpkg_sel, gpkg_file, gpkg_tab)
-        else:
-            # Bestela, shapefile bat GPKG fitxategi batean kargatu
+                        # SELECT sententzia osoa batu
+                        gpkg_sel = " ".join(select_lerroak)
+                        # Azkeneko puntu eta koma kendu
+                        gpkg_sel = remove_semicolon(gpkg_sel);
+                        j = 1
+                        break  # Aurkitu dugunean, loopetik irten
+
+            if j == 0:
+                gpkg_tab = fitx_shp_oin
+
             kargatu_shapefile_gpkg(shapefile_path, gpkg_file, gpkg_tab, gpkg_sel)
+    else:
+        # "multi2" kodea bada, Oracle kontsulta kargatu
+        gpkg_tab = None
+        gpkg_sel = None
+        sql_blocks = []
+        for i, lerroa in enumerate(origen_lerroak):
+            lerroa = lerroa.strip()
+            # Taularen izena bilatu (-- iruzkina select baino lehen)
+            if lerroa.startswith('--') and i + 1 < len(origen_lerroak):
+                next_line = origen_lerroak[i + 1].strip()
+                if next_line.startswith('select'):
+                    # Iruzkinaren hasierako -- kendu
+                    table_name = lerroa[2:].strip()
+                    gpkg_tab = table_name
+
+            # SQL sententzia bilatu
+            if lerroa.startswith('select'):
+                gpkg_sel = lerroa
+                # Hurrengo lerroak gehitu puntu eta komaraino
+                j = i + 1
+                while j < len(origen_lerroak) and not origen_lerroak[j].strip().endswith(';'):
+                    gpkg_sel += ' ' + origen_lerroak[j].strip()
+                    j += 1
+
+                # Azken lerroa (puntu eta komaduna) gehitu
+                if j < len(origen_lerroak):
+                    gpkg_sel += ' ' + origen_lerroak[j].strip()
+
+                # SQL blokea gorde
+                if gpkg_tab and gpkg_sel:
+                    sql_blocks.append({
+                        'gpkg_tab': gpkg_tab,
+                        'gpkg_sel': gpkg_sel
+                    })
+
+                # Reset aldagaiak hurrengo blokerako
+                gpkg_tab = None
+                gpkg_sel = None
+
+        for block in sql_blocks:
+            gpkg_tab = block['gpkg_tab']
+            gpkg_sel = block['gpkg_sel']
+            # Azkeneko puntu eta koma kendu
+            gpkg_sel = remove_semicolon(gpkg_sel);
+            kargatu_oracle_table_gpkg(gpkg_sel, gpkg_file, gpkg_tab)
 
     # GPKG fitxategian eremu deskribapenak gehitu
     if field_descriptions:
