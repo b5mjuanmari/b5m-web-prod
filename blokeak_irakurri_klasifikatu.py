@@ -1,3 +1,23 @@
+"""
+blokeak_irakurri_klasifikatu.py
+
+Script honek CSV fitxategi bat irakurtzen du eta blokeetan antolatutako datuak pantailaratzen ditu,
+bloke bakoitza bere motaren arabera bereiziz.
+
+Funtzionalitatea:
+    - CSV fitxategia irakurri eta datuak memorian gorde.
+    - Bloke bakoitza bere motaren arabera bereizi eta inprimatu.
+    - Blokeen arteko trantsizioak detektatu eta inprimatzea kontrolatu.
+
+Parametroak:
+    csv_fitxategia (str): Irakurri nahi den CSV fitxategiaren bidea.
+    motak (list): Blokeen motak definitzen duten stringen zerrenda.
+
+Adibide erabilera:
+    >>> mota = ["GFA_DST_CP_LAND", "GFA_DST_CP_URBAN", "GFA_DST_CP_ZONING"]
+    >>> irakurri_blokeak("csv/GFA_DSET_CP.csv", mota)
+"""
+
 import csv
 
 def irakurri_blokeak(csv_fitxategia, motak):
