@@ -24,15 +24,19 @@ db_dsn = os.getenv("DB_DSN", "bdet")
 db_tab = os.getenv("DB_TAB", "GIPUTZ")
 ogr2ogr_bin = "/usr/local/bin/ogr2ogr"
 
-# SQL kontsulta (ALDATUTA - campos_csv gehitu da)
+# SQL kontsulta
 sql = """
 select
   case
     when a.nombre_eu = a.nombre_es then a.nombre_eu
     else a.nombre_eu || ' / ' || a.nombre_es
   end as name,
-  a.nombre_eu || ' / ' || a.nombre_es || ' / ' || a.nombre_en as name_dset,
-  a.descripcion_eu || ' / ' || a.descripcion_es || ' / ' || a.descripcion_en as description_dset,
+  a.nombre_eu as name_dset_eu,
+  a.nombre_es as name_dset_es,
+  a.nombre_en as name_dset_en,
+  a.descripcion_eu as description_dset_eu,
+  a.descripcion_es as description_dset_es,
+  a.descripcion_en as description_dset_en,
   a.origen,
   a.destino,
   b.extension,
@@ -467,7 +471,7 @@ def generate_shp(gpkg_file, destino, name_dset, description_dset, campos_csv):
                 subprocess.run(shp_command, check=True)
 
                 if field_descriptions:
-                    # README fitxategia sortu izenburuarekin, deskribanerakin eta eremuen deskribapenekin taula honentzat
+                    # README fitxategia sortu izenburuarekin, deskribapenarekin eta eremuen deskribapenekin taula honentzat
                     readme_file = os.path.join(gpkg_dir, f"README_{shp_base_name}.txt")
                     with open(readme_file, 'w', encoding='utf-8') as f:
                         f.write(f"{name_dset}\n")
@@ -511,7 +515,7 @@ def generate_shp(gpkg_file, destino, name_dset, description_dset, campos_csv):
                 log(f"Errorea Shapefile sortzean {table_name}: {e}")
                 continue
 
-def generate_kml(gpkg_file, destino, namefield, campos_csv):
+def generate_kml(gpkg_file, destino, namefield, name_dset, description_dset, campos_csv):
     """Sortu KML fitxategia GPKG-tik eremu deskribapenekin"""
     kml_file = os.path.join(gpkg_dir, f"{destino}.kml")
     if os.path.exists(kml_file):
@@ -530,7 +534,7 @@ def generate_kml(gpkg_file, destino, namefield, campos_csv):
     ]
     subprocess.run(kml_command, check=True)
 
-    # 2. Eremu deskribapenak gehitu Document elementuaren barruan
+    # 2. Izenburua, deskribapena eta eremu deskribapenak gehitu Document elementuaren barruan
     if field_descriptions:
         with open(kml_file, 'r+', encoding='utf-8') as f:
             content = f.read()
@@ -548,6 +552,10 @@ def generate_kml(gpkg_file, destino, namefield, campos_csv):
             # Sortu deskribapenak KML formatuan
             desc_lines = [
                 '<description><![CDATA[',
+                name_dset,
+                '---',
+                description_dset,
+                '---',
                 'KODE: Eremuen deskribapena / Descripción de los campos / Field Description:'
             ]
 
@@ -578,7 +586,7 @@ def generate_kml(gpkg_file, destino, namefield, campos_csv):
     if os.path.exists(kml_file):
         os.remove(kml_file)
 
-def generate_geojson(gpkg_file, destino, campos_csv):
+def generate_geojson(gpkg_file, destino, name_dset_eu, name_dset_es, name_dset_en, description_dset_eu, description_dset_es, description_dset_en, campos_csv):
     """Sortu GeoJSON fitxategia GPKG-tik eremu deskribapenekin"""
     geojson_file = os.path.join(gpkg_dir, f"{destino}.geojson")
     if os.path.exists(geojson_file):
@@ -595,7 +603,7 @@ def generate_geojson(gpkg_file, destino, campos_csv):
     ]
     subprocess.run(geojson_command, check=True)
 
-    # 2. Eremu deskribapenak gehitu JSON-aren egitura egokian
+    # 2. Izenburua, deskribapena eta eremu deskribapenak gehitu JSON-aren egitura egokian
     if field_descriptions:
         with open(geojson_file, 'r+', encoding='utf-8') as f:
             data = json.load(f)
@@ -620,6 +628,32 @@ def generate_geojson(gpkg_file, destino, campos_csv):
             f.seek(0)
             json.dump(updated_data, f, ensure_ascii=False, indent=2, sort_keys=False)
             f.truncate()
+
+    if name_dset_eu:
+        with open(geojson_file, 'r+', encoding='utf-8') as f:
+            data = json.load(f)
+
+        # Title eta description eremuak name ondoren txertatu
+        keys = list(data.keys())
+        name_index = keys.index('name')
+        new_data = {}
+        for i, key in enumerate(keys):
+            new_data[key] = data[key]
+            if key == 'name':
+                new_data['title'] = {
+                    "eu": name_dset_eu,
+                    "es": name_dset_es,
+                    "en": name_dset_en
+                }
+                new_data['description'] = {
+                    "eu": description_dset_eu,
+                    "es": description_dset_es,
+                    "en": description_dset_en
+                }
+
+        # Eguneratutako GeoJSON fitxategia gorde
+        with open(geojson_file, 'w', encoding='utf-8') as f:
+            json.dump(new_data, f, ensure_ascii=False, indent=2)
 
     # 3. Kopiatu helburuko direktorioa
     geojson_file2 = os.path.join(ruta2, f"{destino}.geojson")
@@ -679,7 +713,9 @@ def generate_datasets(sql):
     start_time = time.time()
     processed_datasets = 0
 
-    for i, (name, name_dset, description_dset, origen, destino, extension, formato, namefield, campos_csv) in enumerate(datasets, start=1):
+    for i, (name, name_dset_eu, name_dset_es, name_dset_en, description_dset_eu, description_dset_es, description_dset_en, origen, destino, extension, formato, namefield, campos_csv) in enumerate(datasets, start=1):
+        name_dset = name_dset_eu + ' / ' + name_dset_es + ' / ' + name_dset_en
+        description_dset = description_dset_eu + ' / ' + description_dset_es + ' / ' + description_dset_en
         iteration_start = time.time()
         log(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {i}/{total_datasets} - {destino} - {name} - {formato} - ")
 
@@ -694,9 +730,9 @@ def generate_datasets(sql):
             elif formato == "SHP":
                 generate_shp(intermediate_gpkg, destino, name_dset, description_dset, campos_csv)
             elif formato == "KML":
-                generate_kml(intermediate_gpkg, destino, namefield, campos_csv)
+                generate_kml(intermediate_gpkg, destino, namefield, name_dset, description_dset, campos_csv)
             elif formato == "GeoJSON":
-                generate_geojson(intermediate_gpkg, destino, campos_csv)
+                generate_geojson(intermediate_gpkg, destino, name_dset_eu, name_dset_es, name_dset_en, description_dset_eu, description_dset_es, description_dset_en, campos_csv)
             elif formato == "CSV":
                 generate_csv(intermediate_gpkg, destino, campos_csv)
             else:
