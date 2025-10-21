@@ -31,6 +31,8 @@ select
     when a.nombre_eu = a.nombre_es then a.nombre_eu
     else a.nombre_eu || ' / ' || a.nombre_es
   end as name,
+  a.nombre_eu || ' / ' || a.nombre_es || ' / ' || a.nombre_en as name_dset,
+  a.descripcion_eu || ' / ' || a.descripcion_es || ' / ' || a.descripcion_en as description_dset,
   a.origen,
   a.destino,
   b.extension,
@@ -289,7 +291,7 @@ def generate_gpkg_multi(origen, gpkg_file, campos_csv):
 
     return gpkg_file
 
-def generate_gpkg(origen, destino, campos_csv):
+def generate_gpkg(origen, destino, name_dset, description_dset, campos_csv):
     """Sortu GPKG fitxategia jatorrizko datuetatik eremu deskribapenekin"""
     gpkg_file = os.path.join(gpkg_dir, f"{destino}.gpkg")
     if os.path.exists(gpkg_file):
@@ -362,10 +364,25 @@ def generate_gpkg(origen, destino, campos_csv):
             ogr2ogr_command.append(os.path.join(ruta1, f"{origen}.shp"))
         subprocess.run(ogr2ogr_command, check=True)
 
+    # GPKG fitxategian izena eta deskribapenak gehitu
+    if name_dset and description_dset:
+        conn2 = sqlite3.connect(gpkg_file)
+        conn2_c = conn2.cursor()
+
     # GPKG fitxategian eremu deskribapenak gehitu
     if field_descriptions:
         conn2 = sqlite3.connect(gpkg_file)
         conn2_c = conn2.cursor()
+
+        conn2_c.execute("""
+            UPDATE gpkg_contents
+            SET
+                identifier = ?,
+                description = ?
+            WHERE table_name = ?
+        """, (name_dset, description_dset, destino))
+
+        conn2.commit()
 
         # gpkg_data_columns taula sortu (baldin ez badago)
         conn2_c.execute("""
@@ -396,7 +413,7 @@ def generate_gpkg(origen, destino, campos_csv):
 
     return gpkg_file
 
-def generate_shp(gpkg_file, destino, campos_csv):
+def generate_shp(gpkg_file, destino, name_dset, description_dset, campos_csv):
     """Sortu SHP fitxategia GPKG-tik eremu deskribapenekin (taula anitzak ZIP bakarrean, README bakoitzeko)"""
     field_descriptions, _ = parse_campos_csv(campos_csv)
 
@@ -450,9 +467,13 @@ def generate_shp(gpkg_file, destino, campos_csv):
                 subprocess.run(shp_command, check=True)
 
                 if field_descriptions:
-                    # README fitxategia sortu EREMUEN DESKRIBAPENEKIN taula honentzat
+                    # README fitxategia sortu izenburuarekin, deskribanerakin eta eremuen deskribapenekin taula honentzat
                     readme_file = os.path.join(gpkg_dir, f"README_{shp_base_name}.txt")
                     with open(readme_file, 'w', encoding='utf-8') as f:
+                        f.write(f"{name_dset}\n")
+                        f.write("-" * 3 + "\n")
+                        f.write(f"{description_dset}\n")
+                        f.write("-" * 3 + "\n")
                         f.write("KODE: Eremuen deskribapena / Descripción de los campos / Field Description:\n")
                         inprimatu = False
                         for field in field_descriptions:
@@ -658,20 +679,20 @@ def generate_datasets(sql):
     start_time = time.time()
     processed_datasets = 0
 
-    for i, (name, origen, destino, extension, formato, namefield, campos_csv) in enumerate(datasets, start=1):
+    for i, (name, name_dset, description_dset, origen, destino, extension, formato, namefield, campos_csv) in enumerate(datasets, start=1):
         iteration_start = time.time()
         log(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {i}/{total_datasets} - {destino} - {name} - {formato} - ")
 
         try:
             # 1. Lehenik eta behin GPKG fitxategia sortu
-            intermediate_gpkg = generate_gpkg(origen, destino, campos_csv)
+            intermediate_gpkg = generate_gpkg(origen, destino, name_dset, description_dset, campos_csv)
 
             # 2. Formatuaren arabera prozesatu
             if formato == "GPKG":
                 target_file = os.path.join(ruta2, f"{destino}.gpkg")
                 shutil.copy2(intermediate_gpkg, target_file)
             elif formato == "SHP":
-                generate_shp(intermediate_gpkg, destino, campos_csv)
+                generate_shp(intermediate_gpkg, destino, name_dset, description_dset, campos_csv)
             elif formato == "KML":
                 generate_kml(intermediate_gpkg, destino, namefield, campos_csv)
             elif formato == "GeoJSON":
