@@ -163,7 +163,7 @@ def parse_campos_csv(campos_csv):
 
     return field_descriptions, header
 
-def generate_gpkg_multi(origen, gpkg_file, campos_csv):
+def generate_gpkg_multi(origen, gpkg_file, name_dset, description_dset, campos_csv):
     origen_lerroak = origen.splitlines()
     # Detektatu "multi2" kodea (Oracle kasua)
     has_multi2 = 'multi2' in origen_lerroak[0].lower() if origen_lerroak else False
@@ -278,6 +278,20 @@ def generate_gpkg_multi(origen, gpkg_file, campos_csv):
         for line in campos_csv.split('\n'):
             if line[:3] == "GFA" or line == "field,fieldname_eu,fieldname_es,fieldname_en":
                 destino2 = line.split(",")[0]
+                if destino2 != "field":
+                    # GPKG fitxategian izena eta deskribapena gehitu
+                    if name_dset and description_dset:
+                        destino3 = line.split(",")[1] + " / " + line.split(",")[2] + " / " + line.split(",")[3]
+                        conn2_c.execute("""
+                            UPDATE gpkg_contents
+                            SET
+                                identifier = ?,
+                                description = ?
+                            WHERE table_name = ?
+                        """, (destino3, description_dset, destino2))
+
+                        conn2.commit()
+
                 continue
             if line.strip():
                 parts = [part.strip() for part in line.split(',')]
@@ -305,7 +319,7 @@ def generate_gpkg(origen, destino, name_dset, description_dset, campos_csv):
 
     if contains_multi(origen.splitlines()[0]):
         # Multi kasu berezia (SQL multilerroak taula bat baino gehiago eskatzen du)
-        generate_gpkg_multi(origen, gpkg_file, campos_csv)
+        generate_gpkg_multi(origen, gpkg_file, name_dset, description_dset, campos_csv)
     elif origen.strip().lower().startswith("with"):
         # Azkeneko puntu eta koma kendu
         origen = remove_semicolon(origen);
@@ -368,13 +382,8 @@ def generate_gpkg(origen, destino, name_dset, description_dset, campos_csv):
             ogr2ogr_command.append(os.path.join(ruta1, f"{origen}.shp"))
         subprocess.run(ogr2ogr_command, check=True)
 
-    # GPKG fitxategian izena eta deskribapenak gehitu
+    # GPKG fitxategian izena eta deskribapena gehitu
     if name_dset and description_dset:
-        conn2 = sqlite3.connect(gpkg_file)
-        conn2_c = conn2.cursor()
-
-    # GPKG fitxategian eremu deskribapenak gehitu
-    if field_descriptions:
         conn2 = sqlite3.connect(gpkg_file)
         conn2_c = conn2.cursor()
 
@@ -387,6 +396,12 @@ def generate_gpkg(origen, destino, name_dset, description_dset, campos_csv):
         """, (name_dset, description_dset, destino))
 
         conn2.commit()
+        conn2.close()
+
+    # GPKG fitxategian eremu deskribapenak gehitu
+    if field_descriptions:
+        conn2 = sqlite3.connect(gpkg_file)
+        conn2_c = conn2.cursor()
 
         # gpkg_data_columns taula sortu (baldin ez badago)
         conn2_c.execute("""
