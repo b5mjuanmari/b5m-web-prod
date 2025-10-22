@@ -1,5 +1,5 @@
 field,fieldname_eu,fieldname_es,fieldname_en
-GFA_DST_PSI_EW,PSI neurri horizontalak,PSI medidas horizontales,PSI horizontal measurements
+GFA_DSET_PSI_EW,PSI neurri horizontalak,PSI medidas horizontales,PSI horizontal measurements
 b5mcode,PSI kodea,Código PSI,PSI code
 url_graphics_psi,PSI grafikoaren URLa,URL de la gráfica PSI,PSI Chart URL
 code,Puntuaren kodea edo identifikadorea,Código o identificador del punto,Point code or identifier
@@ -132,7 +132,7 @@ d20200219,2020ko otsailaren 19ko datua,Dato del 19 de febrero de 2020,Data from 
 d20200302,2020ko martxoaren 2ko datua,Dato del 2 de marzo de 2020,Data from March 2 2020
 d20200314,2020ko martxoaren 14ko datua,Dato del 14 de marzo de 2020,Data from March 14 2020
 geom,Puntuaren geometria espaziala,Geometría espacial del punto,Spatial geometry of the point
-GFA_DST_PSI_UD,PSI neurri bertikalak,PSI medidas verticales,PSI vertical measurements
+GFA_DSET_PSI_UD,PSI neurri bertikalak,PSI medidas verticales,PSI vertical measurements
 b5mcode,PSI kodea,Código PSI,PSI code
 url_graphics_psi,PSI grafikoaren URLa,URL de la gráfica PSI,PSI Chart URL
 code,Puntuaren kodea edo identifikadorea,Código o identificador del punto,Point code or identifier

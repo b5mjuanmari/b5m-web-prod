@@ -1,15 +1,15 @@
 field,fieldname_eu,fieldname_es,fieldname_en
-GFA_DST_CP_LAND,Landalur,Rural,Land
+GFA_DSET_CP_LAND,Landalur,Rural,Land
 nationalcadastralreference,Erregistro katastralaren erreferentzia,Referencia catastral nacional,National cadastral reference
 name,Lurraldearen izena,Nombre del terreno,Name of the land
 muni,Udalerriaren kodea,Código municipal,Municipality code
 urlinfo,Informazio gehiagorako URLa,URL para más información,URL for additional information
-GFA_DST_CP_URBAN,Hirigune,Urbano,Urban
+GFA_DSET_CP_URBAN,Hirigune,Urbano,Urban
 nationalcadastralreference,Erregistro katastralaren erreferentzia,Referencia catastral nacional,National cadastral reference
 name,Lurraldearen izena,Nombre del terreno,Name of the land
 muni,Udalerriaren kodea,Código municipal,Municipality code
 cadastralzoningcode,Katastroko zonifikazio kodea,Código de zonificación catastral,Cadastral zoning code
 urlinfo,Informazio gehiagorako URLa,URL para más información,URL for additional information
-GFA_DST_CP_ZONING,Eremuak,Zonas,Zoning
+GFA_DSET_CP_ZONING,Eremuak,Zonas,Zoning
 muni,Udalerriaren kodea,Código municipal,Municipality code
 cadastralzoningcode,Katastroko zonifikazio kodea,Código de zonificación catastral,Cadastral zoning code

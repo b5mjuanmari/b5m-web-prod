@@ -1,7 +1,7 @@
 -- multi2
 
 -- B5MWEB_25830.PSI_EW_2016_2020
--- GFA_DST_PSI_EW
+-- GFA_DSET_PSI_EW
 select
   'PS_EW_' || ogr_fid as b5mcode,
   'https://b5m.gipuzkoa.eus/api/2.0/psi/ew/id_' || ogr_fid as url_graphics_psi,
@@ -137,7 +137,7 @@ select
 from b5mweb_25830.psi_ew_2016_2020;
 
 -- B5MWEB_25830.PSI_UD_2016_2020
--- GFA_DST_PSI_UD
+-- GFA_DSET_PSI_UD
 select
   'PS_UD_' || ogr_fid as b5mcode,
   'https://b5m.gipuzkoa.eus/api/2.0/psi/ud/id_' || ogr_fid as url_graphics_psi,
