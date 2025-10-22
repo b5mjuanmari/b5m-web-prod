@@ -665,7 +665,7 @@ def generate_geojson(gpkg_file, destino, name_dset_eu, name_dset_es, name_dset_e
     if os.path.exists(geojson_file):
         os.remove(geojson_file)
 
-def generate_csv(gpkg_file, destino, campos_csv):
+def generate_csv(gpkg_file, destino, name_dset, description_dset, campos_csv):
     """Sortu CSV fitxategia GPKG-tik eremu deskribapenekin"""
     csv_file = os.path.join(gpkg_dir, f"{destino}.csv")
     if os.path.exists(csv_file):
@@ -684,6 +684,10 @@ def generate_csv(gpkg_file, destino, campos_csv):
     # README fitxategia sortu eremu deskribapenekin
     readme_file = os.path.join(gpkg_dir, f"README_{destino}.txt")
     with open(readme_file, 'w') as f:
+        f.write(f"{name_dset}\n")
+        f.write("-" * 3 + "\n")
+        f.write(f"{description_dset}\n")
+        f.write("-" * 3 + "\n")
         f.write("KODE: Eremuen deskribapena / Descripción de los campos / Field Description:\n")
         for field in field_descriptions:
             f.write(f"{field['field_name'].upper()}: {field['description_eu']} / {field['description_es']} / {field['description_en']}\n")
@@ -734,7 +738,7 @@ def generate_datasets(sql):
             elif formato == "GeoJSON":
                 generate_geojson(intermediate_gpkg, destino, name_dset_eu, name_dset_es, name_dset_en, description_dset_eu, description_dset_es, description_dset_en, campos_csv)
             elif formato == "CSV":
-                generate_csv(intermediate_gpkg, destino, campos_csv)
+                generate_csv(intermediate_gpkg, destino, name_dset, description_dset, campos_csv)
             else:
                 log(f"{formato} ez da onartzen.\n")
 
