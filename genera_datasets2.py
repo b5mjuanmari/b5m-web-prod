@@ -50,7 +50,7 @@ inner join
 where
   a.crear = 1
 order by
-  a.orden"""
+  a.orden, b.id_fichero"""
 
 ruta1 = "/home5/SHP"
 ruta2 = "/home/data/datos_explotacion/CUR/datasets2"
