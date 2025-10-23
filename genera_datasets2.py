@@ -485,27 +485,6 @@ def generate_shp(gpkg_file, destino, name_dset, description_dset, campos_csv):
             try:
                 subprocess.run(shp_command, check=True)
 
-                if field_descriptions:
-                    # README fitxategia sortu izenburuarekin, deskribapenarekin eta eremuen deskribapenekin taula honentzat
-                    readme_file = os.path.join(gpkg_dir, f"README_{shp_base_name}.txt")
-                    with open(readme_file, 'w', encoding='utf-8') as f:
-                        f.write(f"{name_dset}\n")
-                        f.write("-" * 3 + "\n")
-                        f.write(f"{description_dset}\n")
-                        f.write("-" * 3 + "\n")
-                        f.write("KODE: Eremuen deskribapena / Descripción de los campos / Field Description:\n")
-                        inprimatu = False
-                        for field in field_descriptions:
-                            if len(tables) == 1:
-                                inprimatu = True
-                            if field['field_name'] == shp_base_name:
-                                inprimatu = True
-                            elif field['field_name'] in tables and field['field_name'] != shp_base_name and inprimatu:
-                                break
-
-                            if inprimatu:
-                                f.write(f"{field['field_name'].upper()[:10]}: {field['description_eu']} / {field['description_es']} / {field['description_en']}\n")
-
                 # Gehitu shapefile fitxategi guztiak ZIP-era
                 for shp_file in shp_files:
                     if os.path.exists(shp_file):
@@ -515,20 +494,35 @@ def generate_shp(gpkg_file, destino, name_dset, description_dset, campos_csv):
                         # Garbitu behin behineko fitxategia
                         os.remove(shp_file)
 
-                # Gehitu README fitxategia ZIP-era
-                if os.path.exists(readme_file):
-                    if len(tables) > 1:
-                        readme_zip_path = f"README_{table_name}.txt"
-                    else:
-                        readme_zip_path = f"README_{destino}.txt"
-
-                    zipf.write(readme_file, readme_zip_path)
-                    # Garbitu behin behineko README fitxategia
-                    os.remove(readme_file)
-
             except subprocess.CalledProcessError as e:
                 log(f"Errorea Shapefile sortzean {table_name}: {e}")
                 continue
+
+        if field_descriptions:
+            # README fitxategia sortu izenburuarekin, deskribapenarekin eta eremuen deskribapenekin SHP honentzat
+            readme_file = os.path.join(gpkg_dir, f"README_{destino}.txt")
+            with open(readme_file, 'w', encoding='utf-8') as f:
+                f.write(f"{name_dset}\n")
+                f.write("-" * 3 + "\n")
+                f.write(f"{description_dset}\n")
+                f.write("-" * 3 + "\n")
+                f.write("KODE: Eremuen deskribapena / Descripción de los campos / Field Description:\n")
+                for field in field_descriptions:
+                    if field['field_name'][:3] == "GFA":
+                        f.write("-" * 3 + "\n")
+                        wf1 = field['field_name']
+                    else:
+                        wf1 = field['field_name'].upper()[:10]
+
+                    f.write(f"{wf1}: {field['description_eu']} / {field['description_es']} / {field['description_en']}\n")
+
+            # Gehitu README fitxategia ZIP-era
+            if os.path.exists(readme_file):
+                readme_zip_path = f"README_{destino}.txt"
+
+                zipf.write(readme_file, readme_zip_path)
+                # Garbitu behin behineko README fitxategia
+                os.remove(readme_file)
 
 def generate_kml(gpkg_file, destino, namefield, name_dset, description_dset, campos_csv):
     """Sortu KML fitxategia GPKG-tik eremu deskribapenekin"""
