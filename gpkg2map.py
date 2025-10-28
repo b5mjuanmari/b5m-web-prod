@@ -93,7 +93,7 @@ def lortu_gpkg_metadatuak(gpkg_fitxategia, progresua_osoa, progresua_oraingoa, h
             if progresu_ehunekoa > 0:
                 estimatutako_denbora = (denbora_pasatua / progresu_ehunekoa) * 100
                 denbora_geratzen = estimatutako_denbora - denbora_pasatua
-                print(f"\rProgresua: {progresu_ehunekoa:.1f}% - Denbora geratzen: {denbora_geratzen:.1f}s", end="")
+                print(f"\rProgresua: %{progresu_ehunekoa:.1f} - geratzen da: {denbora_geratzen:.1f}s", end="")
 
             metadatuak['izenburua'] = identifier or os.path.basename(gpkg_fitxategia)
             metadatuak['deskribapena'] = description or ''
@@ -136,37 +136,37 @@ def sortu_map_fitxategia(gpkg_metadatuak, irteera_izena, hasiera_denbora):
 
     with open(irteera_izena, 'w', encoding='utf-8') as f:
         # Map fitxategiaren goiburua
-        f.write(f"""MAP
-    NAME "GPKG_Datuak"
-    STATUS ON
-    SIZE 800 600
-    EXTENT -180 -90 180 90
-    UNITS DD
-    SHAPEPATH "../data"
-    IMAGECOLOR 255 255 255
-    FONTSET "../fonts/fonts.list"
-    SYMBOLSET "../symbols/symbols.sym"
+        f.write(f"""map
+  name "GPKG_Datuak"
+  status on
+  size 800 600
+  extent -180 -90 180 90
+  units dd
+  shapepath "../data"
+  imagecolor 255 255 255
+  fontset "../fonts/fonts.list"
+  symbolset "../symbols/symbols.sym"
 
-    # PROJECTION
-    PROJECTION
-        "init=epsg:4326"
-    END
+  # projection
+  projection
+    "init=epsg:4326"
+  end
 
-    # WEB METADATAK (WMS/WFS zerbitzuak)
-    WEB
-        METADATA
-            "wms_title" "{gpkg_metadatuak[0]['izenburua'] if gpkg_metadatuak else 'GPKG Datuak'}"
-            "wms_onlineresource" "http://localhost/cgi-bin/mapserv?"
-            "wms_srs" "EPSG:4326 EPSG:3857"
-            "wms_enable_request" "*"
-            "wfs_title" "GPKG WFS Zerbitzua"
-            "wfs_onlineresource" "http://localhost/cgi-bin/mapserv?"
-            "wfs_srs" "EPSG:4326"
-            "wfs_enable_request" "*"
-            "wfs_encoding" "UTF-8"
-            "ows_enable_request" "*"
-        END
-    END
+  # web metadata (WMS/WFS zerbitzuak)
+  web
+    metadata
+      "wms_title" "{gpkg_metadatuak[0]['izenburua'] if gpkg_metadatuak else 'GPKG Datuak'}"
+      "wms_onlineresource" "http://localhost/cgi-bin/mapserv?"
+      "wms_srs" "EPSG:4326 EPSG:3857"
+      "wms_enable_request" "*"
+      "wfs_title" "GPKG WFS Zerbitzua"
+      "wfs_onlineresource" "http://localhost/cgi-bin/mapserv?"
+      "wfs_srs" "EPSG:4326"
+      "wfs_enable_request" "*"
+      "wfs_encoding" "UTF-8"
+      "ows_enable_request" "*"
+    end
+  end
 
 """)
 
@@ -185,52 +185,52 @@ def sortu_map_fitxategia(gpkg_metadatuak, irteera_izena, hasiera_denbora):
                 print(f"\rMap fitxategia sortzen: {progresu_ehunekoa:.1f}% - Layer {layer_oraingoa}/{layer_kopurua}", end="")
 
                 f.write(f"""
-    # LAYER: {layer_izena}
-    LAYER
-        NAME "{layer_izena}"
-        TYPE {geometria_mota_aldaketa(taula['geometria_mota'])}
-        STATUS ON
-        CONNECTIONTYPE OGR
-        CONNECTION "{gpkg['fitxategia']}"
-        DATA "{taula['izena']}"
-        METADATA
-            "wms_title" "{taula['izena']}"
-            "wms_srs" "EPSG:4326 EPSG:3857"
-            "gml_include_items" "all"
-            "wfs_typename" "{taula['izena']}"
-        END
-        PROJECTION
-            "init=epsg:{taula['srs_id'] or 4326}"
-        END
+  # layer: {layer_izena}
+  layer
+    name "{layer_izena}"
+    type {geometria_mota_aldaketa(taula['geometria_mota'])}
+    status on
+    connectiontype ogr
+    connection "{gpkg['fitxategia']}"
+    data "{taula['izena']}"
+    metadata
+      "wms_title" "{taula['izena']}"
+      "wms_srs" "EPSG:4326 EPSG:3857"
+      "gml_include_items" "all"
+      "wfs_typename" "{taula['izena']}"
+    end
+    projection
+      "init=epsg:{taula['srs_id'] or 4326}"
+    end
 """)
 
                 # Klase sinple bat gehitu
                 f.write(f"""
-        CLASS
-            NAME "{taula['izena']}"
-            STYLE
-                COLOR 200 100 100
-                OUTLINECOLOR 0 0 0
-            END
-        END
-    END
+    class
+      name "{taula['izena']}"
+      style
+        color 200 100 100
+        outlinecolor 0 0 0
+      end
+    end
+  end
 """)
 
-        f.write("END\n")
+        f.write("end\n")
 
     print(f"\nMap fitxategia sortu da: {irteera_izena}")
 
 def geometria_mota_aldaketa(geometria_mota):
     """Geometria mota MapServer formatura aldatu"""
     mota_aldaketak = {
-        'POINT': 'POINT',
-        'LINESTRING': 'LINE',
-        'POLYGON': 'POLYGON',
-        'MULTIPOINT': 'POINT',
-        'MULTILINESTRING': 'LINE',
-        'MULTIPOLYGON': 'POLYGON'
+        'POINT': 'point',
+        'LINESTRING': 'line',
+        'POLYGON': 'polygon',
+        'MULTIPOINT': 'point',
+        'MULTILINESTRING': 'line',
+        'MULTIPOLYGON': 'polygon'
     }
-    return mota_aldaketak.get(geometria_mota.upper(), 'POLYGON')
+    return mota_aldaketak.get(geometria_mota.upper(), 'polygon')
 
 def main():
     """Programa nagusia"""
