@@ -8,7 +8,7 @@ Script honek direktorio bateko GeoPackage (GPKG) fitxategi guztiak aztertu eta
 MapServer-en .map fitxategi bat sortzen du, WMS eta WFS zerbitzuekin bateragarria.
 
 EGINKIZUNA:
-------------
+-----------
 1. Direktorio bateko GPKG fitxategi guztiak detektatzea
 2. GPKG bakoitzaren edukia aztertzea (taulak, geometria motak, metadatuak)
 3. .map fitxategi bat sortzea MapServer-erako
@@ -23,6 +23,10 @@ DATU-ITURRIAK:
 ERABILERA:
 ----------
 python3 gpkg2map.py /path/to/gpkg/directory irteera.map
+
+ADIBIDEA:
+---------
+python3 gpkg2map.py /home/data/datos_explotacion/CUR/datasets2 ./dat/gipuzkoa_map_wms3.map
 
 Egilea: [Zure izena]
 Data: [Data]
@@ -87,14 +91,6 @@ def lortu_gpkg_metadatuak(gpkg_fitxategia, progresua_osoa, progresua_oraingoa, h
         taula_kopurua = len(taulak)
 
         for i, (taula, identifier, description, data_type, srs_id) in enumerate(taulak):
-            # Progresua eguneratu
-            progresu_ehunekoa = (progresua_oraingoa + (i / taula_kopurua)) / progresua_osoa * 100
-            denbora_pasatua = time.time() - hasiera_denbora
-            if progresu_ehunekoa > 0:
-                estimatutako_denbora = (denbora_pasatua / progresu_ehunekoa) * 100
-                denbora_geratzen = estimatutako_denbora - denbora_pasatua
-                print(f"\rProgresua: %{progresu_ehunekoa:.1f} - geratzen da: {denbora_geratzen:.1f}s", end="")
-
             metadatuak['izenburua'] = identifier or os.path.basename(gpkg_fitxategia)
             metadatuak['deskribapena'] = description or ''
 
@@ -137,53 +133,74 @@ def sortu_map_fitxategia(gpkg_metadatuak, irteera_izena, hasiera_denbora):
     with open(irteera_izena, 'w', encoding='utf-8') as f:
         # Map fitxategiaren goiburua
         f.write(f"""map
-  name "GPKG_Datuak"
+  config proj_lib /usr/local/share/proj
+  name gipuzkoa_map_wms2
   status on
-  size 800 600
-  extent -180 -90 180 90
-  units dd
-  shapepath "../data"
+  size 600 600
+  extent 530000 4740000 610000 4820000
+  units meters
+  shapepath "/home/data/datasets"
   imagecolor 255 255 255
-  fontset "../fonts/fonts.list"
-  symbolset "../symbols/symbols.sym"
-
-  # projection
+  resolution 96
+  maxsize 4096
+  symbolset "wms.sim"
   projection
-    "init=epsg:4326"
+    "init=epsg:25830"
   end
-
-  # web metadata (WMS/WFS zerbitzuak)
+  outputformat
+      name png
+      mimetype image/png
+      driver agg/png
+      extension png
+      imagemode rgba
+      transparent on
+      formatoption "COMPRESSION=9"
+      formatoption "QUANTIZE_FORCE=on"
+      formatoption "QUANTIZE_COLORS=256"
+  end
   web
     metadata
-      "wms_title" "{gpkg_metadatuak[0]['izenburua'] if gpkg_metadatuak else 'GPKG Datuak'}"
-      "wms_onlineresource" "http://localhost/cgi-bin/mapserv?"
-      "wms_srs" "EPSG:4326 EPSG:3857"
-      "wms_enable_request" "*"
-      "wfs_title" "GPKG WFS Zerbitzua"
-      "wfs_onlineresource" "http://localhost/cgi-bin/mapserv?"
-      "wfs_srs" "EPSG:4326"
-      "wfs_enable_request" "*"
-      "wfs_encoding" "UTF-8"
-      "ows_enable_request" "*"
-    end
+      ows_enable_request "*"
+      wms_enable_request "*"
+      wms_title "Gipuzkoa Web Map Service: Maps"
+      wms_abstract "This is an OGC compliant Map Service served by the Provincial Council of Gipuzkoa. The engine used to server this Map Service is MapServer"
+      wms_keywordlist "Gipuzkoa WMS Maps"
+      wms_onlineresource "https://b5mdev/ogc/wms/gipuzkoa_map_wms2?"
+      wms_contactperson ""
+      wms_contactorganization "Provincial Council of Gipuzkoa/Gipuzkoako Foru Aldundia/Diputación Foral de Gipuzkoa"
+      wms_addresstype "postal address"
+      wms_address "Julio Caro Baroja 2-3º"
+      wms_city "Donostia / San Sebastián"
+      wms_stateorprovince "Gipuzkoa"
+      wms_postcode "20018"
+      wms_country "Spain"
+      wms_contactvoicetelephone ""
+      wms_contactfacsimiletelephone ""
+      wms_contactelectronicmailaddress "liz@gipuzkoa.eus"
+      wms_fees "none"
+      wms_accessconstraints "https://b5mdev/web5000/en/legal-information"
+      wms_attribution_title "Provincial Council of Gipuzkoa/Gipuzkoako Foru Aldundia/Diputacion Foral de Gipuzkoa"
+      wms_srs "EPSG:25830 EPSG:23030 EPSG:4326 EPSG:32630 EPSG:4230 EPSG:900913 EPSG:3857 EPSG:3042"
+      wms_feature_info_mime_type "text/html"
+      wfs_title "Gipuzkoa Web Map Service: Maps"
+      wfs_onlineresource "https://b5mdev/ogc/wms/gipuzkoa_map_wms2?"
+      wfs_srs "EPSG:25830 EPSG:23030 EPSG:4326 EPSG:32630 EPSG:4230 EPSG:900913 EPSG:3857 EPSG:3042"
+      wfs_enable_request "*"
+      wfs_encoding "UTF-8"
+  	end
+  	header "info/gipuzkoa_map_wms_bur.html"
+  	footer "info/gipuzkoa_map_wms_oin.html"
+  	empty "info/gipuzkoa_map_wms_huts.html"
+  	temppath "/tmp/"
+  	imagepath "/tmp/"
+  	imageurl "/tmp/"
   end
-
 """)
 
         # Layer bakoitza sortu
-        layer_kopurua = sum(len(gpkg['taulak']) for gpkg in gpkg_metadatuak)
-        layer_oraingoa = 0
-
         for gpkg in gpkg_metadatuak:
             for taula in gpkg['taulak']:
                 layer_izena = f"{os.path.splitext(gpkg['fitxategia'])[0]}_{taula['izena']}"
-
-                # Progresua eguneratu
-                layer_oraingoa += 1
-                progresu_ehunekoa = layer_oraingoa / layer_kopurua * 100
-                denbora_pasatua = time.time() - hasiera_denbora
-                print(f"\rMap fitxategia sortzen: {progresu_ehunekoa:.1f}% - Layer {layer_oraingoa}/{layer_kopurua}", end="")
-
                 f.write(f"""
   # layer: {layer_izena}
   layer
@@ -218,8 +235,6 @@ def sortu_map_fitxategia(gpkg_metadatuak, irteera_izena, hasiera_denbora):
 
         f.write("end\n")
 
-    print(f"\nMap fitxategia sortu da: {irteera_izena}")
-
 def geometria_mota_aldaketa(geometria_mota):
     """Geometria mota MapServer formatura aldatu"""
     mota_aldaketak = {
@@ -245,12 +260,13 @@ def main():
     gpkg_fitxategiak = bilatu_gpkg_fitxategiak(args.direktorioa)
 
     # Metadatuak bildu
-    print("2. GPKG fitxategiak aztertzen...")
+    print("\n2. GPKG fitxategiak aztertzen...")
     gpkg_metadatuak = []
     gpkg_kopurua = len(gpkg_fitxategiak)
 
     for i, gpkg in enumerate(gpkg_fitxategiak):
-        print(f"\nAztertzen: {os.path.basename(gpkg)} ({i+1}/{gpkg_kopurua})")
+        prg_ehun = (i / gpkg_kopurua) * 100
+        print(f"[{i+1}/{gpkg_kopurua}] {os.path.basename(gpkg)} - %{prg_ehun:.0f}")
         metadatuak = lortu_gpkg_metadatuak(gpkg, gpkg_kopurua, i, hasiera_denbora)
         if metadatuak['taulak']:
             gpkg_metadatuak.append(metadatuak)
@@ -261,10 +277,9 @@ def main():
 
     # Denbora totala kalkulatu
     denbora_totala = time.time() - hasiera_denbora
-    print(f"\nProzesua amaitu da!")
-    print(f"Denbora totala: {denbora_totala:.2f} segundo")
-    print(f"Prozesatutako GPKG fitxategiak: {len(gpkg_metadatuak)}")
+    print(f"\nProzesatutako GPKG fitxategiak: {len(gpkg_metadatuak)}")
     print(f"Sortutako layer kopurua: {sum(len(gpkg['taulak']) for gpkg in gpkg_metadatuak)}")
+    print(f"Denbora: {denbora_totala:.2f} segundo")
 
 if __name__ == "__main__":
     main()
