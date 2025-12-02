@@ -1,0 +1,9 @@
+field,fieldname_eu
+b5mcode,Herrigunearen kodea
+name,Herrigunearen izena
+name_eu,Herrigunearen izena euskaraz
+name_es,Herrigunearen izena gaztelaniaz
+type_eu,Mota euskaraz
+type_es,Mota gaztelaniaz
+type_eu,Mota ingelesez
+geom,Geometria (poligonoa)

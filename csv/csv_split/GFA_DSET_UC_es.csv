@@ -1,0 +1,9 @@
+field,fieldname_es
+b5mcode,Código del núcleo urbano
+name,Nombre del núcleo urbano
+name_eu,Nombre del núcleo urbano en euskera
+name_es,Nombre del núcleo urbano en castellano
+type_eu,Tipo en euskera
+type_es,Tipo en castellano
+type_eu,Tipo en inglés
+geom,Geometría (polígono)

@@ -1,0 +1,9 @@
+field,fieldname_eu,fieldname_es,fieldname_en
+b5mcode,Herrigunearen kodea,Código del núcleo urbano,Urban Centre code
+name,Herrigunearen izena,Nombre del núcleo urbano,Name of the Urban Centre
+name_eu,Herrigunearen izena euskaraz,Nombre del núcleo urbano en euskera,Name of the Urban Centre in Basque
+name_es,Herrigunearen izena gaztelaniaz,Nombre del núcleo urbano en castellano,Name of the Urban Centre in Spanish
+type_eu,Mota euskaraz,Tipo en euskera,Type in Basque
+type_es,Mota gaztelaniaz,Tipo en castellano,Type in Spanish
+type_eu,Mota ingelesez,Tipo en inglés,Type in English
+geom,Geometria (poligonoa),Geometría (polígono),Geometry (polygon)

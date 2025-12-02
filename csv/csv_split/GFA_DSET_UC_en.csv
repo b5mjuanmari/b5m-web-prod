@@ -1,0 +1,9 @@
+field,fieldname_en
+b5mcode,Urban Centre code
+name,Name of the Urban Centre
+name_eu,Name of the Urban Centre in Basque
+name_es,Name of the Urban Centre in Spanish
+type_eu,Type in Basque
+type_es,Type in Spanish
+type_eu,Type in English
+geom,Geometry (polygon)
