@@ -58,7 +58,7 @@ ogr2ogr \
 -t_srs "EPSG:25830" \
 ${hidro}.shp \
 OCI:${usu}/${pas}@${bd}:${t} \
--sql "select a.idut,substr(a.nomrotular_c,1,1)||lower(substr(a.nomrotular_c,2,length(a.nomrotular_c)-1)) nombre_c,substr(a.nomrotular_e,1,1)||lower(substr(a.nomrotular_e,2,length(a.nomrotular_e)-1)) nombre_e,a.rotular_c,a.rotular_e,a.tipo_c,a.tipo_e,a.tipo_ut,c.polyline geom
+-sql "select a.idut,substr(a.nomrotular_c,1,1)||lower(substr(a.nomrotular_c,2,length(a.nomrotular_c)-1)) nombre_c,substr(a.nomrotular_e,1,1)||lower(substr(a.nomrotular_e,2,length(a.nomrotular_e)-1)) nombre_e,a.rotular_c,a.rotular_e,a.tipo_c,a.tipo_e,a.tipo_ut,a.clasenombre,c.polyline geom
 from almacen_cache.cla_nombres@almacen_cache_lnk a,almacen_cache.tutrel@almacen_cache_lnk b,b5mweb_25830.ibai_plus c
 where a.idut=b.idutpadre
 and b.iduthijo= c.idut
