@@ -6,6 +6,9 @@ name_es,Toponimoaren izena gaztelaniaz
 type_eu,Toponimo mota euskaraz
 type_es,Toponimo mota gaztelaniaz
 type_en,Toponimo mota ingelesez
+type_name_eu,Izen mota euskaraz (alias
+type_name_es,Izen mota gaztelaniaz
+type_name_en,Izen mota ingelesez
 codmuni,Udalerri kodea
 muni_eu,Udalerriaren izena euskaraz
 muni_es,Udalerriaren izena gaztelaniaz

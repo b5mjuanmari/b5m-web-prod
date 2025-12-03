@@ -6,6 +6,9 @@ name_es,Helbidea gaztelaniaz,Dirección en castellano,Address in Spanish
 type_eu,Mota euskaraz,Tipo en euskera,Type in Basque
 type_es,Mota gaztelaniaz,Tipo en castellano,Type in Spanish
 type_en,Mota ingelesez,Tipo en inglés,Type in English
+type_name_eu,Izen mota euskaraz (alias, alternatiboa, aurrekoa edo lehentasunezkoa),Tipo de nombre en euskera,Type name in Basque
+type_name_es,Izen mota gaztelaniaz,Tipo de nombre en castellano (alias, alternativo, anterior o preferente),Type name in Spanish
+type_name_en,Izen mota ingelesez,Tipo de nombre en inglés,Type name in English (alias, alternative, previous or preferential)
 codmuni,Udalerri kodea,Código municipal,Municipal code
 muni_eu,Udalerriaren izena euskaraz,Nombre del municipio en euskera,Municipality name in Basque
 muni_es,Udalerriaren izena gaztelaniaz,Nombre del municipio en castellano,Municipality name in Spanish

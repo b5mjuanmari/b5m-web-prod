@@ -9,6 +9,21 @@ select
   a.tipo_e as type_eu,
   a.tipo_c as type_es,
   a.tipo_i as type_en,
+  case
+    when a.clasenombre = 'alias' then 'alias'
+    when a.clasenombre = 'alternativo' then 'alternatiboa'
+    when a.clasenombre = 'anterior' then 'aurrekoa'
+    when a.clasenombre = 'preferente' then 'lehentasunezkoa'
+    else a.clasenombre
+  end as type_name_eu,
+  a.clasenombre as type_name_es,
+  case
+    when a.clasenombre = 'alias' then 'alias'
+    when a.clasenombre = 'alternativo' then 'alternative'
+    when a.clasenombre = 'anterior' then 'previous'
+    when a.clasenombre = 'preferente' then 'preferential'
+    else a.clasenombre
+  end as type_name_en,
   a.codmunis as codmuni,
   a.muni_e as muni_eu,
   a.muni_c as muni_es,

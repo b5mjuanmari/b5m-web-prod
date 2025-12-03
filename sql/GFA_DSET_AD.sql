@@ -9,6 +9,21 @@ select
   'posta helbidea' as type_eu,
   'dirección postal' as type_es,
   'postal address' as type_en,
+  case
+    when a.clasenombre = 'alias' then 'alias'
+    when a.clasenombre = 'alternativo' then 'alternatiboa'
+    when a.clasenombre = 'anterior' then 'aurrekoa'
+    when a.clasenombre = 'preferente' then 'lehentasunezkoa'
+    else a.clasenombre
+  end as type_name_eu,
+  a.clasenombre as type_name_es,
+  case
+    when a.clasenombre = 'alias' then 'alias'
+    when a.clasenombre = 'alternativo' then 'alternative'
+    when a.clasenombre = 'anterior' then 'previous'
+    when a.clasenombre = 'preferente' then 'preferential'
+    else a.clasenombre
+  end as type_name_en,
   a.codmuni as codmuni,
   a.municipio_e as muni_eu,
   a.municipio_c as muni_es,

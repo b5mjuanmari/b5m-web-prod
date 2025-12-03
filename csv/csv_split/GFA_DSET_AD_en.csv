@@ -6,6 +6,9 @@ name_es,Address in Spanish
 type_eu,Type in Basque
 type_es,Type in Spanish
 type_en,Type in English
+type_name_eu, aurrekoa edo lehentasunezkoa)
+type_name_es, alternativo
+type_name_en,Type name in English (alias
 codmuni,Municipal code
 muni_eu,Municipality name in Basque
 muni_es,Municipality name in Spanish

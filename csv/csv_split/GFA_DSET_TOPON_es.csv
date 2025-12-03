@@ -6,6 +6,9 @@ name_es,Nombre del topónimo en castellano
 type_eu,Tipo de topónimo en euskera
 type_es,Tipo de topónimo en castellano
 type_en,Tipo de topónimo en inglés
+type_name_eu, alternatiboa
+type_name_es,Tipo de nombre en castellano (alias
+type_name_en,Tipo de nombre en inglés
 codmuni,Código municipal
 muni_eu,Nombre del municipio en euskera
 muni_es,Nombre del municipio en castellano

@@ -6,6 +6,9 @@ name_es,Toponym name in Spanish
 type_eu,Toponym type in Basque
 type_es,Toponym type in Spanish
 type_en,Toponym type in English
+type_name_eu, aurrekoa edo lehentasunezkoa)
+type_name_es, alternativo
+type_name_en,Type name in English (alias
 codmuni,Municipal code
 muni_eu,Municipality name in Basque
 muni_es,Municipality name in Spanish
