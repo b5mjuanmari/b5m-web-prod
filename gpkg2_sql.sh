@@ -2343,7 +2343,7 @@ c.viewer url_geocassini,
 from b5mweb_nombres.dw_file_sizes a
 join b5mweb_nombres.dw_list b on a.id_dw = b.id_dw
 join b5mweb_nombres.geocassini c on a.name_grid = substr(c.name, 1, 4)
-and b.year = substr(c.parent, -4)
+and b.year = substr(c.parent, 5)
 and c.name like '%' || b.subcode || '%'
 where b.subcode like '%RedNAP08%'
 order by id_fs"
