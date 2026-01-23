@@ -58,14 +58,25 @@ ogr2ogr \
 -t_srs "EPSG:25830" \
 ${hidro}.shp \
 OCI:${usu}/${pas}@${bd}:${t} \
--sql "select a.idut,substr(a.nomrotular_c,1,1)||lower(substr(a.nomrotular_c,2,length(a.nomrotular_c)-1)) nombre_c,substr(a.nomrotular_e,1,1)||lower(substr(a.nomrotular_e,2,length(a.nomrotular_e)-1)) nombre_e,a.rotular_c,a.rotular_e,a.tipo_c,a.tipo_e,a.tipo_ut,a.clasenombre,c.polyline geom
-from almacen_cache.cla_nombres@almacen_cache_lnk a,almacen_cache.tutrel@almacen_cache_lnk b,b5mweb_25830.ibai_plus c
-where a.idut=b.idutpadre
-and b.iduthijo= c.idut
+-sql "select
+a.idut,
+substr(a.nomrotular_c, 1, 1) || lower(substr(a.nomrotular_c, 2, length(a.nomrotular_c) - 1)) nombre_c,
+substr(a.nomrotular_e, 1, 1) || lower(substr(a.nomrotular_e, 2, length(a.nomrotular_e) - 1)) nombre_e,
+a.rotular_c,
+a.rotular_e,
+a.tipo_c,
+a.tipo_e,
+a.tipo_ut,
+a.clasenombre,
+c.polyline geom
+from almacen_cache.cla_nombres@almacen_cache_lnk a, almacen_cache.tutrel@almacen_cache_lnk b, b5mweb_25830.ibai_plus c
+where a.idut = b.idutpadre
+and b.iduthijo = c.idut
 and b.tiporelacion like 'composici%'
-and a.tipo_e in('ibaia','erreka')
+and a.tipo_e in ('ibaia', 'erreka')
 and c.oculto is null
-and a.rotular_e <>0" 2> /dev/null
+and a.rotular_e <> 0
+and a.clasenombre = 'preferente'" 2> /dev/null
 fi
 
 # Genera el shp de oronimia
