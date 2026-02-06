@@ -633,7 +633,8 @@ function dw_data {
 					res = res "]}]}," a08
 			} else {
 				if ($6 != c06 && $18 != "5" && $18 != "6") {
-					res = res "," res_code_dw "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
+					#res = res "," res_code_dw "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}"
+					res = res "," res_code_dw "{@format_dw@:@" $8 "@,@url_dw@:@" $9 "@,@file_type_dw@:@" $10 "@,@file_size_mb@:" fs "}]," mdt "}"
 				} else if ($7 != c07) {
 	    		mdt = "@metadata@:{@url_eu@:@" $12 "@,@url_es@:@" $13 "@,@url_en@:@" $14 "@,@owner_eu@:@" $15 "@,@owner_es@:@" $16 "@,@owner_en@:@" $17 "@}ZZ_GEOC"
 					if (substr(res, length(res)-1, 2) != "}}")
