@@ -11,8 +11,8 @@ select
   a.tipo_i as type_en,
   case
     when a.clasenombre = 'alias' then 'alias'
-    when a.clasenombre = 'alternativo' then 'alternatiboa'
-    when a.clasenombre = 'anterior' then 'aurrekoa'
+    when a.clasenombre = 'alternativo' then 'beste bat'
+    when a.clasenombre = 'anterior' then 'lehenagokoa'
     when a.clasenombre = 'preferente' then 'lehentasunezkoa'
     else a.clasenombre
   end as type_name_eu,
