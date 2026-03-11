@@ -136,7 +136,7 @@ ac_gpk="ac_municipal_boundaries"
 ac_des=("Udal muga" "Límite municipal" "Municipal Boundary")
 ac_abs=("B5m AC kodea" "B5m código AC" "B5m Code AC")
 
-# 24. ac_municipal_boundaries
+# 24. mg_landmarks
 mg_gpk="mg_landmarks"
 mg_des=("Udal mugarria" "Mojón de límite municipal" "Municipal Boundary Landmark")
 mg_abs=("B5m MG kodea" "B5m código MG" "B5m Code MG")
