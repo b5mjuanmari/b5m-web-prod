@@ -157,7 +157,29 @@ ogr2ogr \
 -t_srs "EPSG:25830" \
 ${barri}.shp \
 OCI:${usu}/${pas}@${bd}:${t} \
--sql "select a.idut,replace(replace(replace(replace(a.nomrotular_c,' auzoa',''),' Auzoa',''),'een','een auzoa'),', ','') nombre_c,replace(replace(replace(replace(a.nomrotular_e,' auzoa',''),' Auzoa',''),'een','een auzoa'),', ','') nombre_e,a.rotular_c,a.rotular_e,a.tipo_c,a.tipo_e,a.tipo_ut,b.polygon geom
+-sql "select a.idut,
+replace(replace(replace(replace(a.nomrotular_c,' auzoa',''),' Auzoa',''),'een','een auzoa'),', ','') nombre,
+replace(replace(replace(replace(a.nomrotular_c,' auzoa',''),' Auzoa',''),'een','een auzoa'),', ','') nombre_c,
+replace(replace(replace(replace(a.nomrotular_e,' auzoa',''),' Auzoa',''),'een','een auzoa'),', ','') nombre_e,
+a.rotular_c,
+a.rotular_e,
+a.tipo_c,
+a.tipo_e,
+case a.tipo_e
+  when 'atsedenlekua' then 'rest area'
+  when 'auzo eta/edo hiri izena' then 'urban name'
+  when 'auzoa' then 'district'
+  when 'hiri parkea' then 'urban park'
+  when 'hirigunea' then 'urban area'
+  when 'industrialdea' then 'industrial area'
+  when 'kalea' then 'street'
+  when 'mugatutako parkea' then 'delimited park'
+  when 'parke botanikoa' then 'botanic garden'
+  when 'parke teknologikoa' then 'technology park '
+  else a.tipo_e
+end tipo_i,
+a.tipo_ut,
+b.polygon geom
 from almacen_cache.cla_nombres@almacen_cache_lnk a,b5mweb_25830.barrioind b
 where a.idut=b.idut
 and a.rotular_e <>0" 2> /dev/null
