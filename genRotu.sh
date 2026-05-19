@@ -158,9 +158,12 @@ ogr2ogr \
 ${barri}.shp \
 OCI:${usu}/${pas}@${bd}:${t} \
 -sql "select a.idut,
-replace(replace(replace(replace(a.nomrotular_c,' auzoa',''),' Auzoa',''),'een','een auzoa'),', ','') nombre,
-replace(replace(replace(replace(a.nomrotular_c,' auzoa',''),' Auzoa',''),'een','een auzoa'),', ','') nombre_c,
-replace(replace(replace(replace(a.nomrotular_e,' auzoa',''),' Auzoa',''),'een','een auzoa'),', ','') nombre_e,
+case
+  when a.nomrotular_c = a.nomrotular_e then a.nomrotular_e
+  else a.nomrotular_e || ' / ' || a.nomrotular_c
+end as nombre,
+a.nomrotular_c nombre_c,
+a.nomrotular_e nombre_e,
 a.rotular_c,
 a.rotular_e,
 a.tipo_c,
@@ -175,9 +178,9 @@ case a.tipo_e
   when 'kalea' then 'street'
   when 'mugatutako parkea' then 'delimited park'
   when 'parke botanikoa' then 'botanic garden'
-  when 'parke teknologikoa' then 'technology park '
+  when 'parke teknologikoa' then 'technology park'
   else a.tipo_e
-end tipo_i,
+end as tipo_i,
 a.tipo_ut,
 b.polygon geom
 from almacen_cache.cla_nombres@almacen_cache_lnk a,b5mweb_25830.barrioind b
