@@ -60,12 +60,21 @@ ${hidro}.shp \
 OCI:${usu}/${pas}@${bd}:${t} \
 -sql "select
 a.idut,
+case
+  when a.nomrotular_c = a.nomrotular_e then a.nomrotular_e
+  else a.nomrotular_e || ' / ' || a.nomrotular_c
+end as nombre,
 substr(a.nomrotular_c, 1, 1) || lower(substr(a.nomrotular_c, 2, length(a.nomrotular_c) - 1)) nombre_c,
 substr(a.nomrotular_e, 1, 1) || lower(substr(a.nomrotular_e, 2, length(a.nomrotular_e) - 1)) nombre_e,
 a.rotular_c,
 a.rotular_e,
 a.tipo_c,
 a.tipo_e,
+case a.tipo_e
+  when 'ibaia' then 'river'
+  when 'erreka' then 'stream'
+  else a.tipo_e
+end as tipo_i,
 a.tipo_ut,
 a.clasenombre,
 c.polyline geom
