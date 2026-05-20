@@ -16,11 +16,12 @@ has="$(date '+%Y-%m-%d %H:%M:%S')"
 echo "Hasiera: $has" >> "$log"
 
 # Shapefielak
-landuse="${dir}/vt_landuse"
+landuse_uar="vt_landuse_urban_areas_roads"
 
 # 1. landuse
-landuse_tmp="/tmp/vt_landuse_tmp"
-rm ${landuse_tmp}.* 2> /dev/null
+landuse_uar_f="${dir}/${landuse_uar}"
+landuse_uar_tmp="/tmp/${landuse_uar}_tmp"
+rm ${landuse_uar_tmp}.* 2> /dev/null
 
 # Lehenik tileindex-etik shapefile guztiak batu
 for shp in /home9/SHP/fondo2005/fondo2005_*.shp; do
@@ -30,16 +31,16 @@ for shp in /home9/SHP/fondo2005/fondo2005_*.shp; do
     continue
   fi
   echo "$shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
-  if [ ! -f ${landuse_tmp}.shp ]; then
+  if [ ! -f ${landuse_uar_tmp}.shp ]; then
     ogr2ogr -f "ESRI Shapefile" \
       -where "Categoria LIKE 'Suelo e%' OR Categoria = 'Carreteras' OR Categoria = 'Autovia' OR Categoria = 'Viaductos y puentes' OR Categoria = 'Edificios'" \
-      ${landuse_tmp}.shp \
+      ${landuse_uar_tmp}.shp \
       "$shp"
   else
     ogr2ogr -f "ESRI Shapefile" \
       -update -append \
       -where "Categoria LIKE 'Suelo e%' OR Categoria = 'Carreteras' OR Categoria = 'Autovia' OR Categoria = 'Viaductos y puentes' OR Categoria = 'Edificios'" \
-      ${landuse_tmp}.shp \
+      ${landuse_uar_tmp}.shp \
       "$shp"
   fi
 done
@@ -49,17 +50,17 @@ echo "fon_col1.shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
 ogr2ogr -f "ESRI Shapefile" \
   -update -append \
   -sql "SELECT 'Cascos' AS Categoria FROM fon_col1 WHERE TAG = 'cascos'" \
-  ${landuse_tmp}.shp \
+  ${landuse_uar_tmp}.shp \
   /home5/SHP/Resto/fon_col1.shp
 
 # Emaitza helburura kopiatu
-echo "Kopiatu: ${landuse} - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
-rm ${landuse}.* 2> /dev/null
-cp "${landuse_tmp}.shp" "${landuse}.shp"
-cp "${landuse_tmp}.shx" "${landuse}.shx"
-cp "${landuse_tmp}.dbf" "${landuse}.dbf"
-cp "${landuse_tmp}.prj" "${landuse}.prj"
-rm ${landuse_tmp}.* 2> /dev/null
+echo "Kopiatu: ${landuse_uar} - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
+rm ${landuse_uar_f}.* 2> /dev/null
+cp "${landuse_uar_tmp}.shp" "${landuse_uar_f}.shp"
+cp "${landuse_uar_tmp}.shx" "${landuse_uar_f}.shx"
+cp "${landuse_uar_tmp}.dbf" "${landuse_uar_f}.dbf"
+cp "${landuse_uar_tmp}.prj" "${landuse_uar_f}.prj"
+rm ${landuse_uar_tmp}.* 2> /dev/null
 
 # Bukaera
 buk="$(date '+%Y-%m-%d %H:%M:%S')"
