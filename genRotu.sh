@@ -235,6 +235,10 @@ a.nomrotular_e nombre_e,
 decode(a.nomrotular_c,a.nomrotular_e,a.nomrotular_c,a.nomrotular_e||' / '||a.nomrotular_c) nombre_mul,
 a.rotular_c,a.rotular_e,
 a.tipo_c,a.tipo_e,
+case a.tipo_e
+  when 'udalerria' then 'municipality'
+  else a.tipo_e
+end as tipo_i,
 a.tipo_ut,
 sdo_geom.sdo_centroid(c.polygon,m.diminfo) geom
 from almacen_cache.cla_nombres@almacen_cache_lnk a,almacen_cache.cla_nombres@almacen_cache_lnk b,b5mweb_25830.a_edifind c,b5mweb_nombres.n_edifgen d,all_sdo_geom_metadata m
