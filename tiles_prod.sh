@@ -19,6 +19,7 @@ cd "${HOME}/SCRIPTS/WEB_PROD"
 
 ./genAero.sh
 ./genRotu.sh
+./genVT.sh
 python3 copy_tiles.py /home/data/datos_explotacion/CUR/shape/EPSG_25830/Tiles /home5/SHP
 
 exit 0
