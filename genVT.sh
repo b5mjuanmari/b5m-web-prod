@@ -45,13 +45,21 @@ for shp in /home9/SHP/fondo2005/fondo2005_*.shp; do
   fi
 done
 
-# Ondoren fon_col1 gehitu
+# fon_col1 gehitu
 echo "fon_col1.shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
 ogr2ogr -f "ESRI Shapefile" \
   -update -append \
   -sql "SELECT 'Cascos' AS Categoria FROM fon_col1 WHERE TAG = 'cascos'" \
   ${landuse_uar_tmp}.shp \
   /home5/SHP/Resto/fon_col1.shp
+
+# cascos gehitu
+echo "cascos.shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
+ogr2ogr -f "ESRI Shapefile" \
+  -update -append \
+  -sql "SELECT municipi AS Categoria FROM cascos" \
+  ${landuse_uar_tmp}.shp \
+  /home9/SHP/FondosRevisados/cascos.shp
 
 # Emaitza helburura kopiatu
 echo "Kopiatu: ${landuse_uar} - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
