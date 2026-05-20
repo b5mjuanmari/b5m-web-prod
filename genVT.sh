@@ -7,9 +7,9 @@ dir="/home/data/datos_explotacion/CUR/shape/EPSG_25830/Tiles"
 # Shapes
 landuse="${dir}/vt_landuse"
 
-
 # 1. landuse
-rm ${landuse}.* 2> /dev/null
+landuse_tmp="/tmp/vt_landuse_tmp"
+rm ${landuse_tmp}.* 2> /dev/null
 
 # Lehenik tileindex-etik shapefile guztiak batu
 for shp in /home9/SHP/fondo2005/fondo2005_*.shp; do
@@ -18,16 +18,16 @@ for shp in /home9/SHP/fondo2005/fondo2005_*.shp; do
     echo "Saltatzen: $shp"
     continue
   fi
-  if [ ! -f ${landuse}.shp ]; then
+  if [ ! -f ${landuse_tmp}.shp ]; then
     ogr2ogr -f "ESRI Shapefile" \
       -where "Categoria LIKE 'Suelo e%' OR Categoria = 'Carreteras' OR Categoria = 'Autovia' OR Categoria = 'Viaductos y puentes' OR Categoria = 'Edificios'" \
-      ${landuse}.shp \
+      ${landuse_tmp}.shp \
       "$shp"
   else
     ogr2ogr -f "ESRI Shapefile" \
       -update -append \
       -where "Categoria LIKE 'Suelo e%' OR Categoria = 'Carreteras' OR Categoria = 'Autovia' OR Categoria = 'Viaductos y puentes' OR Categoria = 'Edificios'" \
-      ${landuse}.shp \
+      ${landuse_tmp}.shp \
       "$shp"
   fi
   echo "Eginda: $shp"
@@ -37,8 +37,17 @@ done
 ogr2ogr -f "ESRI Shapefile" \
   -update -append \
   -sql "SELECT 'Cascos' AS Categoria FROM fon_col1 WHERE TAG = 'cascos'" \
-  ${landuse}.shp \
+  ${landuse_tmp}.shp \
   /home5/SHP/Resto/fon_col1.shp
 echo "Eginda: fon_col1.shp"
+
+# Emaitza helburura kopiatu
+rm ${landuse}.* 2> /dev/null
+cp "${landuse_tmp}.shp" "${landuse}.shp"
+cp "${landuse_tmp}.shx" "${landuse}.shx"
+cp "${landuse_tmp}.dbf" "${landuse}.dbf"
+cp "${landuse_tmp}.prj" "${landuse}.prj"
+rm ${landuse_tmp}.* 2> /dev/null
+echo "Kopiatuta: ${landuse}"
 
 exit 0
