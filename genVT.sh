@@ -57,7 +57,7 @@ ogr2ogr -f "ESRI Shapefile" \
 echo "cascos.shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
 ogr2ogr -f "ESRI Shapefile" \
   -update -append \
-  -sql "SELECT municipi AS Categoria FROM cascos" \
+  -sql "SELECT 'Cascos' as Categoria FROM cascos" \
   ${landuse_uar_tmp}.shp \
   /home9/SHP/FondosRevisados/cascos.shp
 
