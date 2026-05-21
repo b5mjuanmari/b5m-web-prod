@@ -14,58 +14,119 @@ rm "$log" 2> /dev/null
 has="$(date '+%Y-%m-%d %H:%M:%S')"
 echo "Hasiera: $has" >> "$log"
 
-# Shapefielak
+# Shapefileak
 landuse_uar="vt_landuse_urban_areas_roads"
+landuse_veg="vt_landuse_vegetation"
 
-# 1. landuse
-landuse_uar_f="${dir}/${landuse_uar}"
-landuse_uar_tmp="/tmp/${landuse_uar}_tmp"
-rm ${landuse_uar_tmp}.* 2> /dev/null
+# Egiteko
+landuse_uar1=1
+landuse_veg1=1
 
-# Lehenik tileindex-etik shapefile guztiak batu
-for shp in /home9/SHP/fondo2005/fondo2005_*.shp; do
-  basename=$(basename "$shp")
-  if [ "$basename" = "fondo2005_idx.shp" ]; then
-    echo "Saltatzen: $shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
-    continue
-  fi
-  echo "$shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
-  if [ ! -f ${landuse_uar_tmp}.shp ]; then
-    ogr2ogr -f "ESRI Shapefile" \
-      -where "Categoria LIKE 'Suelo e%' OR Categoria = 'Carreteras' OR Categoria = 'Autovia' OR Categoria = 'Viaductos y puentes' OR Categoria = 'Edificios'" \
-      ${landuse_uar_tmp}.shp \
-      "$shp" || { echo "ERROREA: $shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"; exit 1; }
-  else
-    ogr2ogr -f "ESRI Shapefile" \
-      -update -append \
-      -where "Categoria LIKE 'Suelo e%' OR Categoria = 'Carreteras' OR Categoria = 'Autovia' OR Categoria = 'Viaductos y puentes' OR Categoria = 'Edificios'" \
-      ${landuse_uar_tmp}.shp \
-      "$shp" || { echo "ERROREA: $shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"; exit 1; }
-  fi
-done
+if [ $landuse_uar1 -eq 1 ]
+then
+  # 1. landuse
+  echo "$landuse_uar - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
+  landuse_uar_f="${dir}/${landuse_uar}"
+  landuse_uar_tmp="/tmp/${landuse_uar}_tmp"
+  rm ${landuse_uar_tmp}.* 2> /dev/null
 
-# fon_col1 gehitu
-echo "fon_col1.shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
-ogr2ogr -f "ESRI Shapefile" \
-  -update -append \
-  -sql "SELECT 'Cascos' AS Categoria FROM fon_col1 WHERE TAG = 'cascos'" \
-  ${landuse_uar_tmp}.shp \
-  /home5/SHP/Resto/fon_col1.shp || { echo "ERROREA: fon_col1.shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"; exit 1; }
+  # Lehenik tileindex-etik shapefile guztiak batu
+  for shp in /home9/SHP/fondo2005/fondo2005_*.shp; do
+    basename=$(basename "$shp")
+    if [ "$basename" = "fondo2005_idx.shp" ]; then
+      echo "Saltatzen: $shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
+      continue
+    fi
+    echo "$shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
+    if [ ! -f ${landuse_uar_tmp}.shp ]; then
+      ogr2ogr -f "ESRI Shapefile" \
+        -where "Categoria LIKE 'Suelo e%' OR Categoria = 'Carreteras' OR Categoria = 'Autovia' OR Categoria = 'Viaductos y puentes' OR Categoria = 'Edificios'" \
+        ${landuse_uar_tmp}.shp \
+        "$shp" || { echo "ERROREA: $shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"; exit 1; }
+    else
+      ogr2ogr -f "ESRI Shapefile" \
+        -update -append \
+        -where "Categoria LIKE 'Suelo e%' OR Categoria = 'Carreteras' OR Categoria = 'Autovia' OR Categoria = 'Viaductos y puentes' OR Categoria = 'Edificios'" \
+        ${landuse_uar_tmp}.shp \
+        "$shp" || { echo "ERROREA: $shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"; exit 1; }
+    fi
+  done
 
-# cascos gehitu
-echo "cascos.shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
-ogr2ogr -f "ESRI Shapefile" \
-  -update -append \
-  -sql "SELECT 'Cascos' as Categoria FROM cascos" \
-  ${landuse_uar_tmp}.shp \
-  /home9/SHP/FondosRevisados/cascos.shp || { echo "ERROREA: cascos.shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"; exit 1; }
+  # fon_col1 gehitu
+  echo "fon_col1.shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
+  ogr2ogr -f "ESRI Shapefile" \
+    -update -append \
+    -sql "SELECT 'Cascos' AS Categoria FROM fon_col1 WHERE TAG = 'cascos'" \
+    ${landuse_uar_tmp}.shp \
+    /home5/SHP/Resto/fon_col1.shp || { echo "ERROREA: fon_col1.shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"; exit 1; }
 
-# Emaitza helburura kopiatu
-cp "${landuse_uar_tmp}.shp" "${landuse_uar_f}.shp"
-cp "${landuse_uar_tmp}.shx" "${landuse_uar_f}.shx"
-cp "${landuse_uar_tmp}.dbf" "${landuse_uar_f}.dbf"
-cp "${landuse_uar_tmp}.prj" "${landuse_uar_f}.prj"
-rm ${landuse_uar_tmp}.* 2> /dev/null
+  # cascos gehitu
+  echo "cascos.shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
+  ogr2ogr -f "ESRI Shapefile" \
+    -update -append \
+    -sql "SELECT 'Cascos' as Categoria FROM cascos" \
+    ${landuse_uar_tmp}.shp \
+    /home9/SHP/FondosRevisados/cascos.shp || { echo "ERROREA: cascos.shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"; exit 1; }
+
+  # Emaitza helburura kopiatu
+  rm ${landuse_uar_f}.* 2> /dev/null
+  cp "${landuse_uar_tmp}.shp" "${landuse_uar_f}.shp"
+  cp "${landuse_uar_tmp}.shx" "${landuse_uar_f}.shx"
+  cp "${landuse_uar_tmp}.dbf" "${landuse_uar_f}.dbf"
+  cp "${landuse_uar_tmp}.prj" "${landuse_uar_f}.prj"
+  rm ${landuse_uar_tmp}.* 2> /dev/null
+fi
+
+if [ $landuse_veg1 -eq 1 ]
+then
+  # 1. landuse
+  echo "$landuse_veg - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
+  landuse_veg_f="${dir}/${landuse_veg}"
+  landuse_veg_tmp="/tmp/${landuse_veg}_tmp"
+  rm ${landuse_veg_tmp}.* 2> /dev/null
+
+  # Lehenik shapefile guztiak batu
+  for i in arb for mat pra; do
+    case "$i" in
+      arb)
+        i2="tree"
+        ;;
+      for)
+        i2="forestal"
+        ;;
+      mat)
+        i2="scrub"
+        ;;
+      pra)
+        i2="meadow"
+        ;;
+    esac
+    for j in $(ls "/home9/SHP/FondosRevisados/"*${i}.shp); do
+      echo "$j - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
+      k="$(echo "$j" | gawk -F'/' '{n = split($5, a, "."); print a[1]}')"
+      if [ ! -f ${landuse_veg_tmp}.shp ]; then
+        ogr2ogr -f "ESRI Shapefile" \
+          -sql "SELECT '${i2}' AS type FROM ${k}" \
+          ${landuse_veg_tmp}.shp \
+          "$j" || { echo "ERROREA: $shp - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"; exit 1; }
+      else
+        ogr2ogr -f "ESRI Shapefile" \
+          -update -append \
+          -sql "SELECT '${i2}' AS type FROM ${k}" \
+          ${landuse_veg_tmp}.shp \
+          "$j" || { echo "ERROREA: $veg - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"; exit 1; }
+      fi
+    done
+  done
+
+  # Emaitza helburura kopiatu
+  rm ${landuse_veg_f}.* 2> /dev/null
+  cp "${landuse_veg_tmp}.shp" "${landuse_veg_f}.shp"
+  cp "${landuse_veg_tmp}.shx" "${landuse_veg_f}.shx"
+  cp "${landuse_veg_tmp}.dbf" "${landuse_veg_f}.dbf"
+  cp "${landuse_veg_tmp}.prj" "${landuse_veg_f}.prj"
+  rm ${landuse_veg_tmp}.* 2> /dev/null
+fi
 
 # Bukaera
 buk="$(date '+%Y-%m-%d %H:%M:%S')"
