@@ -30,19 +30,19 @@ calle="${dir}/r_calles"
 edifn="${dir}/r_edifn"
 edifp="${dir}/r_edifp"
 
-hidro1=1
+hidro1=0
 oroni1=1
-barri1=1
-carre1=1
-munic1=1
-munic2=1
-parzo1=1
-alt251=1
-alt051=1
-cotas1=1
-calle1=1
-edifn1=1
-edifp1=1
+barri1=0
+carre1=0
+munic1=0
+munic2=0
+parzo1=0
+alt251=0
+alt051=0
+cotas1=0
+calle1=0
+edifn1=0
+edifp1=0
 
 # Hasiera
 dh="$(date '+%Y-%m-%d %H:%M:%S')"
@@ -135,7 +135,20 @@ ogr2ogr \
 -t_srs "EPSG:25830" \
 ${oroni}.shp \
 OCI:${usu}/${pas}@${bd}:${t} \
--sql "select a.idut,a.nomrotular_c nombre_c,a.nomrotular_e nombre_e,a.rotular_c,a.rotular_e,a.oficial,a.tipo_c,a.tipo_e,a.tipo_ut,b.polygon geom
+-sql "select a.idut,
+case
+  when a.nomrotular_c = a.nomrotular_e then a.nomrotular_e
+  else a.nomrotular_e || ' / ' || a.nomrotular_c
+end as nombre,
+a.nomrotular_c nombre_c,
+a.nomrotular_e nombre_e,
+a.rotular_c,
+a.rotular_e,
+a.oficial,
+a.tipo_c,
+a.tipo_e,
+a.tipo_ut,
+b.polygon geom
 from b5mweb_25830.${toro_tmp} a,b5mweb_25830.montesind b
 where a.idut=b.idut
 and a.rotular_e<>0" 2> /dev/null
