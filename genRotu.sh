@@ -30,19 +30,19 @@ calle="${dir}/r_calles"
 edifn="${dir}/r_edifn"
 edifp="${dir}/r_edifp"
 
-hidro1=0
+hidro1=1
 oroni1=1
-barri1=0
-carre1=0
-munic1=0
-munic2=0
-parzo1=0
-alt251=0
-alt051=0
-cotas1=0
-calle1=0
-edifn1=0
-edifp1=0
+barri1=1
+carre1=1
+munic1=1
+munic2=1
+parzo1=1
+alt251=1
+alt051=1
+cotas1=1
+calle1=1
+edifn1=1
+edifp1=1
 
 # Hasiera
 dh="$(date '+%Y-%m-%d %H:%M:%S')"
@@ -808,13 +808,41 @@ ogr2ogr \
 -t_srs "EPSG:25830" \
 ${edifn}.shp \
 OCI:${usu}/${pas}@${bd}:${t} \
--sql "select a.idut,regexp_substr(a.nomrotular_c,'[^#]+',1,1) nombre_c,regexp_substr(a.nomrotular_e,'[^#]+',1,1) nombre_e,replace(a.nomrotular_c,'#','| |') nombre_c2,replace(a.nomrotular_e,'#','| |') nombre_e2,a.rotular_c,a.rotular_e,a.tipo_c,a.tipo_e,a.tipo_ut,b.polygon geom
+-sql "select a.idut,
+case
+  when regexp_substr(a.nomrotular_c,'[^#]+',1,1) = regexp_substr(a.nomrotular_e,'[^#]+',1,1) then regexp_substr(a.nomrotular_e,'[^#]+',1,1)
+  else regexp_substr(a.nomrotular_e,'[^#]+',1,1) || ' / ' || regexp_substr(a.nomrotular_c,'[^#]+',1,1)
+end as nombre,
+regexp_substr(a.nomrotular_c,'[^#]+',1,1) nombre_c,
+regexp_substr(a.nomrotular_e,'[^#]+',1,1) nombre_e,
+replace(a.nomrotular_c,'#','| |') nombre_c2,
+replace(a.nomrotular_e,'#','| |') nombre_e2,
+a.rotular_c,
+a.rotular_e,
+a.tipo_c,
+a.tipo_e,
+a.tipo_ut,
+b.polygon geom
 from almacen_cache.cla_nombres@almacen_cache_lnk a,b5mweb_25830.a_edifind b
 where a.idut=b.idut
 and a.idnomtipo in (98,99,100)
 and a.rotular_e<>0
 union all
-select a.idut,regexp_substr(a.nomrotular_c,'[^#]+',1,1) nombre_c,regexp_substr(a.nomrotular_e,'[^#]+',1,1) nombre_e,replace(a.nomrotular_c,'#','| |') nombre_c2,replace(a.nomrotular_e,'#','| |') nombre_e2,a.rotular_c,a.rotular_e,a.tipo_c,a.tipo_e,a.tipo_ut,b.polygon geom
+select a.idut,
+case
+  when regexp_substr(a.nomrotular_c,'[^#]+',1,1) = regexp_substr(a.nomrotular_e,'[^#]+',1,1) then regexp_substr(a.nomrotular_e,'[^#]+',1,1)
+  else regexp_substr(a.nomrotular_e,'[^#]+',1,1) || ' / ' || regexp_substr(a.nomrotular_c,'[^#]+',1,1)
+end as nombre,
+regexp_substr(a.nomrotular_c,'[^#]+',1,1) nombre_c,
+regexp_substr(a.nomrotular_e,'[^#]+',1,1) nombre_e,
+replace(a.nomrotular_c,'#','| |') nombre_c2,
+replace(a.nomrotular_e,'#','| |') nombre_e2,
+a.rotular_c,
+a.rotular_e,
+a.tipo_c,
+a.tipo_e,
+a.tipo_ut,
+b.polygon geom
 from almacen_cache.cla_nombres@almacen_cache_lnk a,b5mweb_25830.o_edifind b
 where a.idut=b.idut
 and a.idnomtipo in (98,99,100)
