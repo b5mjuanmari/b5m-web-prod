@@ -2,6 +2,9 @@ import geopandas as gpd
 import pandas as pd
 import time
 import os
+import subprocess
+import tempfile
+import shutil
 
 # Aldagaiak: fitxategiak
 input_shp  = "/home9/BTAGV2025/BTA_CUBIERT_TERRESTRE_A_5000.shp"
@@ -37,10 +40,18 @@ t2 = time.time()
 gdf_filtered[output_field] = gdf_filtered[category_field].map(mapping)
 print(f"  Mapeatuta ({time.time() - t2:.1f}s)")
 
-# Gorde type eta geometria bakarrik
-gdf_out = gdf_filtered[[output_field, "geometry"]]
+# Disolbaketa type eremuan oinarrituta
+print("Disolbatzen...")
+t3 = time.time()
+dissolved = gdf_filtered[[output_field, "geometry"]].dissolve(by=output_field, as_index=False)
+print(f"  Disolbatuta: {len(dissolved)} poligono ({time.time() - t3:.1f}s)")
 
-# Ezabatu output_shp badago
+# Aldi baterako direktorioa eta Shapefile
+tmp_dir = tempfile.mkdtemp()
+tmp_shp = os.path.join(tmp_dir, "dissolved.shp")
+dissolved.to_file(tmp_shp)
+
+# output_shp ezabatu badago
 base = os.path.splitext(output_shp)[0]
 for ext in [".shp", ".shx", ".dbf", ".prj", ".cpg"]:
     f = base + ext
@@ -48,11 +59,45 @@ for ext in [".shp", ".shx", ".dbf", ".prj", ".cpg"]:
         os.remove(f)
         print(f"  Ezabatuta: {f}")
 
-# Gorde Shapefile
-print("Gordetzen...")
-t3 = time.time()
-gdf_out.to_file(output_shp)
-print(f"  Gordeta: {output_shp} ({time.time() - t3:.1f}s)")
+# GRASS script-a idatzi
+grass_script = os.path.join(tmp_dir, "vclean.sh")
+grassdata   = os.path.join(tmp_dir, "grassdata")
+output_shp_abs = os.path.abspath(output_shp)
+tmp_shp_abs    = os.path.abspath(tmp_shp)
 
-print(f"\nBanaketa:\n{gdf_out[output_field].value_counts().to_string()}")
+with open(grass_script, "w") as f:
+    f.write(f"""#!/bin/bash
+# Location sortu Shapefile-aren CRS-etik
+grass74 -c "{tmp_shp_abs}" "{grassdata}/loc" -e
+
+# GRASS komandoak exekutatu location berrian
+grass74 "{grassdata}/loc/PERMANENT" --exec bash << 'EOF'
+v.import input="{tmp_shp_abs}" output=dissolved --overwrite
+v.clean input=dissolved output=cleaned tool=break,rmdupl,rmline,rmdangle,rmbridge,bpol,prune threshold=0,0,0,0,0,0,0.1 --overwrite
+v.out.ogr input=cleaned output="{output_shp_abs}" format=ESRI_Shapefile --overwrite
+EOF
+""")
+
+os.chmod(grass_script, 0o755)
+
+# Exekutatu
+print("v.clean exekutatzen...")
+t4 = time.time()
+result = subprocess.run(
+    ["bash", grass_script],
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    universal_newlines=True
+)
+
+if result.returncode == 0:
+    print(f"  v.clean eginda ({time.time() - t4:.1f}s)")
+else:
+    print("  v.clean errorea:")
+    print(result.stdout)
+    print(result.stderr)
+
 print(f"\nDenbora guztira: {time.time() - t0:.1f}s")
+
+# Aldi baterako fitxategiak ezabatu
+shutil.rmtree(tmp_dir)

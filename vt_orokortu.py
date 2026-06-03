@@ -6,10 +6,12 @@ import time
 
 warnings.filterwarnings('ignore', 'GeoSeries.notna', UserWarning)
 
-INPUT_GPKG = "/home5/SHP/Tiles/vt_landuse_vegetation.gpkg"
+#INPUT_GPKG = "/home5/SHP/Tiles/vt_landuse_vegetation.gpkg"
 #INPUT_GPKG = "./dat/LQ.gpkg"
-OUTPUT_GPKG = "./dat/vt_landuse_vegetation_z11.gpkg"
+INPUT_GPKG = "./dat/vt_landcover.gpkg"
+OUTPUT_GPKG = "./dat/vt_landuse_vegetation_z10.gpkg"
 #OUTPUT_GPKG = "./dat/vt_landuse_vegetation_LQ_z11.gpkg"
+OUTPUT_GPKG = "./dat/vt_landcover_100.gpkg"
 
 def poligonoak_atera(geom):
     """GeometryCollection batetik poligonoak soilik atera."""
@@ -57,7 +59,7 @@ print(f"  Geometry motak konpondu ostean:\n{gdf.geometry.geom_type.to_string()}"
 # --- 4. SIMPLIFIKATU ---
 print("Simplifikatzen (50m)...")
 gdf.geometry = gdf.geometry.simplify(
-    tolerance=50,
+    tolerance=100,
     preserve_topology=True
 )
 
