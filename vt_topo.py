@@ -1,345 +1,336 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+Shapefile-en topologia sortu eta orokortze prozesua egin GRASS GIS bidez.
+
+Deskribapena:
+    1. Hasierako Shapefile bat irakurri (poligonoak)
+    2. GRASS GIS datu-base batean inportatu
+    3. Topologia sortu (v.clean)
+    4. Orokortze prozesua egin (v.generalize) - zulorik gabe
+    5. Emaitza Shapefile gisa exportatu
+
+Python 3.6+ bateragarria.
+"""
 
 import os
 import sys
-import time
 import shutil
+import tempfile
 import subprocess
+import time
 import geopandas as gpd
-from datetime import timedelta
-from shapely.geometry import Polygon, MultiPolygon
 
-# ==================================================
-# ALDAGAI KONFIGURAGARRIAK
-# ==================================================
+# =============================================================================
+# ALDAGAIAK - Hemen alda ditzakezu parametroak
+# =============================================================================
 
+# Sarrerako eta irteerako Shapefile-ak
 INPUT_SHAPEFILE = "/home5/SHP/TilesVT/MT_landcover_EJ_4E5.shp"
 OUTPUT_SHAPEFILE = "./dat/vt_MT_landcover_4e5_5.shp"
-SIMPLIFICATION_TOLERANCE = 5.0
-GRASS_BASE = "/usr/lib/grass74"
 
-# ==================================================
-# DENBORA KONTAGAILLUA
-# ==================================================
+# Orokortze parametroak
+GENERALIZE_THRESHOLD = 5.0        # Orokortze tolerantzia (metroak)
+GENERALIZE_METHOD    = "douglas"  # Metodoa: "douglas", "lang", "snakes", "hermite", "chaiken"
 
-def format_time(seconds):
-    return str(timedelta(seconds=int(seconds)))
+# Topologia garbiketa parametroak
+SNAP_THRESHOLD  = 0.001   # Snap tolerantzia (metroak) - topologia sortzeko
+AREA_THRESHOLD  = 1.0     # Azalera minimoa (metro koadroak) - zulo txikiak kentzeko
 
-class DenboraKontagailua:
-    def __init__(self, izena="Prozesua"):
-        self.izena = izena
-        self.hasiera_globala = None
-        self.bukaera_globala = None
-        self.urratsak = []
+# GRASS GIS konfigurazioa
+GRASS_EXECUTABLE = "grass"   # GRASS exekutagarriaren bidea (PATH-ean badago "grass" nahikoa)
+GRASS_EPSG       = None      # None bada, input Shapefile-tik hartuko du automatikoki
 
-    def hasi_prozesu_osoa(self):
-        self.hasiera_globala = time.time()
-        print(f"\n{'='*60}")
-        print(f">>> {self.izena} HASIERA - {time.strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"{'='*60}\n")
+# =============================================================================
+# FUNTZIO LAGUNTZAILEAK
+# =============================================================================
 
-    def amaitu_prozesu_osoa(self):
-        self.bukaera_globala = time.time()
-        denbora_totala = self.bukaera_globala - self.hasiera_globala
-        print(f"\n{'='*60}")
-        print(f">>> {self.izena} AMAITU")
-        print(f"    Denbora totala: {format_time(denbora_totala)}")
-        print(f"{'='*60}\n")
-        self.erakutsi_laburpena()
+def segunduak_formateatu(segunduak):
+    """Segunduak HH:MM:SS formatuan itzuli."""
+    segunduak = int(segunduak)
+    orduak   = segunduak // 3600
+    minutuak = (segunduak % 3600) // 60
+    seg      = segunduak % 60
+    return "{:02d}:{:02d}:{:02d}".format(orduak, minutuak, seg)
 
-    def urratsa_hasi(self, urrats_izena):
-        hasiera = time.time()
-        self.urratsak.append({
-            'izena': urrats_izena,
-            'hasiera': hasiera,
-            'bukaera': None
-        })
-        print(f"    [*] {urrats_izena}...", end=' ', flush=True)
-        return hasiera
 
-    def urratsa_amaitu(self):
-        if self.urratsak and self.urratsak[-1]['bukaera'] is None:
-            bukaera = time.time()
-            self.urratsak[-1]['bukaera'] = bukaera
-            iraupena = bukaera - self.urratsak[-1]['hasiera']
-            print(f"[DONE - {format_time(iraupena)}]")
+def log(mezua):
+    """Mezua pantailan erakutsi."""
+    print("[INFO] {}".format(mezua), flush=True)
 
-    def erakutsi_laburpena(self):
-        print("\nDENBORA LABURPENA:")
-        print("-" * 50)
-        for urratsa in self.urratsak:
-            if urratsa['bukaera']:
-                iraupena = urratsa['bukaera'] - urratsa['hasiera']
-                print(f"    - {urratsa['izena']:30} {format_time(iraupena)}")
-        print("-" * 50)
 
-# ==================================================
-# ZULOAK KENTZEKO FUNTZIOA (BEHAR BEZALA)
-# ==================================================
+def log_denbora(etiketa, hasiera):
+    """Urrats baten iraupena erakutsi."""
+    iraupena = time.time() - hasiera
+    print("[DENBORA] {} --> {}".format(etiketa, segunduak_formateatu(iraupena)), flush=True)
 
-def remove_all_holes(geometry):
-    """Poligono baten zulo guztiak kendu (barneko eremu guztiak ezabatu)"""
 
-    if geometry is None or geometry.is_empty:
-        return geometry
+def errore(mezua):
+    """Errore mezua erakutsi eta irten."""
+    print("[ERRORE] {}".format(mezua), file=sys.stderr, flush=True)
+    sys.exit(1)
 
-    def process_polygon(poly):
-        if poly.is_empty:
-            return poly
-        # Zuloak kendu: kanpoko perimetroa bakarrik mantendu
-        if poly.exterior:
-            return Polygon(poly.exterior)
-        return poly
 
-    def process_geometry(geom):
-        if geom.geom_type == 'Polygon':
-            return process_polygon(geom)
-        elif geom.geom_type == 'MultiPolygon':
-            # MultiPoligonoaren poligono bakoitzaren zuloak kendu
-            new_polygons = []
-            for poly in geom.geoms:
-                if isinstance(poly, Polygon):
-                    cleaned = process_polygon(poly)
-                    if not cleaned.is_empty and cleaned.is_valid:
-                        new_polygons.append(cleaned)
-            if new_polygons:
-                return MultiPolygon(new_polygons)
-            else:
-                return None
-        return geom
+def subprocess_run_compat(cmd):
+    """
+    subprocess.run() Python 3.6rekin bateragarria.
+    capture_output=True ez dago 3.6an; stdout/stderr=PIPE erabiltzen du.
+    """
+    return subprocess.run(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
 
-    try:
-        result = process_geometry(geometry)
-        # Gehiegizko sinplifikazioa? (aukerakoa)
-        if result and hasattr(result, 'simplify'):
-            result = result.simplify(0.1, preserve_topology=True)
-        return result
-    except Exception as e:
-        print(f"    Zuloak kentzean errorea: {e}")
-        return geometry
 
-def fill_holes(geometry, max_hole_area=1000):
-    """Zulo txikiak bete (tolerantzia baino txikiagoak direnak)"""
+def grass_exekutatu_script(grass_bin, gisdb, location, mapset, script_edukia):
+    """
+    Bash script bat GRASS ingurune batean exekutatu.
+    Irteera zuzenean pantailara bidalzen du (ez du memorian gordetzen).
+    """
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".sh", delete=False, prefix="grass_script_"
+    ) as f:
+        f.write("#!/bin/bash\nset -e\n")
+        f.write(script_edukia)
+        script_path = f.name
 
-    if geometry is None or geometry.is_empty:
-        return geometry
+    os.chmod(script_path, 0o755)
 
-    def process_polygon(poly):
-        if not poly.interiors:
-            return poly
+    cmd = [
+        grass_bin,
+        os.path.join(gisdb, location, mapset),
+        "--exec",
+        "bash",
+        script_path,
+    ]
 
-        new_interiors = []
-        for interior in poly.interiors:
-            interior_poly = Polygon(interior)
-            # Zuloaren azalera kalkulatu
-            if interior_poly.area > max_hole_area:
-                # Zulo handia mantendu
-                new_interiors.append(interior)
-            # Zulo txikiak baztertu (ez dira mantenduko)
+    # Irteera zuzenean pantailara (ez capture_output)
+    resultado = subprocess.run(cmd)
+    os.unlink(script_path)
+    return resultado.returncode
 
-        return Polygon(poly.exterior, new_interiors)
 
-    def process_geometry(geom):
-        if geom.geom_type == 'Polygon':
-            return process_polygon(geom)
-        elif geom.geom_type == 'MultiPolygon':
-            polygons = [process_polygon(p) for p in geom.geoms]
-            return MultiPolygon(polygons)
-        return geom
+def epsg_lortu(shp_bidea):
+    """Shapefile-aren EPSG kodea lortu GeoPandas bidez."""
+    gdf = gpd.read_file(shp_bidea)
+    if gdf.crs is None:
+        errore("Sarrerako Shapefile-ak ez du proiekziorik (CRS). Mesedez zehaztu EPSG kodea.")
+    epsg = gdf.crs.to_epsg()
+    if epsg is None:
+        log("EPSG kodea ez da aurkitu, proiektua WKT bidez sortuko da.")
+        return None, gdf.crs.to_wkt()
+    log("CRS detektatua: EPSG:{}".format(epsg))
+    return epsg, None
 
-    return process_geometry(geometry)
 
-# ==================================================
-# GRASS PROZESUA
-# ==================================================
+def shapefile_ezabatu(output_path):
+    """
+    Irteera Shapefile eta fitxategi osagarri guztiak ezabatu (existitzen badira).
+    Shapefile batek .shp, .dbf, .shx, .prj, .cpg eta beste batzuk izan ditzake.
+    """
+    oinarri_izena = os.path.splitext(output_path)[0]
+    luzapenak = [
+        ".shp", ".dbf", ".shx", ".prj", ".cpg",
+        ".sbn", ".sbx", ".qix", ".atx",
+        ".fbn", ".fbx", ".ain", ".aih",
+    ]
+    ezabatutakoak = []
+    for luzapena in luzapenak:
+        fitx = oinarri_izena + luzapena
+        if os.path.isfile(fitx):
+            os.remove(fitx)
+            ezabatutakoak.append(os.path.basename(fitx))
 
-def generalize_polygons_grass(input_shp, output_shp, tolerance):
-    """GRASS erabiliz poligonoak orokortu, gero zulo guztiak kendu"""
+    if ezabatutakoak:
+        log("Irteera Shapefile ezabatua (sortu aurretik): {}".format(", ".join(ezabatutakoak)))
+    else:
+        log("Irteera Shapefile ez zegoen aurretik; ez da ezer ezabatu.")
 
-    denbora_kont = DenboraKontagailua("Poligonoen Orokortzea (GRASS)")
-    denbora_kont.hasi_prozesu_osoa()
 
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    grass_db = os.path.join(script_dir, "grassdata_temp")
-    temp_shp = os.path.join(script_dir, "temp_generalized.shp")
-
-    try:
-        # 1. Irteera Shapefile zaharra ezabatu
-        denbora_kont.urratsa_hasi("Irteera Shapefile zaharra ezabatzen")
-        for f in [output_shp, temp_shp]:
-            if os.path.exists(f):
-                base_path = os.path.splitext(f)[0]
-                for ext in ['.shp', '.shx', '.dbf', '.prj', '.cpg', '.qpj']:
-                    file_path = base_path + ext
-                    if os.path.exists(file_path):
-                        os.remove(file_path)
-        denbora_kont.urratsa_amaitu()
-
-        # 2. Irteera direktorioa sortu
-        denbora_kont.urratsa_hasi("Irteera direktorioa sortzen")
-        output_dir = os.path.dirname(output_shp)
-        if output_dir and not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-        denbora_kont.urratsa_amaitu()
-
-        # 3. CRS lortu
-        denbora_kont.urratsa_hasi("CRS detektatzen")
-        original_gdf = gpd.read_file(input_shp)
-        crs = original_gdf.crs
-        epsg_code = crs.to_epsg() if crs and crs.to_epsg() else 25830
-        print(f"    EPSG: {epsg_code}")
-        print(f"    Jatorrizko poligono kopurua: {len(original_gdf)}")
-        denbora_kont.urratsa_amaitu()
-
-        # 4. GRASS Location sortu
-        denbora_kont.urratsa_hasi("GRASS Location sortzen")
-        location_path = os.path.join(grass_db, "proiektua")
-
-        if os.path.exists(grass_db):
-            shutil.rmtree(grass_db)
-        os.makedirs(grass_db)
-
-        subprocess.run(
-            ["grass", "-c", f"EPSG:{epsg_code}", "-e", location_path],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-
-        mapset_path = os.path.join(location_path, "PERMANENT")
-        if not os.path.exists(mapset_path):
-            os.makedirs(mapset_path)
-        denbora_kont.urratsa_amaitu()
-
-        # 5. Shapefile inportatu
-        denbora_kont.urratsa_hasi("Shapefile inportatzen GRASS-era")
-        subprocess.run([
-            "grass", mapset_path, "--exec",
-            "v.in.ogr", f"input={input_shp}", "output=landcover", "--overwrite"
-        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-        denbora_kont.urratsa_amaitu()
-
-        # 6. Topologia eraiki
-        denbora_kont.urratsa_hasi("Topologia eraikitzen")
-        subprocess.run([
-            "grass", mapset_path, "--exec",
-            "v.build", "map=landcover", "option=build"
-        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-        denbora_kont.urratsa_amaitu()
-
-        # 7. Poligonoak orokortu
-        denbora_kont.urratsa_hasi(f"Poligonoak orokortzen ({tolerance}m)")
-
-        methods = ["boyle", "reduction", "snake"]
-        success = False
-
-        for method in methods:
-            print(f"    Saiatzen: {method} metodoa...")
-            result = subprocess.run([
-                "grass", mapset_path, "--exec",
-                "v.generalize", "input=landcover", "output=landcover_gen",
-                f"method={method}", f"threshold={tolerance}", "--overwrite"
-            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-            if result.returncode == 0:
-                print(f"    {method} metodoak ondo funtzionatu du")
-                success = True
-                break
-
-        if not success:
-            raise RuntimeError("Ez da orokortze metodoa aurkitu")
-
-        denbora_kont.urratsa_amaitu()
-
-        # 8. Emaitza esportatu
-        denbora_kont.urratsa_hasi("Emaitza esportatzen")
-        subprocess.run([
-            "grass", mapset_path, "--exec",
-            "v.out.ogr", "input=landcover_gen", f"output={temp_shp}",
-            "format=ESRI_Shapefile", "--overwrite"
-        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-        denbora_kont.urratsa_amaitu()
-
-        # 9. Zulo guztiak kendu GeoPandas-ekin
-        denbora_kont.urratsa_hasi("Zulo guztiak kentzen")
-        gdf_gen = gpd.read_file(temp_shp)
-        print(f"    Orokortu ondorengo poligonoak: {len(gdf_gen)}")
-
-        # Lehenengo: geometria bakoitza baliozkoa dela ziurtatu
-        gdf_gen['geometry'] = gdf_gen.geometry.buffer(0)
-
-        # Zulo guztiak kendu (zulo txiki eta handi guztiak)
-        gdf_clean = gdf_gen.copy()
-        gdf_clean['geometry'] = gdf_clean.geometry.apply(remove_all_holes)
-
-        # Baliozkotasuna ziurtatu
-        gdf_clean['geometry'] = gdf_clean.geometry.buffer(0)
-
-        # Poligono hutsak ezabatu
-        gdf_clean = gdf_clean[~gdf_clean.geometry.is_empty]
-        gdf_clean = gdf_clean[gdf_clean.geometry.is_valid]
-
-        print(f"    Zuloak kendu ondorengo poligonoak: {len(gdf_clean)}")
-        denbora_kont.urratsa_amaitu()
-
-        # 10. Azken emaitza gorde
-        denbora_kont.urratsa_hasi("Azken emaitza gordetzen")
-        gdf_clean.to_file(output_shp)
-        denbora_kont.urratsa_amaitu()
-
-        print(f"\nProzesua amaituta. Emaitza: {output_shp}")
-
-    except subprocess.CalledProcessError as e:
-        print(f"\nErrorea GRASS komandoan: {e}")
-        raise
-    except Exception as e:
-        print(f"\nErrorea: {e}")
-        raise
-    finally:
-        denbora_kont.urratsa_hasi("Behin-behineko fitxategiak garbitzen")
-        if os.path.exists(grass_db):
-            shutil.rmtree(grass_db)
-        if os.path.exists(temp_shp):
-            base_path = os.path.splitext(temp_shp)[0]
-            for ext in ['.shp', '.shx', '.dbf', '.prj', '.cpg', '.qpj']:
-                f = base_path + ext
-                if os.path.exists(f):
-                    os.remove(f)
-        denbora_kont.urratsa_amaitu()
-        denbora_kont.amaitu_prozesu_osoa()
-
-# ==================================================
-# MAIN
-# ==================================================
+# =============================================================================
+# PROZESU NAGUSIA
+# =============================================================================
 
 def main():
-    if not os.path.exists(INPUT_SHAPEFILE):
-        print(f"Errorea: {INPUT_SHAPEFILE} ez da existitzen.")
-        return 1
+    hasiera_osoa = time.time()
 
-    print(f"\nSarrera Shapefile: {INPUT_SHAPEFILE}")
-    print(f"Irteera Shapefile: {OUTPUT_SHAPEFILE}")
-    print(f"Orokortze tolerantzia: {SIMPLIFICATION_TOLERANCE} metro")
-    print(f"GRASS + GeoPandas (zulo guztiak kenduz)")
+    log("=" * 60)
+    log("GRASS GIS bidezko topologia eta orokortze prozesua")
+    log("=" * 60)
+
+    # --- 1. Sarrerak egiaztatu ---
+    t = time.time()
+    input_path  = os.path.abspath(INPUT_SHAPEFILE)
+    output_path = os.path.abspath(OUTPUT_SHAPEFILE)
+
+    if not os.path.isfile(input_path):
+        errore("Sarrerako Shapefile ez da aurkitu: {}".format(input_path))
+
+    log("Sarrera:  {}".format(input_path))
+    log("Irteera:  {}".format(output_path))
+    log("Orokortze tolerantzia: {} m".format(GENERALIZE_THRESHOLD))
+    log("Orokortze metodoa:     {}".format(GENERALIZE_METHOD))
+
+    # --- 2. EPSG lortu ---
+    log("-" * 60)
+    log("CRS irakurtzen...")
+    t = time.time()
+    if GRASS_EPSG is not None:
+        epsg = GRASS_EPSG
+        wkt  = None
+        log("CRS eskuz zehaztuta: EPSG:{}".format(epsg))
+    else:
+        epsg, wkt = epsg_lortu(input_path)
+    log_denbora("CRS irakurketa", t)
+
+    # --- 3. GRASS datu-base aldi baterako sortu ---
+    gisdb    = tempfile.mkdtemp(prefix="grass_db_")
+    location = "lan_location"
+    mapset   = "PERMANENT"
+    log("-" * 60)
+    log("GRASS datu-base aldi baterakoa: {}".format(gisdb))
 
     try:
-        generalize_polygons_grass(
-            INPUT_SHAPEFILE,
-            OUTPUT_SHAPEFILE,
-            SIMPLIFICATION_TOLERANCE
-        )
-    except Exception as e:
-        print(f"\nProzesuak huts egin du: {e}")
-        return 1
+        # --- 4. Location sortu ---
+        log("-" * 60)
+        log("GRASS location sortzen...")
+        t = time.time()
+        if epsg is not None:
+            cmd_loc = [
+                GRASS_EXECUTABLE, "-c", "EPSG:{}".format(epsg),
+                os.path.join(gisdb, location),
+                "-e",
+            ]
+        else:
+            wkt_file = os.path.join(gisdb, "crs.wkt")
+            with open(wkt_file, "w") as f:
+                f.write(wkt)
+            cmd_loc = [
+                GRASS_EXECUTABLE, "-c", wkt_file,
+                os.path.join(gisdb, location),
+                "-e",
+            ]
 
-    if os.path.exists(OUTPUT_SHAPEFILE):
-        gdf_out = gpd.read_file(OUTPUT_SHAPEFILE)
-        print(f"\nEmaitzaren estatistikak:")
-        print(f"  Poligono kopurua: {len(gdf_out)}")
-        print("\nProzesua ARRAKASTATSUA izan da!")
-        return 0
-    else:
-        print("\nErrorea: Irteera Shapefile-a ez da sortu.")
-        return 1
+        ret = subprocess_run_compat(cmd_loc)
+        if ret.returncode != 0:
+            if ret.stdout:
+                print(ret.stdout.decode("utf-8", errors="replace"))
+            if ret.stderr:
+                print(ret.stderr.decode("utf-8", errors="replace"), file=sys.stderr)
+            errore("GRASS location sortzean akatsa gertatu da.")
+        log("Location sortua.")
+        log_denbora("Location sorrera", t)
+
+        # --- 5. Irteera Shapefile ezabatu (v.out.ogr baino LEHEN) ---
+        log("-" * 60)
+        shapefile_ezabatu(output_path)
+
+        # --- 6. Prozesua GRASS barnean exekutatu ---
+        log("-" * 60)
+        log("GRASS prozesua abiatzen...")
+        t = time.time()
+
+        script = """
+# --- Aldagaiak ---
+INPUT_SHP="{input_path}"
+MAPA_SARRERA="poligonoak_sarrera"
+MAPA_GARBIA="poligonoak_garbia"
+MAPA_OROKORTUA="poligonoak_orokortu"
+OUTPUT_SHP="{output_path}"
+SNAP_THRESHOLD="{snap}"
+AREA_THRESHOLD="{area}"
+GENERALIZE_THRESHOLD="{gen_thr}"
+GENERALIZE_METHOD="{gen_met}"
+
+# --- 1/5: Inportatu ---
+echo "[GRASS] 1/5 - Shapefile inportatzen..."
+T0=$(date +%s)
+v.in.ogr input="$INPUT_SHP" output="$MAPA_SARRERA" --overwrite -o
+T1=$(date +%s); echo "[DENBORA] v.in.ogr --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
+
+# --- 2/5: Snap ---
+echo "[GRASS] 2/5 - Topologia garbitzen (snap)..."
+T0=$(date +%s)
+v.clean input="$MAPA_SARRERA" output="${{MAPA_SARRERA}}_snap" \\
+    tool=snap threshold="$SNAP_THRESHOLD" --overwrite
+T1=$(date +%s); echo "[DENBORA] v.clean snap --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
+
+# --- 3/5: Topologia garbi ---
+echo "[GRASS] 3/5 - Topologia garbitzen (break, rmdupl, rmarea, rmdangle)..."
+T0=$(date +%s)
+v.clean input="${{MAPA_SARRERA}}_snap" output="$MAPA_GARBIA" \\
+    tool=break,rmdupl,rmarea,rmdangle \\
+    threshold="0,$SNAP_THRESHOLD,$AREA_THRESHOLD,$SNAP_THRESHOLD" --overwrite
+T1=$(date +%s); echo "[DENBORA] v.clean topologia --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
+
+# --- 4/5: Orokortze ---
+echo "[GRASS] 4/5 - Orokortze prozesua egiten ($GENERALIZE_METHOD, ${{GENERALIZE_THRESHOLD}}m)..."
+T0=$(date +%s)
+v.generalize input="$MAPA_GARBIA" output="$MAPA_OROKORTUA" \\
+    method="$GENERALIZE_METHOD" threshold="$GENERALIZE_THRESHOLD" --overwrite
+T1=$(date +%s); echo "[DENBORA] v.generalize --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
+
+# --- 5/5: Azken garbiketa ---
+echo "[GRASS] 5/5 - Topologia azken garbiketa (zuloak konpondu)..."
+T0=$(date +%s)
+v.clean input="$MAPA_OROKORTUA" output="${{MAPA_OROKORTUA}}_final" \\
+    tool=snap,break,rmdupl,rmarea \\
+    threshold="$SNAP_THRESHOLD,$SNAP_THRESHOLD,$SNAP_THRESHOLD,$AREA_THRESHOLD" --overwrite
+T1=$(date +%s); echo "[DENBORA] v.clean azken --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
+
+# --- Exportatu ---
+echo "[GRASS] Shapefile exportatzen..."
+T0=$(date +%s)
+v.out.ogr input="${{MAPA_OROKORTUA}}_final" output="$OUTPUT_SHP" \\
+    format=ESRI_Shapefile type=area --overwrite
+T1=$(date +%s); echo "[DENBORA] v.out.ogr --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
+
+echo "[GRASS] Prozesua amaituta."
+""".format(
+            input_path=input_path,
+            output_path=output_path,
+            snap=SNAP_THRESHOLD,
+            area=AREA_THRESHOLD,
+            gen_thr=GENERALIZE_THRESHOLD,
+            gen_met=GENERALIZE_METHOD,
+        )
+
+        ret = grass_exekutatu_script(
+            GRASS_EXECUTABLE, gisdb, location, mapset, script
+        )
+        log_denbora("GRASS prozesu osoa", t)
+
+        if ret != 0:
+            errore("GRASS script-ean akatsa gertatu da. Ikusi goiko errore mezuak.")
+
+        # --- 7. Emaitza egiaztatu ---
+        log("-" * 60)
+        if not os.path.isfile(output_path):
+            errore("Irteera Shapefile ez da sortu: {}".format(output_path))
+
+        t = time.time()
+        gdf_out = gpd.read_file(output_path)
+        log_denbora("Emaitza irakurketa", t)
+
+        log("-" * 60)
+        log("Emaitza Shapefile: {}".format(output_path))
+        log("Poligono kopurua:  {}".format(len(gdf_out)))
+        log("CRS:               {}".format(gdf_out.crs))
+        log_denbora("PROZESU OSOA", hasiera_osoa)
+        log("=" * 60)
+        log("Prozesua ONGI amaitu da.")
+        log("=" * 60)
+
+    finally:
+        # --- 8. Aldi baterako GRASS datu-basea ezabatu ---
+        log("GRASS datu-base aldi baterakoa ezabatzen: {}".format(gisdb))
+        shutil.rmtree(gisdb, ignore_errors=True)
+
+
+# =============================================================================
+# SARRERA PUNTUA
+# =============================================================================
 
 if __name__ == "__main__":
-    exit(main())
+    main()
