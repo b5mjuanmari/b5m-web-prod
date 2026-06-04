@@ -26,11 +26,11 @@ import geopandas as gpd
 # =============================================================================
 
 # Sarrerako eta irteerako Shapefile-ak
-INPUT_SHAPEFILE = "/home5/SHP/TilesVT/MT_landcover_EJ_4E5.shp"
-OUTPUT_SHAPEFILE = "./dat/vt_MT_landcover_4e5_5.shp"
+INPUT_SHAPEFILE = "/home5/SHP/TilesVT/BTA_CUBIERT_TERRESTRE_A_4E5_ETRS89.shp"
+OUTPUT_SHAPEFILE = "./dat/vt_landcover_4e5_50.shp"
 
 # Orokortze parametroak
-GENERALIZE_THRESHOLD = 5.0        # Orokortze tolerantzia (metroak)
+GENERALIZE_THRESHOLD = 50.0        # Orokortze tolerantzia (metroak)
 GENERALIZE_METHOD    = "douglas"  # Metodoa: "douglas", "lang", "snakes", "hermite", "chaiken"
 
 # Topologia garbiketa parametroak
