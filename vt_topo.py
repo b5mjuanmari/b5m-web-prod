@@ -19,6 +19,7 @@ import shutil
 import tempfile
 import subprocess
 import time
+import datetime
 import geopandas as gpd
 
 # =============================================================================
@@ -26,50 +27,85 @@ import geopandas as gpd
 # =============================================================================
 
 # Sarrerako eta irteerako Shapefile-ak
-INPUT_SHAPEFILE = "/home5/SHP/TilesVT/BTA_CUBIERT_TERRESTRE_A_4E5_ETRS89.shp"
-OUTPUT_SHAPEFILE = "./dat/vt_landcover_4e5_50.shp"
+INPUT_SHAPEFILE  = "/home5/SHP/TilesVT/vt_landcover_4e5.shp"
+OUTPUT_SHAPEFILE = "/home/juanmari/SCRIPTS/WEB_PROD/dat/vt_landcover_4e5_50.shp"
 
 # Orokortze parametroak
-GENERALIZE_THRESHOLD = 50.0        # Orokortze tolerantzia (metroak)
+GENERALIZE_THRESHOLD = 50.0       # Orokortze tolerantzia (metroak)
 GENERALIZE_METHOD    = "douglas"  # Metodoa: "douglas", "lang", "snakes", "hermite", "chaiken"
 
 # Topologia garbiketa parametroak
-SNAP_THRESHOLD  = 0.001   # Snap tolerantzia (metroak) - topologia sortzeko
-AREA_THRESHOLD  = 1.0     # Azalera minimoa (metro koadroak) - zulo txikiak kentzeko
+SNAP_THRESHOLD = 0.001  # Snap tolerantzia (metroak) - topologia sortzeko
+AREA_THRESHOLD = 1.0    # Azalera minimoa (metro koadroak) - zulo txikiak kentzeko
 
 # GRASS GIS konfigurazioa
-GRASS_EXECUTABLE = "grass"   # GRASS exekutagarriaren bidea (PATH-ean badago "grass" nahikoa)
-GRASS_EPSG       = None      # None bada, input Shapefile-tik hartuko du automatikoki
+GRASS_EXECUTABLE = "grass"  # GRASS exekutagarriaren bidea (PATH-ean badago "grass" nahikoa)
+GRASS_EPSG       = None     # None bada, input Shapefile-tik hartuko du automatikoki
+
+# =============================================================================
+# LOG SISTEMA - Hasieraketa
+# =============================================================================
+
+def log_fitxategia_prestatu():
+    """
+    Log direktorioa eta fitxategia prestatu.
+    - Direktorioa: scriptaren ondoan dagoen 'log/' karpeta.
+    - Izena: <script_izena>_YYYYMMDD.log
+    - Aurrekoa ezabatu existitzen bada.
+    """
+    script_izena = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+    data_str     = datetime.datetime.now().strftime("%Y%m%d")
+    log_dir      = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "log")
+
+    # Direktorioa sortu ez bada existitzen
+    if not os.path.isdir(log_dir):
+        os.makedirs(log_dir)
+
+    log_path = os.path.join(log_dir, "{}_{}.log".format(script_izena, data_str))
+
+    # Aurrekoa ezabatu existitzen bada
+    if os.path.isfile(log_path):
+        os.remove(log_path)
+
+    return log_path
+
+
+# Log fitxategia global gisa ireki (scriptaren hasieran)
+LOG_PATH = log_fitxategia_prestatu()
+LOG_FH   = open(LOG_PATH, "w", buffering=1)  # buffering=1: lerro-buffering
+
+
+def _idatzi(lerro):
+    """Lerro bat log fitxategira idatzi (timestamp-arekin)."""
+    ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    LOG_FH.write("[{}] {}\n".format(ts, lerro))
+    LOG_FH.flush()
+
+
+def log(mezua):
+    """Mezu arrunta log fitxategira."""
+    _idatzi("[INFO]    {}".format(mezua))
+
+
+def log_denbora(etiketa, hasiera):
+    """Urrats baten iraupena log fitxategira."""
+    iraupena = int(time.time() - hasiera)
+    orduak   = iraupena // 3600
+    minutuak = (iraupena % 3600) // 60
+    seg      = iraupena % 60
+    _idatzi("[DENBORA] {} --> {:02d}:{:02d}:{:02d}".format(etiketa, orduak, minutuak, seg))
+
+
+def errore(mezua):
+    """Errore mezua log fitxategira idatzi eta irten."""
+    _idatzi("[ERRORE]  {}".format(mezua))
+    LOG_FH.close()
+    sys.exit(1)
+
 
 # =============================================================================
 # FUNTZIO LAGUNTZAILEAK
 # =============================================================================
-
-def segunduak_formateatu(segunduak):
-    """Segunduak HH:MM:SS formatuan itzuli."""
-    segunduak = int(segunduak)
-    orduak   = segunduak // 3600
-    minutuak = (segunduak % 3600) // 60
-    seg      = segunduak % 60
-    return "{:02d}:{:02d}:{:02d}".format(orduak, minutuak, seg)
-
-
-def log(mezua):
-    """Mezua pantailan erakutsi."""
-    print("[INFO] {}".format(mezua), flush=True)
-
-
-def log_denbora(etiketa, hasiera):
-    """Urrats baten iraupena erakutsi."""
-    iraupena = time.time() - hasiera
-    print("[DENBORA] {} --> {}".format(etiketa, segunduak_formateatu(iraupena)), flush=True)
-
-
-def errore(mezua):
-    """Errore mezua erakutsi eta irten."""
-    print("[ERRORE] {}".format(mezua), file=sys.stderr, flush=True)
-    sys.exit(1)
-
 
 def subprocess_run_compat(cmd):
     """
@@ -86,7 +122,7 @@ def subprocess_run_compat(cmd):
 def grass_exekutatu_script(grass_bin, gisdb, location, mapset, script_edukia):
     """
     Bash script bat GRASS ingurune batean exekutatu.
-    Irteera zuzenean pantailara bidalzen du (ez du memorian gordetzen).
+    stdout eta stderr log fitxategira bideratzen dira.
     """
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".sh", delete=False, prefix="grass_script_"
@@ -105,8 +141,12 @@ def grass_exekutatu_script(grass_bin, gisdb, location, mapset, script_edukia):
         script_path,
     ]
 
-    # Irteera zuzenean pantailara (ez capture_output)
-    resultado = subprocess.run(cmd)
+    # stdout eta stderr log fitxategira bideratu zuzenean
+    resultado = subprocess.run(
+        cmd,
+        stdout=LOG_FH,
+        stderr=LOG_FH,
+    )
     os.unlink(script_path)
     return resultado.returncode
 
@@ -157,10 +197,10 @@ def main():
 
     log("=" * 60)
     log("GRASS GIS bidezko topologia eta orokortze prozesua")
+    log("Log fitxategia: {}".format(LOG_PATH))
     log("=" * 60)
 
     # --- 1. Sarrerak egiaztatu ---
-    t = time.time()
     input_path  = os.path.abspath(INPUT_SHAPEFILE)
     output_path = os.path.abspath(OUTPUT_SHAPEFILE)
 
@@ -213,11 +253,14 @@ def main():
             ]
 
         ret = subprocess_run_compat(cmd_loc)
+        # Location-en irteera log-era idatzi
+        if ret.stdout:
+            LOG_FH.write(ret.stdout.decode("utf-8", errors="replace"))
+        if ret.stderr:
+            LOG_FH.write(ret.stderr.decode("utf-8", errors="replace"))
+        LOG_FH.flush()
+
         if ret.returncode != 0:
-            if ret.stdout:
-                print(ret.stdout.decode("utf-8", errors="replace"))
-            if ret.stderr:
-                print(ret.stderr.decode("utf-8", errors="replace"), file=sys.stderr)
             errore("GRASS location sortzean akatsa gertatu da.")
         log("Location sortua.")
         log_denbora("Location sorrera", t)
@@ -302,7 +345,7 @@ echo "[GRASS] Prozesua amaituta."
         log_denbora("GRASS prozesu osoa", t)
 
         if ret != 0:
-            errore("GRASS script-ean akatsa gertatu da. Ikusi goiko errore mezuak.")
+            errore("GRASS script-ean akatsa gertatu da. Ikusi log fitxategia: {}".format(LOG_PATH))
 
         # --- 7. Emaitza egiaztatu ---
         log("-" * 60)
@@ -326,6 +369,7 @@ echo "[GRASS] Prozesua amaituta."
         # --- 8. Aldi baterako GRASS datu-basea ezabatu ---
         log("GRASS datu-base aldi baterakoa ezabatzen: {}".format(gisdb))
         shutil.rmtree(gisdb, ignore_errors=True)
+        LOG_FH.close()
 
 
 # =============================================================================
