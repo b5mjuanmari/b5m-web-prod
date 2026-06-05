@@ -26,12 +26,38 @@ import geopandas as gpd
 # ALDAGAIAK - Hemen alda ditzakezu parametroak
 # =============================================================================
 
-# Sarrerako eta irteerako Shapefile-ak
-INPUT_SHAPEFILE  = "/home5/SHP/TilesVT/vt_landcover_4e5.shp"
-OUTPUT_SHAPEFILE = "/home/juanmari/SCRIPTS/WEB_PROD/dat/vt_landcover_4e5_50.shp"
+# Sarrerako eta irteerako Shapefile-ak — komando-lerroko parametroetatik hartu
+if len(sys.argv) != 4:
+    print(
+        "Erabilera: python3 {} <sarrera.shp> <irteera.shp> <tolerantzia_m>\n"
+        "\n"
+        "  <sarrera.shp>     Hasierako Shapefile-aren bide osoa (poligonoak)\n"
+        "  <irteera.shp>     Bukaerako Shapefile-aren bide osoa\n"
+        "  <tolerantzia_m>   Orokortze tolerantzia metroak (adib. 5, 50)\n"
+        "\n"
+        "Adibidea:\n"
+        "  python3 {prog} /home5/SHP/TilesVT/vt_landcover_4e5.shp"
+        " /home/juanmari/SCRIPTS/WEB_PROD/dat/vt_landcover_4e5_50.shp 50".format(sys.argv[0], prog=sys.argv[0]),
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
+INPUT_SHAPEFILE  = sys.argv[1]
+OUTPUT_SHAPEFILE = sys.argv[2]
+
+try:
+    _thr = float(sys.argv[3])
+    if _thr <= 0:
+        raise ValueError
+except ValueError:
+    print(
+        "ERRORE: <tolerantzia_m> zenbaki positibo bat izan behar da (adib. 5, 50).",
+        file=sys.stderr,
+    )
+    sys.exit(1)
 
 # Orokortze parametroak
-GENERALIZE_THRESHOLD = 50.0       # Orokortze tolerantzia (metroak)
+GENERALIZE_THRESHOLD = _thr              # Orokortze tolerantzia (metroak) — argv[3]
 GENERALIZE_METHOD    = "douglas"  # Metodoa: "douglas", "lang", "snakes", "hermite", "chaiken"
 
 # Topologia garbiketa parametroak
