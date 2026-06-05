@@ -368,7 +368,7 @@ v.db.update map="$M2" column="type" value="Urban"      where="LEGENDA_1 = 'Artif
 v.db.update map="$M2" column="type" value="Forestal"   where="LEGENDA_1 = 'Baso zuhaiztia'"
 v.db.update map="$M2" column="type" value="Water"      where="LEGENDA_1 = 'Ingurune hezeak eta urazalak'"
 v.db.update map="$M2" column="type" value="Meadow"     where="LEGENDA_1 = 'Laborantzak eta belardiak'"
-v.db.update map="$M2" column="type" value="RockLarrea" where="LEGENDA_1 = 'Landaretzagabeko edo urriko teselak'"
+v.db.update map="$M2" column="type" value="Rock" where="LEGENDA_1 = 'Landaretzagabeko edo urriko teselak'"
 v.db.update map="$M2" column="type" value="Meadow"     where="LEGENDA_1 = 'Larrea'"
 v.db.update map="$M2" column="type" value="Scrub"      where="LEGENDA_1 = 'Sastraka'"
 # Egiaztatu: type NULL gelditu den erregistrorik ba ote dagoen
@@ -419,35 +419,12 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# fid eta type bakarrik gorde: eremu guztiak kendu eta biak bakarrik gehitu
+# Exportatu (GeoPandas-ek egingo du eremu garbiketa ondoren)
 # ---------------------------------------------------------------------------
-echo "[GRASS] fid eta type eremuz soilik geratzen..."
+echo "[GRASS] Exportatzen (aldi baterako fitxategia)..."
 T0=$(date +%s)
-# type eremua kopiatu $M7ra modu garbian
-v.extract input="$MAPA_AZKEN" output="$M7" --overwrite type=area
-
-# Taulako eremu guztiak lortu eta type izan ezik kendu
-COLS=$(db.columns map="$M7" | grep -v "^cat$" | grep -v "^type$" | tr '\n' ',')
-if [ -n "$COLS" ]; then
-    # Azkenengo koma kendu eta v.db.dropcolumn deitu
-    COLS=$(echo "$COLS" | sed 's/,$//')
-    v.db.dropcolumn map="$M7" columns="$COLS"
-fi
-
-# fid zutabea sortu (1etik hasita, elementu bakoitzeko)
-v.db.addcolumn map="$M7" columns="fid integer"
-v.db.update map="$M7" column="fid" query_column="cat"
-T1=$(date +%s); echo "[DENBORA] Eremu garbiketa --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
-
-# ---------------------------------------------------------------------------
-# Exportatu
-# ---------------------------------------------------------------------------
-echo "[GRASS] Exportatzen..."
-T0=$(date +%s)
-v.out.ogr input="$M7" output="$OUTPUT_SHP" \
-    format=ESRI_Shapefile type=area \
-    output_layer=$(basename "$OUTPUT_SHP" .shp) \
-    --overwrite
+v.out.ogr input="$MAPA_AZKEN" output="$OUTPUT_SHP" \
+    format=ESRI_Shapefile type=area --overwrite
 T1=$(date +%s); echo "[DENBORA] v.out.ogr --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
 
 echo "[GRASS] Prozesua amaituta."
@@ -469,18 +446,33 @@ echo "[GRASS] Prozesua amaituta."
         if ret != 0:
             errore("GRASS script-ean akatsa gertatu da. Ikusi log fitxategia: {}".format(LOG_PATH))
 
-        # --- 7. Emaitza egiaztatu ---
+        # --- 7. Eremu garbiketa GeoPandas bidez: fid + type bakarrik, cat gabe ---
         log("-" * 60)
         if not os.path.isfile(output_path):
             errore("Irteera Shapefile ez da sortu: {}".format(output_path))
 
+        log("Eremu garbiketa GeoPandas bidez (fid, type)...")
         t = time.time()
         gdf_out = gpd.read_file(output_path)
-        log_denbora("Emaitza irakurketa", t)
+
+        # type eremua egiaztatu
+        if "type" not in gdf_out.columns:
+            errore("'type' eremua ez da aurkitu irteerako Shapefile-an.")
+
+        # fid sortu (1etik hasita, jarraian), type mantendu, cat eta gainerakoak kendu
+        gdf_out["fid"] = range(1, len(gdf_out) + 1)
+
+        # fid lehenengo, type bigarren, geometry azken
+        gdf_out = gdf_out[["fid", "type", "geometry"]]
+
+        # Berriro gorde (cat eta beste eremu guztiak kenduta)
+        gdf_out.to_file(output_path, encoding="utf-8")
+        log_denbora("Eremu garbiketa", t)
 
         log("-" * 60)
         log("Emaitza Shapefile: {}".format(output_path))
         log("Poligono kopurua:  {}".format(len(gdf_out)))
+        log("Eremua:            fid, type")
         log("CRS:               {}".format(gdf_out.crs))
         log_denbora("PROZESU OSOA", hasiera_osoa)
         log("=" * 60)
