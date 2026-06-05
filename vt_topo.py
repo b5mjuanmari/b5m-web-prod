@@ -33,7 +33,7 @@ if len(sys.argv) != 4:
         "\n"
         "  <sarrera.shp>     Hasierako Shapefile-aren bide osoa (poligonoak)\n"
         "  <irteera.shp>     Bukaerako Shapefile-aren bide osoa\n"
-        "  <tolerantzia_m>   Orokortze tolerantzia metroak (adib. 5, 50)\n"
+        "  <tolerantzia_m>   Orokortze tolerantzia metroak (adib. 5, 50); 0 = orokortzerik ez\n"
         "\n"
         "Adibidea:\n"
         "  python3 {prog} /home5/SHP/TilesVT/vt_landcover_4e5.shp"
@@ -47,11 +47,11 @@ OUTPUT_SHAPEFILE = sys.argv[2]
 
 try:
     _thr = float(sys.argv[3])
-    if _thr <= 0:
+    if _thr < 0:
         raise ValueError
 except ValueError:
     print(
-        "ERRORE: <tolerantzia_m> zenbaki positibo bat izan behar da (adib. 5, 50).",
+        "ERRORE: <tolerantzia_m> zenbaki positibo bat edo 0 izan behar da (0 = orokortzerik ez).",
         file=sys.stderr,
     )
     sys.exit(1)
@@ -235,7 +235,10 @@ def main():
 
     log("Sarrera:  {}".format(input_path))
     log("Irteera:  {}".format(output_path))
-    log("Orokortze tolerantzia: {} m".format(GENERALIZE_THRESHOLD))
+    if GENERALIZE_THRESHOLD == 0:
+        log("Orokortze tolerantzia: DESGAITUTA (0)")
+    else:
+        log("Orokortze tolerantzia: {} m".format(GENERALIZE_THRESHOLD))
     log("Orokortze metodoa:     {}".format(GENERALIZE_METHOD))
 
     # --- 2. EPSG lortu ---
@@ -300,107 +303,151 @@ def main():
         log("GRASS prozesua abiatzen...")
         t = time.time()
 
+        # Orokortze aktibo dagoen ala ez erabaki
+        do_generalize = (GENERALIZE_THRESHOLD > 0)
+
+        # Mapa izenak urrats bakoitzeko
+        # Orokortzerik ez bada, M4 zuzenean M6 bihurtzen da
         script = """
 # --- Aldagaiak ---
 INPUT_SHP="{input_path}"
 M0="p_00_sarrera"
-M1="p_01_snap1"
-M2="p_02_clean1"
-M3="p_03_snap2"
-M4="p_04_clean2"
-M5="p_05_orokortu"
-M6="p_06_final"
+M1="p_01_clean1"
+M2="p_02_clean2"
+M3="p_03_reklasif"
+M4="p_04_dissolve"
+M5="p_05_clean3"
+M6="p_06_orokortu"
+M7="p_07_final"
 OUTPUT_SHP="{output_path}"
 SNAP_THRESHOLD="{snap}"
 AREA_THRESHOLD="{area}"
 GENERALIZE_THRESHOLD="{gen_thr}"
 GENERALIZE_METHOD="{gen_met}"
+DO_GENERALIZE="{do_gen}"
 
 # ---------------------------------------------------------------------------
-# 1/8 - Inportatu
+# 1/N - Inportatu
 # ---------------------------------------------------------------------------
-echo "[GRASS] 1/8 - Shapefile inportatzen..."
+echo "[GRASS] 1 - Shapefile inportatzen..."
 T0=$(date +%s)
 v.in.ogr input="$INPUT_SHP" output="$M0" snap=1e-08 --overwrite -o
 T1=$(date +%s); echo "[DENBORA] v.in.ogr --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
 
 # ---------------------------------------------------------------------------
-# 2/8 - Lehen garbiketa: snap + break + bpol + rmdupl + rmbridge + rmarea
-#   snap     : puntu hurbilak batu
-#   break    : gurutzaketak apurtu
-#   bpol     : boundary poligonoak konpondu (GRASS 7.4.0-rekin bateragarria)
-#   rmdupl   : lerro bikoiztuak kendu
-#   rmbridge : zubiak kendu (bi poligonoaren arteko lerro meheak)
-#   rmarea   : azalera txikiegiko poligonoak kendu
-# Oharra: rmcap GRASS 7.8+ baino ez dago; hemen ez da erabiltzen.
+# 2 - Lehen topologia garbiketa
 # ---------------------------------------------------------------------------
-echo "[GRASS] 2/8 - Lehen topologia garbiketa (snap+break+bpol+rmdupl+rmbridge+rmarea)..."
+echo "[GRASS] 2 - Lehen topologia garbiketa..."
 T0=$(date +%s)
-v.clean input="$M0" output="$M1" \\
-    tool=snap,break,bpol,rmdupl,rmbridge,rmarea \\
-    threshold="$SNAP_THRESHOLD,0,0,$SNAP_THRESHOLD,$SNAP_THRESHOLD,$AREA_THRESHOLD" \\
+v.clean input="$M0" output="$M1" \
+    tool=snap,break,bpol,rmdupl,rmbridge,rmarea \
+    threshold="$SNAP_THRESHOLD,0,0,$SNAP_THRESHOLD,$SNAP_THRESHOLD,$AREA_THRESHOLD" \
     --overwrite
 T1=$(date +%s); echo "[DENBORA] v.clean 1. garbiketa --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
 
 # ---------------------------------------------------------------------------
-# 3/8 - Bigarren garbiketa iterazioa (lehen pasean agertutako arazo berriak)
+# 3 - Bigarren topologia garbiketa (iterazioa)
 # ---------------------------------------------------------------------------
-echo "[GRASS] 3/8 - Bigarren topologia garbiketa (iterazioa)..."
+echo "[GRASS] 3 - Bigarren topologia garbiketa..."
 T0=$(date +%s)
-v.clean input="$M1" output="$M2" \\
-    tool=snap,break,bpol,rmdupl,rmbridge,rmarea \\
-    threshold="$SNAP_THRESHOLD,0,0,$SNAP_THRESHOLD,$SNAP_THRESHOLD,$AREA_THRESHOLD" \\
+v.clean input="$M1" output="$M2" \
+    tool=snap,break,bpol,rmdupl,rmbridge,rmarea \
+    threshold="$SNAP_THRESHOLD,0,0,$SNAP_THRESHOLD,$SNAP_THRESHOLD,$AREA_THRESHOLD" \
     --overwrite
 T1=$(date +%s); echo "[DENBORA] v.clean 2. garbiketa --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
 
 # ---------------------------------------------------------------------------
-# 4/8 - v.dissolve: topologia sendotu eta area "hilak" ezabatu
-#   Atributu bereko area guztiak batu — centroide problemak konpontzen ditu.
-#   cat zutabea erabiltzen dugu (beti existitzen da).
+# 4 - LEGENDA_1 birsailkapena: type eremu berria sortu
+#   v.db.addcolumn: type zutabea gehitu
+#   v.db.update:    LEGENDA_1 balioaren arabera type bete
 # ---------------------------------------------------------------------------
-echo "[GRASS] 4/8 - Topologia sendotzen (v.dissolve)..."
+echo "[GRASS] 4 - LEGENDA_1 birsailkapena (type eremua sortzen)..."
 T0=$(date +%s)
-v.dissolve input="$M2" output="$M3" --overwrite
+v.db.addcolumn map="$M2" columns="type varchar(20)"
+v.db.update map="$M2" column="type" value="Urban"      where="LEGENDA_1 = 'Artifiziala'"
+v.db.update map="$M2" column="type" value="Forestal"   where="LEGENDA_1 = 'Baso zuhaiztia'"
+v.db.update map="$M2" column="type" value="Water"      where="LEGENDA_1 = 'Ingurune hezeak eta urazalak'"
+v.db.update map="$M2" column="type" value="Meadow"     where="LEGENDA_1 = 'Laborantzak eta belardiak'"
+v.db.update map="$M2" column="type" value="RockLarrea" where="LEGENDA_1 = 'Landaretzagabeko edo urriko teselak'"
+v.db.update map="$M2" column="type" value="Meadow"     where="LEGENDA_1 = 'Larrea'"
+v.db.update map="$M2" column="type" value="Scrub"      where="LEGENDA_1 = 'Sastraka'"
+# Egiaztatu: type NULL gelditu den erregistrorik ba ote dagoen
+NULL_COUNT=$(db.select sql="SELECT COUNT(*) FROM $M2 WHERE type IS NULL" | tail -1)
+echo "[GRASS] type=NULL duten erregistroak: $NULL_COUNT"
+T1=$(date +%s); echo "[DENBORA] Birsailkapena --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
+
+# ---------------------------------------------------------------------------
+# 5 - Dissolve type eremuan oinarrituta
+# ---------------------------------------------------------------------------
+echo "[GRASS] 5 - Dissolve type eremuan..."
+T0=$(date +%s)
+v.dissolve input="$M2" column="type" output="$M3" --overwrite
 T1=$(date +%s); echo "[DENBORA] v.dissolve --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
 
 # ---------------------------------------------------------------------------
-# 5/8 - Hirugarren garbiketa dissolve ondoren sortutako arazoetarako
+# 6 - Hirugarren topologia garbiketa (dissolve ostean)
 # ---------------------------------------------------------------------------
-echo "[GRASS] 5/8 - Hirugarren topologia garbiketa (dissolve ostean)..."
+echo "[GRASS] 6 - Topologia garbiketa dissolve ostean..."
 T0=$(date +%s)
-v.clean input="$M3" output="$M4" \\
-    tool=snap,break,bpol,rmdupl,rmbridge,rmarea \\
-    threshold="$SNAP_THRESHOLD,0,0,$SNAP_THRESHOLD,$SNAP_THRESHOLD,$AREA_THRESHOLD" \\
+v.clean input="$M3" output="$M4" \
+    tool=snap,break,bpol,rmdupl,rmbridge,rmarea \
+    threshold="$SNAP_THRESHOLD,0,0,$SNAP_THRESHOLD,$SNAP_THRESHOLD,$AREA_THRESHOLD" \
     --overwrite
 T1=$(date +%s); echo "[DENBORA] v.clean 3. garbiketa --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
 
 # ---------------------------------------------------------------------------
-# 6/8 - Orokortze
+# 7 - Orokortze (DO_GENERALIZE=1 bada bakarrik)
 # ---------------------------------------------------------------------------
-echo "[GRASS] 6/8 - Orokortze prozesua ($GENERALIZE_METHOD, ${{GENERALIZE_THRESHOLD}}m)..."
-T0=$(date +%s)
-v.generalize input="$M4" output="$M5" \\
-    method="$GENERALIZE_METHOD" threshold="$GENERALIZE_THRESHOLD" --overwrite
-T1=$(date +%s); echo "[DENBORA] v.generalize --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
+if [ "$DO_GENERALIZE" = "1" ]; then
+    echo "[GRASS] 7 - Orokortze ($GENERALIZE_METHOD, ${{GENERALIZE_THRESHOLD}}m)..."
+    T0=$(date +%s)
+    v.generalize input="$M4" output="$M5" \
+        method="$GENERALIZE_METHOD" threshold="$GENERALIZE_THRESHOLD" --overwrite
+    T1=$(date +%s); echo "[DENBORA] v.generalize --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
+
+    echo "[GRASS] 8 - Azken topologia garbiketa (orokortze ostean)..."
+    T0=$(date +%s)
+    v.clean input="$M5" output="$M6" \
+        tool=snap,break,bpol,rmdupl,rmbridge,rmarea \
+        threshold="$SNAP_THRESHOLD,0,0,$SNAP_THRESHOLD,$SNAP_THRESHOLD,$AREA_THRESHOLD" \
+        --overwrite
+    T1=$(date +%s); echo "[DENBORA] v.clean azken --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
+    MAPA_AZKEN="$M6"
+else
+    echo "[GRASS] 7 - Orokortze desgaituta (tolerantzia=0); urratsa saltatu."
+    MAPA_AZKEN="$M4"
+fi
 
 # ---------------------------------------------------------------------------
-# 7/8 - Azken garbiketa (orokortze ondoren sor daitezkeen arazoak)
+# fid eta type bakarrik gorde: eremu guztiak kendu eta biak bakarrik gehitu
 # ---------------------------------------------------------------------------
-echo "[GRASS] 7/8 - Azken topologia garbiketa (orokortze ostean)..."
+echo "[GRASS] fid eta type eremuz soilik geratzen..."
 T0=$(date +%s)
-v.clean input="$M5" output="$M6" \\
-    tool=snap,break,bpol,rmdupl,rmbridge,rmarea \\
-    threshold="$SNAP_THRESHOLD,0,0,$SNAP_THRESHOLD,$SNAP_THRESHOLD,$AREA_THRESHOLD" \\
+# type eremua kopiatu $M7ra modu garbian
+v.extract input="$MAPA_AZKEN" output="$M7" --overwrite type=area
+
+# Taulako eremu guztiak lortu eta type izan ezik kendu
+COLS=$(db.columns map="$M7" | grep -v "^cat$" | grep -v "^type$" | tr '\n' ',')
+if [ -n "$COLS" ]; then
+    # Azkenengo koma kendu eta v.db.dropcolumn deitu
+    COLS=$(echo "$COLS" | sed 's/,$//')
+    v.db.dropcolumn map="$M7" columns="$COLS"
+fi
+
+# fid zutabea sortu (1etik hasita, elementu bakoitzeko)
+v.db.addcolumn map="$M7" columns="fid integer"
+v.db.update map="$M7" column="fid" query_column="cat"
+T1=$(date +%s); echo "[DENBORA] Eremu garbiketa --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
+
+# ---------------------------------------------------------------------------
+# Exportatu
+# ---------------------------------------------------------------------------
+echo "[GRASS] Exportatzen..."
+T0=$(date +%s)
+v.out.ogr input="$M7" output="$OUTPUT_SHP" \
+    format=ESRI_Shapefile type=area \
+    output_layer=$(basename "$OUTPUT_SHP" .shp) \
     --overwrite
-T1=$(date +%s); echo "[DENBORA] v.clean azken --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
-
-# ---------------------------------------------------------------------------
-# 8/8 - Exportatu
-# ---------------------------------------------------------------------------
-echo "[GRASS] 8/8 - Shapefile exportatzen..."
-T0=$(date +%s)
-v.out.ogr input="$M6" output="$OUTPUT_SHP" \\
-    format=ESRI_Shapefile type=area --overwrite
 T1=$(date +%s); echo "[DENBORA] v.out.ogr --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
 
 echo "[GRASS] Prozesua amaituta."
@@ -411,6 +458,7 @@ echo "[GRASS] Prozesua amaituta."
             area=AREA_THRESHOLD,
             gen_thr=GENERALIZE_THRESHOLD,
             gen_met=GENERALIZE_METHOD,
+            do_gen="1" if do_generalize else "0",
         )
 
         ret = grass_exekutatu_script(
