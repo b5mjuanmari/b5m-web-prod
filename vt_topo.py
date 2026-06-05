@@ -277,55 +277,103 @@ def main():
         script = """
 # --- Aldagaiak ---
 INPUT_SHP="{input_path}"
-MAPA_SARRERA="poligonoak_sarrera"
-MAPA_GARBIA="poligonoak_garbia"
-MAPA_OROKORTUA="poligonoak_orokortu"
+M0="p_00_sarrera"
+M1="p_01_snap1"
+M2="p_02_clean1"
+M3="p_03_snap2"
+M4="p_04_clean2"
+M5="p_05_orokortu"
+M6="p_06_final"
 OUTPUT_SHP="{output_path}"
 SNAP_THRESHOLD="{snap}"
 AREA_THRESHOLD="{area}"
 GENERALIZE_THRESHOLD="{gen_thr}"
 GENERALIZE_METHOD="{gen_met}"
 
-# --- 1/5: Inportatu ---
-echo "[GRASS] 1/5 - Shapefile inportatzen..."
+# ---------------------------------------------------------------------------
+# 1/8 - Inportatu
+# ---------------------------------------------------------------------------
+echo "[GRASS] 1/8 - Shapefile inportatzen..."
 T0=$(date +%s)
-v.in.ogr input="$INPUT_SHP" output="$MAPA_SARRERA" --overwrite -o
+v.in.ogr input="$INPUT_SHP" output="$M0" snap=1e-08 --overwrite -o
 T1=$(date +%s); echo "[DENBORA] v.in.ogr --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
 
-# --- 2/5: Snap ---
-echo "[GRASS] 2/5 - Topologia garbitzen (snap)..."
+# ---------------------------------------------------------------------------
+# 2/8 - Lehen garbiketa: snap + break + bpol + rmdupl + rmbridge + rmarea
+#   snap     : puntu hurbilak batu
+#   break    : gurutzaketak apurtu
+#   bpol     : boundary poligonoak konpondu (GRASS 7.4.0-rekin bateragarria)
+#   rmdupl   : lerro bikoiztuak kendu
+#   rmbridge : zubiak kendu (bi poligonoaren arteko lerro meheak)
+#   rmarea   : azalera txikiegiko poligonoak kendu
+# Oharra: rmcap GRASS 7.8+ baino ez dago; hemen ez da erabiltzen.
+# ---------------------------------------------------------------------------
+echo "[GRASS] 2/8 - Lehen topologia garbiketa (snap+break+bpol+rmdupl+rmbridge+rmarea)..."
 T0=$(date +%s)
-v.clean input="$MAPA_SARRERA" output="${{MAPA_SARRERA}}_snap" \\
-    tool=snap threshold="$SNAP_THRESHOLD" --overwrite
-T1=$(date +%s); echo "[DENBORA] v.clean snap --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
+v.clean input="$M0" output="$M1" \\
+    tool=snap,break,bpol,rmdupl,rmbridge,rmarea \\
+    threshold="$SNAP_THRESHOLD,0,0,$SNAP_THRESHOLD,$SNAP_THRESHOLD,$AREA_THRESHOLD" \\
+    --overwrite
+T1=$(date +%s); echo "[DENBORA] v.clean 1. garbiketa --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
 
-# --- 3/5: Topologia garbi ---
-echo "[GRASS] 3/5 - Topologia garbitzen (break, rmdupl, rmarea, rmdangle)..."
+# ---------------------------------------------------------------------------
+# 3/8 - Bigarren garbiketa iterazioa (lehen pasean agertutako arazo berriak)
+# ---------------------------------------------------------------------------
+echo "[GRASS] 3/8 - Bigarren topologia garbiketa (iterazioa)..."
 T0=$(date +%s)
-v.clean input="${{MAPA_SARRERA}}_snap" output="$MAPA_GARBIA" \\
-    tool=break,rmdupl,rmarea,rmdangle \\
-    threshold="0,$SNAP_THRESHOLD,$AREA_THRESHOLD,$SNAP_THRESHOLD" --overwrite
-T1=$(date +%s); echo "[DENBORA] v.clean topologia --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
+v.clean input="$M1" output="$M2" \\
+    tool=snap,break,bpol,rmdupl,rmbridge,rmarea \\
+    threshold="$SNAP_THRESHOLD,0,0,$SNAP_THRESHOLD,$SNAP_THRESHOLD,$AREA_THRESHOLD" \\
+    --overwrite
+T1=$(date +%s); echo "[DENBORA] v.clean 2. garbiketa --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
 
-# --- 4/5: Orokortze ---
-echo "[GRASS] 4/5 - Orokortze prozesua egiten ($GENERALIZE_METHOD, ${{GENERALIZE_THRESHOLD}}m)..."
+# ---------------------------------------------------------------------------
+# 4/8 - v.dissolve: topologia sendotu eta area "hilak" ezabatu
+#   Atributu bereko area guztiak batu — centroide problemak konpontzen ditu.
+#   cat zutabea erabiltzen dugu (beti existitzen da).
+# ---------------------------------------------------------------------------
+echo "[GRASS] 4/8 - Topologia sendotzen (v.dissolve)..."
 T0=$(date +%s)
-v.generalize input="$MAPA_GARBIA" output="$MAPA_OROKORTUA" \\
+v.dissolve input="$M2" output="$M3" --overwrite
+T1=$(date +%s); echo "[DENBORA] v.dissolve --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
+
+# ---------------------------------------------------------------------------
+# 5/8 - Hirugarren garbiketa dissolve ondoren sortutako arazoetarako
+# ---------------------------------------------------------------------------
+echo "[GRASS] 5/8 - Hirugarren topologia garbiketa (dissolve ostean)..."
+T0=$(date +%s)
+v.clean input="$M3" output="$M4" \\
+    tool=snap,break,bpol,rmdupl,rmbridge,rmarea \\
+    threshold="$SNAP_THRESHOLD,0,0,$SNAP_THRESHOLD,$SNAP_THRESHOLD,$AREA_THRESHOLD" \\
+    --overwrite
+T1=$(date +%s); echo "[DENBORA] v.clean 3. garbiketa --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
+
+# ---------------------------------------------------------------------------
+# 6/8 - Orokortze
+# ---------------------------------------------------------------------------
+echo "[GRASS] 6/8 - Orokortze prozesua ($GENERALIZE_METHOD, ${{GENERALIZE_THRESHOLD}}m)..."
+T0=$(date +%s)
+v.generalize input="$M4" output="$M5" \\
     method="$GENERALIZE_METHOD" threshold="$GENERALIZE_THRESHOLD" --overwrite
 T1=$(date +%s); echo "[DENBORA] v.generalize --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
 
-# --- 5/5: Azken garbiketa ---
-echo "[GRASS] 5/5 - Topologia azken garbiketa (zuloak konpondu)..."
+# ---------------------------------------------------------------------------
+# 7/8 - Azken garbiketa (orokortze ondoren sor daitezkeen arazoak)
+# ---------------------------------------------------------------------------
+echo "[GRASS] 7/8 - Azken topologia garbiketa (orokortze ostean)..."
 T0=$(date +%s)
-v.clean input="$MAPA_OROKORTUA" output="${{MAPA_OROKORTUA}}_final" \\
-    tool=snap,break,rmdupl,rmarea \\
-    threshold="$SNAP_THRESHOLD,$SNAP_THRESHOLD,$SNAP_THRESHOLD,$AREA_THRESHOLD" --overwrite
+v.clean input="$M5" output="$M6" \\
+    tool=snap,break,bpol,rmdupl,rmbridge,rmarea \\
+    threshold="$SNAP_THRESHOLD,0,0,$SNAP_THRESHOLD,$SNAP_THRESHOLD,$AREA_THRESHOLD" \\
+    --overwrite
 T1=$(date +%s); echo "[DENBORA] v.clean azken --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
 
-# --- Exportatu ---
-echo "[GRASS] Shapefile exportatzen..."
+# ---------------------------------------------------------------------------
+# 8/8 - Exportatu
+# ---------------------------------------------------------------------------
+echo "[GRASS] 8/8 - Shapefile exportatzen..."
 T0=$(date +%s)
-v.out.ogr input="${{MAPA_OROKORTUA}}_final" output="$OUTPUT_SHP" \\
+v.out.ogr input="$M6" output="$OUTPUT_SHP" \\
     format=ESRI_Shapefile type=area --overwrite
 T1=$(date +%s); echo "[DENBORA] v.out.ogr --> $(date -u -d @$(( T1 - T0 )) +%H:%M:%S)"
 
