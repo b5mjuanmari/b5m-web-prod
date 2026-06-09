@@ -27,17 +27,18 @@ import geopandas as gpd
 # =============================================================================
 
 # Sarrerako eta irteerako Shapefile-ak — komando-lerroko parametroetatik hartu
-if len(sys.argv) != 4:
+if len(sys.argv) != 5:
     print(
-        "Erabilera: python3 {} <sarrera.shp> <irteera.shp> <tolerantzia_m>\n"
+        "Erabilera: python3 {} <sarrera.shp> <irteera.shp> <tolerantzia_m> <area_min_m2>\n"
         "\n"
         "  <sarrera.shp>     Hasierako Shapefile-aren bide osoa (poligonoak)\n"
         "  <irteera.shp>     Bukaerako Shapefile-aren bide osoa\n"
         "  <tolerantzia_m>   Orokortze tolerantzia metroak (adib. 5, 50); 0 = orokortzerik ez\n"
+        "  <area_min_m2>    Azalera minimoa m2 (adib. 1000); txikiagoak ezabatu eta ondokoarekin batu; 0 = ez ezabatu\n"
         "\n"
         "Adibidea:\n"
-        "  python3 {prog} /home5/SHP/TilesVT/vt_landcover_4e5.shp"
-        " /home/juanmari/SCRIPTS/WEB_PROD/dat/vt_landcover_4e5_50.shp 50".format(sys.argv[0], prog=sys.argv[0]),
+        "  python3 {prog} /home/juanmari/SCRIPTS/WEB_PROD/dat/vt_landcover_4e5.shp"
+        " /home/juanmari/SCRIPTS/WEB_PROD/dat/vt_landcover_4e5_50.shp 50 1000".format(sys.argv[0], prog=sys.argv[0]),
         file=sys.stderr,
     )
     sys.exit(1)
@@ -56,8 +57,20 @@ except ValueError:
     )
     sys.exit(1)
 
+try:
+    _area_min = float(sys.argv[4])
+    if _area_min < 0:
+        raise ValueError
+except ValueError:
+    print(
+        "ERRORE: <area_min_m2> zenbaki positibo bat edo 0 izan behar da (0 = ez ezabatu).",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
 # Orokortze parametroak
 GENERALIZE_THRESHOLD = _thr              # Orokortze tolerantzia (metroak) — argv[3]
+AREA_MIN_M2          = _area_min         # Poligono txikienen azalera minimoa (m2) — argv[4]
 GENERALIZE_METHOD    = "douglas"  # Metodoa: "douglas", "lang", "snakes", "hermite", "chaiken"
 
 # Topologia garbiketa parametroak
@@ -240,6 +253,10 @@ def main():
     else:
         log("Orokortze tolerantzia: {} m".format(GENERALIZE_THRESHOLD))
     log("Orokortze metodoa:     {}".format(GENERALIZE_METHOD))
+    if AREA_MIN_M2 > 0:
+        log("Poligono min. azalera: {} m2 (txikiagoak ezabatu eta ondokoarekin batu)".format(AREA_MIN_M2))
+    else:
+        log("Poligono min. azalera: DESGAITUTA (0)")
 
     # --- 2. EPSG lortu ---
     log("-" * 60)
@@ -446,7 +463,7 @@ echo "[GRASS] Prozesua amaituta."
         if ret != 0:
             errore("GRASS script-ean akatsa gertatu da. Ikusi log fitxategia: {}".format(LOG_PATH))
 
-        # --- 7. Eremu garbiketa GeoPandas bidez: fid + type bakarrik, cat gabe ---
+        # --- 7. Eremu garbiketa eta poligono txikiak ezabatu (GeoPandas) ---
         log("-" * 60)
         if not os.path.isfile(output_path):
             errore("Irteera Shapefile ez da sortu: {}".format(output_path))
@@ -459,22 +476,98 @@ echo "[GRASS] Prozesua amaituta."
         if "type" not in gdf_out.columns:
             errore("'type' eremua ez da aurkitu irteerako Shapefile-an.")
 
-        # fid sortu (1etik hasita, jarraian), type mantendu, cat eta gainerakoak kendu
-        gdf_out["fid"] = range(1, len(gdf_out) + 1)
+        # --- 7a. Poligono txikiak ezabatu eta hutsuneak ondokoarekin bete ---
+        if AREA_MIN_M2 > 0:
+            log("Poligono txikiak ezabatzen ({} m2 baino txikiagoak)...".format(AREA_MIN_M2))
+            t2 = time.time()
+            gdf_out = gdf_out.reset_index(drop=True)
+            gdf_out["_area"] = gdf_out.geometry.area
 
-        # fid lehenengo, type bigarren, geometry azken
+            txiki_mask = gdf_out["_area"] < AREA_MIN_M2
+            n_txiki = txiki_mask.sum()
+            log("  Ezabatzeko poligonoak: {}".format(n_txiki))
+
+            if n_txiki > 0:
+                # Sindex erabiliz ondoko poligono handiena aurkitu eta type hartu
+                # Iterazio bat baino gehiago behar da poligono txikien kate-efektua
+                # konpontzeko (txiki bat ezabatu -> ondokoa txiki bihurtu)
+                aldaketa = True
+                while aldaketa:
+                    aldaketa = False
+                    gdf_out = gdf_out.reset_index(drop=True)
+                    gdf_out["_area"] = gdf_out.geometry.area
+                    txiki_idx = gdf_out.index[gdf_out["_area"] < AREA_MIN_M2].tolist()
+                    if not txiki_idx:
+                        break
+
+                    # Spatial index eraiki
+                    sindex = gdf_out.sindex
+
+                    ezabatu_idx = []
+                    for idx in txiki_idx:
+                        geom = gdf_out.at[idx, "geometry"]
+                        if geom is None or geom.is_empty:
+                            ezabatu_idx.append(idx)
+                            continue
+
+                        # Kandidatoak: geometriarekin ukitzen duten poligonoak
+                        kandidatuak = list(sindex.intersection(geom.bounds))
+                        kandidatuak = [
+                            i for i in kandidatuak
+                            if i != idx
+                            and gdf_out.at[i, "geometry"] is not None
+                            and not gdf_out.at[i, "geometry"].is_empty
+                            and gdf_out.at[i, "geometry"].touches(geom)
+                        ]
+
+                        if not kandidatuak:
+                            # Ukitzerik ez bada, intersects probatu
+                            kandidatuak = [
+                                i for i in list(sindex.intersection(geom.bounds))
+                                if i != idx
+                                and gdf_out.at[i, "geometry"] is not None
+                                and not gdf_out.at[i, "geometry"].is_empty
+                                and gdf_out.at[i, "geometry"].intersects(geom)
+                                and gdf_out.at[i, "_area"] >= AREA_MIN_M2
+                            ]
+
+                        if not kandidatuak:
+                            # Ezin da ondokorik aurkitu; ezabatu hutsik
+                            ezabatu_idx.append(idx)
+                            continue
+
+                        # Azaleraren arabera kandidatu handiena aukeratu
+                        ondokoa = max(kandidatuak, key=lambda i: gdf_out.at[i, "_area"])
+
+                        # type hartu ondokotik eta geometria batu
+                        tipo_berria = gdf_out.at[ondokoa, "type"]
+                        geom_berria = gdf_out.at[ondokoa, "geometry"].union(geom)
+                        gdf_out.at[ondokoa, "geometry"] = geom_berria
+                        gdf_out.at[ondokoa, "type"]     = tipo_berria
+                        ezabatu_idx.append(idx)
+                        aldaketa = True
+
+                    if ezabatu_idx:
+                        gdf_out = gdf_out.drop(index=ezabatu_idx).reset_index(drop=True)
+                        gdf_out["_area"] = gdf_out.geometry.area
+
+            gdf_out = gdf_out.drop(columns=["_area"])
+            log("  Poligono kopurua ezabatu ostean: {}".format(len(gdf_out)))
+            log_denbora("Poligono txikiak ezabatu", t2)
+
+        # --- 7b. fid sortu eta eremu ordena ezarri ---
+        gdf_out["fid"] = range(1, len(gdf_out) + 1)
         gdf_out = gdf_out[["fid", "type", "geometry"]]
 
         # Berriro gorde (cat eta beste eremu guztiak kenduta)
         gdf_out.to_file(output_path, encoding="utf-8")
-        log_denbora("Eremu garbiketa", t)
+        log_denbora("Eremu garbiketa osoa", t)
 
         log("-" * 60)
         log("Emaitza Shapefile: {}".format(output_path))
         log("Poligono kopurua:  {}".format(len(gdf_out)))
         log("Eremua:            fid, type")
         log("CRS:               {}".format(gdf_out.crs))
-        log_denbora("PROZESU OSOA", hasiera_osoa)
         log("=" * 60)
         log("Prozesua ONGI amaitu da.")
         log("=" * 60)
@@ -483,6 +576,9 @@ echo "[GRASS] Prozesua amaituta."
         # --- 8. Aldi baterako GRASS datu-basea ezabatu ---
         log("GRASS datu-base aldi baterakoa ezabatzen: {}".format(gisdb))
         shutil.rmtree(gisdb, ignore_errors=True)
+        log("=" * 60)
+        log_denbora("PROZESU OSOA", hasiera_osoa)
+        log("=" * 60)
         LOG_FH.close()
 
 
