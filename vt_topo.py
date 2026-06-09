@@ -21,6 +21,8 @@ import subprocess
 import time
 import datetime
 import geopandas as gpd
+from shapely.ops import unary_union
+from shapely.geometry import Polygon, MultiPolygon
 
 # =============================================================================
 # ALDAGAIAK - Hemen alda ditzakezu parametroak
@@ -555,7 +557,77 @@ echo "[GRASS] Prozesua amaituta."
             log("  Poligono kopurua ezabatu ostean: {}".format(len(gdf_out)))
             log_denbora("Poligono txikiak ezabatu", t2)
 
-        # --- 7b. fid sortu eta eremu ordena ezarri ---
+        # --- 7b. Hutsune egiaztapena eta konponketa (interior rings) ---
+        # Interior ring bat poligono baten barruan dagoen zulo geometrikoa da.
+        # Aurkitzen badira: zuloa betetzen duen ondoko poligonora gehitu (union),
+        # eta poligono berria ring-rik gabe gorde.
+        log("Hutsune egiaztapena egiten (interior rings)...")
+        t_huts = time.time()
+
+        gdf_out = gdf_out.reset_index(drop=True)
+        sindex  = gdf_out.sindex
+        zulo_total    = 0
+        zulo_konpondu = 0
+
+        for i in range(len(gdf_out)):
+            geom = gdf_out.at[i, "geometry"]
+            if geom is None or geom.is_empty:
+                continue
+
+            # Poligono guztiak lortu (Polygon edo MultiPolygon)
+            poli_lista = list(geom.geoms) if hasattr(geom, "geoms") else [geom]
+            zulo_kopuru_i = sum(len(p.interiors) for p in poli_lista)
+            if zulo_kopuru_i == 0:
+                continue
+
+            zulo_total += zulo_kopuru_i
+            geom_berri_lista = []
+
+            for poly in poli_lista:
+                if len(poly.interiors) == 0:
+                    geom_berri_lista.append(poly)
+                    continue
+
+                # Interior ring bakoitza ondoko poligonorik handiena aurkitu eta eman
+                for ring in poly.interiors:
+                    zulo_geom = Polygon(ring)
+                    kandidatuak = [
+                        j for j in sindex.intersection(zulo_geom.bounds)
+                        if j != i
+                        and gdf_out.at[j, "geometry"] is not None
+                        and not gdf_out.at[j, "geometry"].is_empty
+                        and gdf_out.at[j, "geometry"].intersects(zulo_geom)
+                    ]
+                    if kandidatuak:
+                        ondokoa = max(
+                            kandidatuak,
+                            key=lambda j: gdf_out.at[j, "geometry"].intersection(zulo_geom).area
+                        )
+                        gdf_out.at[ondokoa, "geometry"] = (
+                            gdf_out.at[ondokoa, "geometry"].union(zulo_geom)
+                        )
+                        zulo_konpondu += 1
+
+                # Poligono berria exterior bakarrik (interior ring-rik gabe)
+                geom_berri_lista.append(Polygon(poly.exterior))
+
+            # Geometria eguneratu
+            if len(geom_berri_lista) == 1:
+                gdf_out.at[i, "geometry"] = geom_berri_lista[0]
+            else:
+                gdf_out.at[i, "geometry"] = MultiPolygon(geom_berri_lista)
+
+        if zulo_total == 0:
+            log("  Interior ring-rik ez da aurkitu.")
+        else:
+            log("  {} interior ring aurkitu, {} konponduta.".format(zulo_total, zulo_konpondu))
+            if zulo_total != zulo_konpondu:
+                log("  ABISUA: {} interior ring ezin izan da konpondu "
+                    "(ondoko poligonorik gabe).".format(zulo_total - zulo_konpondu))
+
+        log_denbora("Hutsune egiaztapena", t_huts)
+
+        # --- 7c. fid sortu eta eremu ordena ezarri ---
         gdf_out["fid"] = range(1, len(gdf_out) + 1)
         gdf_out = gdf_out[["fid", "type", "geometry"]]
 
