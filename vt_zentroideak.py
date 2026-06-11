@@ -124,7 +124,7 @@ def zentroideak_sortu(input_path):
 
     # Irakurri
     t = time.time()
-    gdf = gpd.read_file(input_path)
+    gdf = gpd.read_file(input_path, encoding="iso-8859-1")
     log("  Elementu kopurua: {} | CRS: {}".format(len(gdf), gdf.crs))
     log_denbora("  Irakurketa", t)
 
@@ -171,12 +171,19 @@ def zentroideak_sortu(input_path):
     gdf_zentro             = gdf_zentro[gdf_zentro.geometry.notnull()].reset_index(drop=True)
 
     t = time.time()
-    gdf_zentro.to_file(output_path, encoding="utf-8")
+    gdf_zentro.to_file(output_path, encoding="iso-8859-1")
 
-    # .cpg ezabatu
+    # .cpg fitxategia ezabatu (ez dugu nahi)
     cpg_path = oinarria + "_p.cpg"
     if os.path.isfile(cpg_path):
         os.remove(cpg_path)
+
+    # DBF fitxategiaren 29. byte-a (LDID) 0x57 jarri -> ISO-8859-1/Windows-1252
+    dbf_path = oinarria + "_p.dbf"
+    if os.path.isfile(dbf_path):
+        with open(dbf_path, "r+b") as _dbf:
+            _dbf.seek(29)
+            _dbf.write(b"\x57")
 
     log_denbora("  Gorde", t)
     log("  Irteera: {}".format(output_path))
