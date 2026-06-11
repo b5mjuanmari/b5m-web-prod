@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Poligono Shapefile batetik zentroideak sortu.
+Direktorio bateko «r_» kateaz hasten diren Shapefile guztietatik
+zentroideak sortu (poligonoak dituztenak bakarrik).
 
 Erabilera:
-    python3 zentroideak.py <sarrera.shp>
+    python3 zentroideak.py <direktorioa>
 
 Deskribapena:
-    - Sarrerako Shapefile-ak poligonoak dituela egiaztatzen du.
-    - Poligono bakoitzaren zentroidea kalkulatzen du.
-    - Zentroidea poligonoaren barruan ez badago, representative_point()
-      erabiltzen du (beti barnean kokatzen den puntua).
-    - Irteerako Shapefile-a sarrerakoaren izen bera du + "_p" atzizkia.
-    - Aurretik existitzen bada, ezabatu eta berriro sortzen du.
+    - Direktorioko «r_»-z hasten diren .shp fitxategi guztiak zerrendatzen ditu.
+    - Poligonoak dituzten Shapefile-ak prozesatzen ditu.
+    - Poligono bakoitzaren zentroidea kalkulatzen du; zentroidea poligonoaren
+      barruan ez badago, representative_point() erabiltzen du.
+    - Irteerako Shapefile-a sarrerakoaren izen bera du + "_p" atzizkia,
+      direktorio berean. Aurretik existitzen bada, ezabatu eta berriro sortzen du.
 
 Python 3.6+ bateragarria.
 """
@@ -29,31 +30,25 @@ import geopandas as gpd
 
 if len(sys.argv) != 2:
     print(
-        "Erabilera: python3 {} <sarrera.shp>\n"
+        "Erabilera: python3 {} <direktorioa>\n"
         "\n"
-        "  <sarrera.shp>  Poligono Shapefile-aren bide osoa\n"
+        "  <direktorioa>  «r_»-z hasten diren Shapefile-ak dituen direktorioa\n"
         "\n"
         "Adibidea:\n"
-        "  python3 {prog} /home/data/datos_explotacion/CUR/shape/EPSG_25830/Tiles/r_oronimia.shp".format(
+        "  python3 {prog} /home/data/datos_explotacion/CUR/shape/EPSG_25830/Tiles".format(
             sys.argv[0], prog=sys.argv[0]
         ),
         file=sys.stderr,
     )
     sys.exit(1)
 
-INPUT_SHAPEFILE = sys.argv[1]
+INPUT_DIR = sys.argv[1]
 
 # =============================================================================
 # LOG SISTEMA
 # =============================================================================
 
 def log_fitxategia_prestatu():
-    """
-    Log direktorioa eta fitxategia prestatu.
-    - Direktorioa: scriptaren ondoan dagoen 'log/' karpeta.
-    - Izena: <script_izena>_YYYYMMDD.log
-    - Aurrekoa ezabatu existitzen bada.
-    """
     script_izena = os.path.splitext(os.path.basename(sys.argv[0]))[0]
     data_str     = datetime.datetime.now().strftime("%Y%m%d")
     log_dir      = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "log")
@@ -74,7 +69,6 @@ LOG_FH   = open(LOG_PATH, "w", buffering=1)
 
 
 def _idatzi(lerro):
-    """Lerro bat log fitxategira idatzi (timestamp-arekin)."""
     ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     LOG_FH.write("[{}] {}\n".format(ts, lerro))
     LOG_FH.flush()
@@ -117,7 +111,76 @@ def shapefile_ezabatu(path):
             os.remove(fitx)
             ezabatutakoak.append(os.path.basename(fitx))
     if ezabatutakoak:
-        log("Aurrekoa ezabatua: {}".format(", ".join(ezabatutakoak)))
+        log("  Aurrekoa ezabatua: {}".format(", ".join(ezabatutakoak)))
+
+
+def zentroideak_sortu(input_path):
+    """
+    Shapefile bat prozesatu eta zentroideen Shapefile-a sortu.
+    Itzultzen du: True (ongi), False (ez da poligonorik, saltatu).
+    """
+    oinarria    = os.path.splitext(input_path)[0]
+    output_path = oinarria + "_p.shp"
+
+    # Irakurri
+    t = time.time()
+    gdf = gpd.read_file(input_path)
+    log("  Elementu kopurua: {} | CRS: {}".format(len(gdf), gdf.crs))
+    log_denbora("  Irakurketa", t)
+
+    # Poligonoak dituela egiaztatu
+    geom_motak     = gdf.geometry.geom_type.unique().tolist()
+    poligono_motak = {"Polygon", "MultiPolygon"}
+    ez_poligonoak  = [m for m in geom_motak if m not in poligono_motak]
+
+    if ez_poligonoak:
+        log("  SALTATU: ez ditu poligono geometriak bakarrik "
+            "(aurkitutakoak: {}).".format(geom_motak))
+        return False
+
+    # Irteera aurrekoa ezabatu
+    shapefile_ezabatu(output_path)
+
+    # Zentroideak kalkulatu
+    t = time.time()
+    zentroideak    = []
+    kanpoan_kopuru = 0
+
+    for _, errenkada in gdf.iterrows():
+        geom = errenkada.geometry
+        if geom is None or geom.is_empty:
+            zentroideak.append(None)
+            continue
+
+        zentroide = geom.centroid
+        if geom.contains(zentroide):
+            zentroideak.append(zentroide)
+        else:
+            zentroideak.append(geom.representative_point())
+            kanpoan_kopuru += 1
+
+    log_denbora("  Zentroideak kalkulatu", t)
+
+    if kanpoan_kopuru > 0:
+        log("  OHARRA: {} zentroide kanpoan; representative_point() "
+            "erabili da.".format(kanpoan_kopuru))
+
+    # GeoDataFrame berria sortu eta gorde
+    gdf_zentro             = gdf.copy()
+    gdf_zentro["geometry"] = zentroideak
+    gdf_zentro             = gdf_zentro[gdf_zentro.geometry.notnull()].reset_index(drop=True)
+
+    t = time.time()
+    gdf_zentro.to_file(output_path, encoding="utf-8")
+
+    # .cpg ezabatu
+    cpg_path = oinarria + "_p.cpg"
+    if os.path.isfile(cpg_path):
+        os.remove(cpg_path)
+
+    log_denbora("  Gorde", t)
+    log("  Irteera: {}".format(output_path))
+    return True
 
 
 # =============================================================================
@@ -128,100 +191,59 @@ def main():
     hasiera_osoa = time.time()
 
     log("=" * 60)
-    log("Zentroideen Shapefile sortzailea")
+    log("Zentroideen batch prozesadorea (r_*.shp)")
     log("Log fitxategia: {}".format(LOG_PATH))
     log("=" * 60)
 
-    # --- 1. Sarrera egiaztatu ---
-    input_path = os.path.abspath(INPUT_SHAPEFILE)
+    # --- 1. Direktorioa egiaztatu ---
+    input_dir = os.path.abspath(INPUT_DIR)
+    if not os.path.isdir(input_dir):
+        errore("Direktorioa ez da aurkitu: {}".format(input_dir))
 
-    if not os.path.isfile(input_path):
-        errore("Sarrerako Shapefile ez da aurkitu: {}".format(input_path))
+    log("Direktorioa: {}".format(input_dir))
 
-    log("Sarrera: {}".format(input_path))
-
-    # --- 2. Irakurri ---
+    # --- 2. «r_»-z hasten diren Shapefile-ak zerrendatu ---
     log("-" * 60)
-    log("Shapefile irakurtzen...")
-    t = time.time()
-    gdf = gpd.read_file(input_path)
-    log_denbora("Shapefile irakurketa", t)
-    log("Elementu kopurua: {}".format(len(gdf)))
-    log("CRS: {}".format(gdf.crs))
+    log("«r_»-z hasten diren Shapefile-ak bilatzen...")
 
-    # --- 3. Poligonoak direla egiaztatu ---
-    geom_motak = gdf.geometry.geom_type.unique().tolist()
-    log("Geometria motak: {}".format(geom_motak))
+    shp_fitxategiak = sorted([
+        os.path.join(input_dir, f)
+        for f in os.listdir(input_dir)
+        if f.startswith("r_") and f.lower().endswith(".shp")
+    ])
 
-    poligono_motak = {"Polygon", "MultiPolygon"}
-    ez_poligonoak  = [m for m in geom_motak if m not in poligono_motak]
-    if ez_poligonoak:
-        errore(
-            "Shapefile-ak ez ditu poligono geometriak bakarrik. "
-            "Aurkitutako mota ez-onartuak: {}".format(ez_poligonoak)
-        )
-    log("Geometria egiaztapena ONGI: poligonoak dira.")
+    if not shp_fitxategiak:
+        errore("Ez da «r_»-z hasten den Shapefile-rik aurkitu: {}".format(input_dir))
 
-    # --- 4. Irteera bidea sortu (<izena>_p.shp) ---
-    oinarria    = os.path.splitext(input_path)[0]
-    output_path = oinarria + "_p.shp"
-    log("Irteera: {}".format(output_path))
+    log("Aurkitutako Shapefile-ak: {}".format(len(shp_fitxategiak)))
+    for shp in shp_fitxategiak:
+        log("  {}".format(os.path.basename(shp)))
 
-    # --- 5. Aurrekoa ezabatu existitzen bada ---
-    shapefile_ezabatu(output_path)
-
-    # --- 6. Zentroideak kalkulatu ---
+    # --- 3. Bakoitza prozesatu ---
     log("-" * 60)
-    log("Zentroideak kalkulatzen...")
-    t = time.time()
-    zentroideak    = []
-    kanpoan_kopuru = 0
+    prozesatutakoak = 0
+    saltatutakoak   = 0
 
-    for idx, errenkada in gdf.iterrows():
-        geom = errenkada.geometry
-        if geom is None or geom.is_empty:
-            zentroideak.append(None)
-            continue
+    for i, shp_path in enumerate(shp_fitxategiak, start=1):
+        log("[{}/{}] Prozesatzen: {}".format(i, len(shp_fitxategiak),
+                                              os.path.basename(shp_path)))
+        t_shp = time.time()
 
-        zentroide = geom.centroid
+        ongi = zentroideak_sortu(shp_path)
 
-        if geom.contains(zentroide):
-            zentroideak.append(zentroide)
+        if ongi:
+            prozesatutakoak += 1
         else:
-            # representative_point(): beti poligonoaren barruan kokatzen den puntua
-            zentroideak.append(geom.representative_point())
-            kanpoan_kopuru += 1
+            saltatutakoak += 1
 
-    log_denbora("Zentroideak kalkulatu", t)
+        log_denbora("  [{}/{}] Denbora".format(i, len(shp_fitxategiak)), t_shp)
+        log("-" * 60)
 
-    if kanpoan_kopuru > 0:
-        log("OHARRA: {} zentroide poligonotik kanpo zeuden; "
-            "representative_point() erabili da.".format(kanpoan_kopuru))
-    else:
-        log("Zentroide guztiak poligonoaren barruan daude.")
-
-    # --- 7. GeoDataFrame berria sortu ---
-    gdf_zentro = gdf.copy()
-    gdf_zentro["geometry"] = zentroideak
-    gdf_zentro = gdf_zentro[gdf_zentro.geometry.notnull()].reset_index(drop=True)
-
-    # --- 8. Gorde ---
-    log("-" * 60)
-    log("Shapefile gordetzen...")
-    t = time.time()
-    gdf_zentro.to_file(output_path, encoding="utf-8")
-
-    # .cpg fitxategia ezabatu (GeoPandas-ek sortzen du baina ez da beharrezkoa)
-    cpg_path = os.path.splitext(output_path)[0] + ".cpg"
-    if os.path.isfile(cpg_path):
-        os.remove(cpg_path)
-        log(".cpg fitxategia ezabatua.")
-
-    log_denbora("Shapefile gorde", t)
-
-    log("-" * 60)
-    log("Irteerako Shapefile: {}".format(output_path))
-    log("Zentroide kopurua:   {}".format(len(gdf_zentro)))
+    # --- 4. Laburpena ---
+    log("LABURPENA:")
+    log("  Aurkitutako Shapefile-ak:  {}".format(len(shp_fitxategiak)))
+    log("  Prozesatutakoak:           {}".format(prozesatutakoak))
+    log("  Saltatutakoak (ez-polig.): {}".format(saltatutakoak))
     log_denbora("PROZESU OSOA", hasiera_osoa)
     log("=" * 60)
     log("Prozesua ONGI amaitu da.")
