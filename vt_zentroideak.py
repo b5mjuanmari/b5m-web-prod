@@ -4,8 +4,15 @@
 Direktorio bateko «r_» kateaz hasten diren Shapefile guztietatik
 zentroideak sortu (poligonoak dituztenak bakarrik).
 
+«r_edifn» izeneko Shapefile-erako, gainera, «repeat» eremua gehitzen du:
+    1  ->  NOMBRE bera duen beste zentroide bat erradio barruan badago
+    0  ->  bestela
+
 Erabilera:
-    python3 zentroideak.py <direktorioa>
+    python3 vt_zentroideak.py <direktorioa> [erradio_m]
+
+      <direktorioa>  «r_»-z hasten diren Shapefile-ak dituen direktorioa
+      [erradio_m]    Errepikapen-erradioa metretan (default: 200)
 
 Deskribapena:
     - Direktorioko «r_»-z hasten diren .shp fitxategi guztiak zerrendatzen ditu.
@@ -28,14 +35,16 @@ import geopandas as gpd
 # PARAMETROAK
 # =============================================================================
 
-if len(sys.argv) != 2:
+if len(sys.argv) < 2 or len(sys.argv) > 3:
     print(
-        "Erabilera: python3 {} <direktorioa>\n"
+        "Erabilera: python3 {} <direktorioa> [erradio_m]\n"
         "\n"
         "  <direktorioa>  «r_»-z hasten diren Shapefile-ak dituen direktorioa\n"
+        "  [erradio_m]    Errepikapen-erradioa metretan (default: 200)\n"
         "\n"
-        "Adibidea:\n"
-        "  python3 {prog} /home/data/datos_explotacion/CUR/shape/EPSG_25830/Tiles".format(
+        "Adibideak:\n"
+        "  python3 {prog} /home/data/datos_explotacion/CUR/shape/EPSG_25830/Tiles\n"
+        "  python3 {prog} /home/data/datos_explotacion/CUR/shape/EPSG_25830/Tiles 300".format(
             sys.argv[0], prog=sys.argv[0]
         ),
         file=sys.stderr,
@@ -43,6 +52,21 @@ if len(sys.argv) != 2:
     sys.exit(1)
 
 INPUT_DIR = sys.argv[1]
+
+ERRADIO_M = 200
+if len(sys.argv) == 3:
+    try:
+        ERRADIO_M = float(sys.argv[2])
+        if ERRADIO_M <= 0:
+            raise ValueError
+    except ValueError:
+        print(
+            "ERRORE: erradio_m parametroa zenbaki positibo bat izan behar da: {!r}".format(
+                sys.argv[2]
+            ),
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
 # =============================================================================
 # LOG SISTEMA
@@ -114,13 +138,73 @@ def shapefile_ezabatu(path):
         log("  Aurrekoa ezabatua: {}".format(", ".join(ezabatutakoak)))
 
 
-def zentroideak_sortu(input_path):
+def repeat_eremua_kalkulatu(gdf_zentro, erradio_m):
+    """
+    «NOMBRE» eremua erabiliz, erradio barruan izen bera duten zentroideak
+    detektatu eta «repeat» eremua gehitu (1/0).
+
+    Estrategia:
+      - Izen bakoitzeko taldea hartu.
+      - Taldean puntu bat baino gehiago badago, distantzia-matrizea kalkulatu.
+      - Erradio barruan beste bat badago -> repeat=1, bestela repeat=0.
+
+    Python 3.6 bateragarria (scipy gabe, GeoPandas distance bidez).
+    """
+    repeat = [0] * len(gdf_zentro)
+
+    if "NOMBRE" not in gdf_zentro.columns:
+        log("  OHARRA: «NOMBRE» eremua ez da aurkitu; «repeat» eremua beti 0 izango da.")
+        gdf_zentro["repeat"] = repeat
+        return gdf_zentro
+
+    # Izen bakoitzeko indize-taldeak eraiki
+    taldeak = {}
+    for idx, row in gdf_zentro.iterrows():
+        izena = row["NOMBRE"]
+        if izena not in taldeak:
+            taldeak[izena] = []
+        taldeak[izena].append(idx)
+
+    errepikatu_kopuru = 0
+
+    for izena, indizeak in taldeak.items():
+        if len(indizeak) < 2:
+            # Izen hori bakarra da: repeat=0 (dagoeneko)
+            continue
+
+        # Taldeko geometriak hartu
+        azpimul = gdf_zentro.loc[indizeak]
+
+        for i, idx_i in enumerate(indizeak):
+            if repeat[idx_i] == 1:
+                # Dagoeneko markatuta dago
+                continue
+            geom_i = gdf_zentro.at[idx_i, "geometry"]
+            for idx_j in indizeak[i + 1:]:
+                geom_j = gdf_zentro.at[idx_j, "geometry"]
+                dist = geom_i.distance(geom_j)
+                if dist <= erradio_m:
+                    repeat[idx_i] = 1
+                    repeat[idx_j] = 1
+                    errepikatu_kopuru += 1
+                    break  # idx_i dagoeneko markatu da; hurrengo idx_i-ra
+
+    gdf_zentro["repeat"] = repeat
+    log("  «repeat»=1 duten zentroideak: {}".format(sum(repeat)))
+    return gdf_zentro
+
+
+def zentroideak_sortu(input_path, erradio_m):
     """
     Shapefile bat prozesatu eta zentroideen Shapefile-a sortu.
+    r_edifn bada, «repeat» eremua gehitzen du.
     Itzultzen du: True (ongi), False (ez da poligonorik, saltatu).
     """
     oinarria    = os.path.splitext(input_path)[0]
     output_path = oinarria + "_p.shp"
+    fitx_izena  = os.path.splitext(os.path.basename(input_path))[0]
+
+    da_edifn = fitx_izena.lower() == "r_edifn"
 
     # Irakurri
     t = time.time()
@@ -165,11 +249,20 @@ def zentroideak_sortu(input_path):
         log("  OHARRA: {} zentroide kanpoan; representative_point() "
             "erabili da.".format(kanpoan_kopuru))
 
-    # GeoDataFrame berria sortu eta gorde
+    # GeoDataFrame berria sortu
     gdf_zentro             = gdf.copy()
     gdf_zentro["geometry"] = zentroideak
     gdf_zentro             = gdf_zentro[gdf_zentro.geometry.notnull()].reset_index(drop=True)
 
+    # «repeat» eremua — r_edifn bakarrik
+    if da_edifn:
+        log("  r_edifn detektatua: «repeat» eremua kalkulatzen "
+            "(erradioa: {} m)...".format(erradio_m))
+        t = time.time()
+        gdf_zentro = repeat_eremua_kalkulatu(gdf_zentro, erradio_m)
+        log_denbora("  «repeat» kalkulua", t)
+
+    # Gorde
     t = time.time()
     gdf_zentro.to_file(output_path, encoding="iso-8859-1")
 
@@ -200,6 +293,7 @@ def main():
     log("=" * 60)
     log("Zentroideen batch prozesadorea (r_*.shp)")
     log("Log fitxategia: {}".format(LOG_PATH))
+    log("Errepikapen-erradioa: {} m".format(ERRADIO_M))
     log("=" * 60)
 
     # --- 1. Direktorioa egiaztatu ---
@@ -236,7 +330,7 @@ def main():
                                               os.path.basename(shp_path)))
         t_shp = time.time()
 
-        ongi = zentroideak_sortu(shp_path)
+        ongi = zentroideak_sortu(shp_path, ERRADIO_M)
 
         if ongi:
             prozesatutakoak += 1
