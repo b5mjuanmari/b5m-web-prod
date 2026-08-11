@@ -312,7 +312,7 @@ def main():
 
     # 8. Laburpena
     logger.log("\n" + "=" * 60)
-    logger.log("PROZESUA AMAITU DA")
+    logger.log(f"PROZESUA AMAITU DA - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     logger.log("=" * 60)
 
     prozesu_bukaera = time.time()
