@@ -1,4 +1,7 @@
 bak/
 dat/
 log/
+topo/__pycache__/
+topo/log/
 *.dsv
+*.pyc
