@@ -20,6 +20,13 @@ cd "${HOME}/SCRIPTS/WEB_PROD"
 ./genAero.sh
 ./genRotu.sh
 ./genVT.sh
+
+# Toponimiaren aldaketak
+cd topo
+./prozedura_guztiak.sh
+python3 99_copy_prod.py
+cd ..
+
 python3 genBuildings3D.py
 python3 vt_zentroideak.py /home/data/datos_explotacion/CUR/shape/EPSG_25830/Tiles
 python3 copy_tiles.py /home/data/datos_explotacion/CUR/shape/EPSG_25830/Tiles /home5/SHP
