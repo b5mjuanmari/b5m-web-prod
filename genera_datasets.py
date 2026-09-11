@@ -56,6 +56,8 @@ ruta1 = "/home5/SHP"
 ruta2 = "/home/data/datos_explotacion/CUR/datasets"
 gpkg_dir = f"/tmp/{os.path.splitext(os.path.basename(sys.argv[0]))[0]}"
 cur_dir = "/home/lidar/SCRIPTS/WEB_PROD"
+csv_ori = f"{cur_dir}/csv/csv_split"
+csv_des = f"{ruta2}/csv"
 log_file = f"{cur_dir}/log/genera_datasets_{datetime.now().strftime('%Y%m%d')}.log"
 
 def log(message):
@@ -553,7 +555,8 @@ def generate_kml(gpkg_file, destino, namefield, name_dset, description_dset, cam
             if doc_start == -1:
                 doc_start = content.find('<Document>')
                 if doc_start == -1:
-                    raise ValueError("Ezin da <Document> elementua aurkitu KML fitxategian")
+                    log(f"Ezin da <Document> elementua aurkitu KML fitxategian: {kml_file}\n")
+                    return False
 
             # Kalkulatu kokalekua (Document etiketaren ondoren)
             insert_pos = content.find('>', doc_start) + 1
@@ -774,6 +777,22 @@ def generate_datasets(sql):
     except Exception as e:
         log(f"Errorea GPKG direktorioa ezabatzean: {str(e)}\n")
 
+def copy_csv(csv_ori: str, csv_des: str) -> None:
+    """
+    CSVak kopiatu
+    """
+
+    log(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - CSVak kopiatzen.\n")
+    if not os.path.isdir(csv_ori):
+        log(f"Jatorrizko karpeta ez da existitzen: {csv_ori}\n")
+        return
+
+    if os.path.exists(csv_des):
+        shutil.rmtree(csv_des)
+
+    shutil.copytree(csv_ori, csv_des)
+    log(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - CSVak kopiatuta.\n")
+
 if __name__ == "__main__":
     script_start_time = datetime.now()
     if os.path.exists(log_file):
@@ -787,6 +806,7 @@ if __name__ == "__main__":
 
     log(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Hasiera: {os.path.abspath(__file__)}\n")
     generate_datasets(sql)
+    copy_csv(csv_ori, csv_des)
     script_end_time = datetime.now()
     script_duration = script_end_time - script_start_time
     log(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Bukaera: {os.path.abspath(__file__)}\n")
