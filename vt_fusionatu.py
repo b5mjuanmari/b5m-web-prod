@@ -1,381 +1,144 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+Poligono Shapefile guztiak (azpikarpetak barne) GPKG fitxategi bakar batean fusionatu.
+
+Erabilera:
+    python script.py <shapefile_karpeta> <gpkg_bidea>
+"""
 
 import os
 import sys
+import time
+from osgeo import ogr
 
-import geopandas as gpd
-import pandas as pd
-
-from shapely.ops import unary_union, snap
-
-# ----------------------------------------------------------------------
-# Shapely bateragarritasuna
-# ----------------------------------------------------------------------
-
-try:
-    from shapely import make_valid
-except ImportError:
-    try:
-        from shapely.validation import make_valid
-    except ImportError:
-        make_valid = None
-
-# ----------------------------------------------------------------------
-# Parametroak
-# ----------------------------------------------------------------------
-
-SNAP_DISTANCE = 0.50
-MIN_AREA = 1.0
-
-# ----------------------------------------------------------------------
-# Log
-# ----------------------------------------------------------------------
-
-from logger import c_log
-
-log = c_log(__file__)
-
-# ----------------------------------------------------------------------
-# Geometriak
-# ----------------------------------------------------------------------
-
-def fix_geom(geom):
-
-    if geom is None:
-        return None
-
-    try:
-        if geom.is_valid:
-            return geom
-    except Exception:
-        return geom
-
-    if make_valid is not None:
-        try:
-            return make_valid(geom)
-        except Exception:
-            pass
-
-    try:
-        return geom.buffer(0)
-    except Exception:
-        return geom
-
-
-# ----------------------------------------------------------------------
-# Shapefile bilaketa
-# ----------------------------------------------------------------------
-
-def find_shapefiles(root_folder):
-
-    shp_files = []
-
-    for root, dirs, files in os.walk(root_folder):
-
-        for filename in files:
-
-            if filename.lower().endswith(".shp"):
-
-                shp_files.append(
-                    os.path.join(root, filename)
-                )
-
-    shp_files.sort()
-
-    return shp_files
-
-
-# ----------------------------------------------------------------------
-# Shapefile irakurketa
-# ----------------------------------------------------------------------
-
-def read_shapefile(shp):
-
-    encodings = [
-        None,
-        "utf-8",
-        "latin1",
-        "cp1252"
-    ]
-
-    last_error = None
-
-    for encoding in encodings:
-
-        try:
-
-            if encoding is None:
-                return gpd.read_file(shp)
-
-            return gpd.read_file(
-                shp,
-                encoding=encoding
-            )
-
-        except Exception as e:
-
-            last_error = e
-
-    raise last_error
-
-
-# ----------------------------------------------------------------------
-# Topologia
-# ----------------------------------------------------------------------
-
-def clean_topology(
-    gdf,
-    snap_distance,
-    min_area
-):
-
-    log("Geometriak balioztatzen...")
-
-    gdf["geometry"] = gdf.geometry.apply(
-        fix_geom
-    )
-
-    valid_geoms = [
-        g
-        for g in gdf.geometry
-        if g is not None
-    ]
-
-    if len(valid_geoms) > 0:
-
-        log("Snap sare globala sortzen...")
-
-        union_geom = unary_union(
-            valid_geoms
-        )
-
-        snapped = []
-
-        for geom in gdf.geometry:
-
-            if geom is None:
-
-                snapped.append(None)
-
-                continue
-
-            try:
-
-                snapped.append(
-                    snap(
-                        geom,
-                        union_geom,
-                        snap_distance
-                    )
-                )
-
-            except Exception:
-
-                snapped.append(
-                    geom
-                )
-
-        gdf["geometry"] = snapped
-
-    log("Bigarren balidazioa...")
-
-    gdf["geometry"] = gdf.geometry.apply(
-        fix_geom
-    )
-
-    log(
-        f"Azalera < {min_area} "
-        f"duten poligonoak kentzen..."
-    )
-
-    gdf = gdf[
-        gdf.geometry.notnull()
-    ].copy()
-
-    gdf = gdf[
-        ~gdf.geometry.is_empty
-    ].copy()
-
-    gdf = gdf[
-        gdf.geometry.area >= min_area
-    ].copy()
-
-    return gdf
-
-
-# ----------------------------------------------------------------------
-# Programa nagusia
-# ----------------------------------------------------------------------
 
 def main():
-
-    script_name = os.path.basename(
-        sys.argv[0]
-    )
+    script_izena = os.path.basename(sys.argv[0])
 
     if len(sys.argv) != 3:
-
-        log(
-            f"Erabilera:\n"
-            f"python3 {script_name} "
-            f"<shp_karpeta> "
-            f"<irteera.gpkg>"
-        )
-
+        print(f"Erabilera: python {script_izena} <shapefile_karpeta> <gpkg_bidea>")
         sys.exit(1)
 
-    shp_folder = sys.argv[1]
-    output_gpkg = sys.argv[2]
+    karpeta = sys.argv[1]
+    gpkg_bidea = sys.argv[2]
 
-    if not os.path.isdir(shp_folder):
-
-        log(
-            f"Ez da karpeta aurkitu: "
-            f"{shp_folder}"
-        )
-
+    if not os.path.isdir(karpeta):
+        print(f"Errorea: '{karpeta}' ez da karpeta baliogarri bat.")
         sys.exit(1)
 
-    shp_files = find_shapefiles(
-        shp_folder
-    )
+    # GPKG-a ezabatu aurretik badago
+    if os.path.exists(gpkg_bidea):
+        os.remove(gpkg_bidea)
+        print(f"Aurreko GPKG ezabatu da: {gpkg_bidea}")
 
-    if not shp_files:
+    # Shapefile guztiak bilatu (azpikarpetak barne)
+    shp_zerrenda = []
+    for erroa, _, fitxategiak in os.walk(karpeta):
+        for fitxategia in fitxategiak:
+            if fitxategia.lower().endswith(".shp"):
+                shp_zerrenda.append(os.path.join(erroa, fitxategia))
 
-        log(
-            "Ez da shapefilerik aurkitu."
-        )
+    if not shp_zerrenda:
+        print("Ez da Shapefile-ik aurkitu.")
+        sys.exit(0)
 
+    print(f"{len(shp_zerrenda)} Shapefile aurkitu dira.\n")
+
+    # GPKG driver-a
+    driver = ogr.GetDriverByName("GPKG")
+    if driver is None:
+        print("Errorea: GPKG driver-a ez dago erabilgarri.")
         sys.exit(1)
 
-    log(
-        f"{len(shp_files)} shapefile "
-        f"aurkitu dira "
-        f"(azpidirektorioak barne)."
-    )
+    # GPKG-a sortu
+    ds_out = driver.CreateDataSource(gpkg_bidea)
+    if ds_out is None:
+        print(f"Errorea: ezin izan da GPKG-a sortu: {gpkg_bidea}")
+        sys.exit(1)
 
-    if os.path.exists(output_gpkg):
+    layer_out = None
 
-        log(
-            f"Lehendik dagoen GPKG "
-            f"ezabatzen: {output_gpkg}"
-        )
+    denbora_totala_hasiera = time.time()
 
-        os.remove(output_gpkg)
+    for idx, shp_bidea in enumerate(shp_zerrenda, 1):
+        hasiera = time.time()
+        shp_izena = os.path.basename(shp_bidea)
+        izen_garbia = os.path.splitext(shp_izena)[0]
 
-    gdfs = []
+        # 'type' balioa: lehenengo bi hizkiak kendu
+        if len(izen_garbia) > 2:
+            type_balioa = izen_garbia[2:]
+        else:
+            type_balioa = izen_garbia
 
-    for shp in shp_files:
+        print(f"[{idx}/{len(shp_zerrenda)}] {shp_izena} -> type='{type_balioa}'")
 
-        try:
+        ds_in = ogr.Open(shp_bidea, 0)
+        if ds_in is None:
+            print(f"  Abisua: ezin izan da ireki: {shp_bidea}")
+            continue
 
-            rel_path = os.path.relpath(
-                shp,
-                shp_folder
+        layer_in = ds_in.GetLayer(0)
+        if layer_in is None:
+            print(f"  Abisua: ez du layer-ik: {shp_bidea}")
+            ds_in = None
+            continue
+
+        # Irteerako layer-a sortu (lehenengo aldian)
+        if layer_out is None:
+            srs = layer_in.GetSpatialRef()
+            layer_out = ds_out.CreateLayer(
+                "polygons", srs, ogr.wkbMultiPolygon
             )
 
-            log(
-                f"Irakurtzen: {rel_path}"
-            )
+            # Eremuak: fid automatikoa + type (String)
+            field_type = ogr.FieldDefn("type", ogr.OFTString)
+            field_type.SetWidth(254)
+            layer_out.CreateField(field_type)
 
-            gdf = read_shapefile(
-                shp
-            )
+        layer_defn_out = layer_out.GetLayerDefn()
+        type_idx_out = layer_defn_out.GetFieldIndex("type")
 
-            if gdf is None:
+        layer_in.ResetReading()
+        kargatutako_kopurua = 0
+
+        for feature_in in layer_in:
+            geom = feature_in.GetGeometryRef()
+            if geom is None:
                 continue
 
-            if gdf.empty:
+            # Soilik poligonoak
+            geom_izena = geom.GetGeometryName()
+            if geom_izena not in ("POLYGON", "MULTIPOLYGON"):
                 continue
 
-            shp_name = os.path.splitext(
-                os.path.basename(shp)
-            )[0]
-
-            if len(shp_name) > 2:
-                type_value = shp_name[2:]
+            # Poligonoa Multipoligono bihurtu
+            if geom_izena == "POLYGON":
+                multi = ogr.Geometry(ogr.wkbMultiPolygon)
+                multi.AddGeometry(geom.Clone())
+                geom_finala = multi
             else:
-                type_value = shp_name
+                geom_finala = geom.Clone()
 
-            tmp = gpd.GeoDataFrame(
-                {
-                    "type": [type_value] * len(gdf)
-                },
-                geometry=gdf.geometry,
-                crs=gdf.crs
-            )
+            feature_out = ogr.Feature(layer_defn_out)
+            feature_out.SetGeometry(geom_finala)
+            feature_out.SetField(type_idx_out, type_balioa)
 
-            gdfs.append(tmp)
+            layer_out.CreateFeature(feature_out)
+            feature_out = None
+            kargatutako_kopurua += 1
 
-        except Exception as e:
+        ds_in = None  # itxi
 
-            log(
-                f"Errorea '{shp}' "
-                f"irakurtzean: {e}"
-            )
+        igarotakoa = time.time() - hasiera
+        print(f"  {kargatutako_kopurua} poligono kargatu -> {igarotakoa:.2f} s")
 
-    if not gdfs:
+    ds_out = None  # GPKG-a itxi
 
-        log(
-            "Ez dago fusionatzeko daturik."
-        )
-
-        sys.exit(1)
-
-    log("Fusionatzen...")
-
-    merged = gpd.GeoDataFrame(
-        pd.concat(
-            gdfs,
-            ignore_index=True
-        ),
-        crs=gdfs[0].crs
-    )
-
-    try:
-
-        if (
-            merged.crs
-            and merged.crs.is_geographic
-        ):
-
-            log(
-                "ABISUA: CRS geografikoa da. "
-                "Azalerak gradu karratuetan "
-                "kalkulatuko dira."
-            )
-
-    except Exception:
-        pass
-
-    #merged = clean_topology(
-    #    merged,
-    #    SNAP_DISTANCE,
-    #    MIN_AREA
-    #)
-
-    layer_name = os.path.splitext(
-        os.path.basename(output_gpkg)
-    )[0]
-
-    log("GPKG idazten...")
-
-    merged.to_file(
-        output_gpkg,
-        driver="GPKG",
-        layer=layer_name,
-        index=False
-    )
-
-    log(
-        f"Eginda: {output_gpkg}"
-    )
-
-    log(
-        f"Azken elementuak: "
-        f"{len(merged)}"
-    )
+    denbora_totala = time.time() - denbora_totala_hasiera
+    print(f"\nProzesu osoak {denbora_totala:.2f} segundo behar izan ditu.")
+    print(f"GPKG sortuta: {gpkg_bidea}")
 
 
 if __name__ == "__main__":
