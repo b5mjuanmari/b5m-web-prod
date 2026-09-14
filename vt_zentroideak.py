@@ -153,8 +153,8 @@ def repeat_eremua_kalkulatu(gdf_zentro, erradio_m):
     repeat = [0] * len(gdf_zentro)
 
     if "NOMBRE" not in gdf_zentro.columns:
-        log("  OHARRA: «NOMBRE» eremua ez da aurkitu; «repeat» eremua beti 0 izango da.")
-        gdf_zentro["repeat"] = repeat
+        log("  OHARRA: «NOMBRE» eremua ez da aurkitu; «REPEAT» eremua beti 0 izango da.")
+        gdf_zentro["REPEAT"] = repeat
         return gdf_zentro
 
     # Izen bakoitzeko indize-taldeak eraiki
@@ -189,8 +189,8 @@ def repeat_eremua_kalkulatu(gdf_zentro, erradio_m):
                     errepikatu_kopuru += 1
                     break  # idx_i dagoeneko markatu da; hurrengo idx_i-ra
 
-    gdf_zentro["repeat"] = repeat
-    log("  «repeat»=1 duten zentroideak: {}".format(sum(repeat)))
+    gdf_zentro["REPEAT"] = repeat
+    log("  «REPEAT»=1 duten zentroideak: {}".format(sum(repeat)))
     return gdf_zentro
 
 
