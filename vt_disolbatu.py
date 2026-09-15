@@ -12,8 +12,9 @@ import os
 import sys
 import time
 
+import fiona
 import geopandas as gpd
-from shapely.geometry import MultiPolygon
+from shapely.geometry import MultiPolygon, shape
 from shapely.ops import unary_union
 
 FIELD = "type"  # Disolbatzeko eremua
@@ -47,6 +48,79 @@ def ezabatu_irteera_baldin_badago(bidea):
     if os.path.exists(bidea):
         os.remove(bidea)
         print("Aurretik zegoen irteerako fitxategia ezabatu da: {}".format(bidea))
+
+
+def garbitu_geometria(geom_diktategia):
+    """
+    Geometria-diktategi bat (GeoJSON motakoa) jaso eta baliogabeak diren
+    eraztunak kentzen ditu (4 koordenatu-bikote baino gutxiago dituztenak,
+    hau da, itxitako eraztun izan ez daitezkeenak).
+
+    Kanpoko eraztuna baliogabea bada, poligono/azpi-poligono osoa baztertzen
+    da. Emaitzarik ez badago, None itzultzen da.
+    """
+    mota = geom_diktategia.get("type")
+    koordenatuak = geom_diktategia.get("coordinates")
+
+    if mota == "Polygon":
+        eraztunak = [e for e in koordenatuak if len(e) >= 4]
+        if not eraztunak or len(eraztunak[0]) < 4:
+            return None
+        return {"type": "Polygon", "coordinates": eraztunak}
+
+    if mota == "MultiPolygon":
+        poligonoak = []
+        for poligonoa in koordenatuak:
+            eraztunak = [e for e in poligonoa if len(e) >= 4]
+            if eraztunak and len(eraztunak[0]) >= 4:
+                poligonoak.append(eraztunak)
+        if not poligonoak:
+            return None
+        return {"type": "MultiPolygon", "coordinates": poligonoak}
+
+    return geom_diktategia
+
+
+def irakurri_gpkg(bidea):
+    """
+    GPKG fitxategia fiona bidez erregistroz erregistro irakurri, geometria
+    bakoitza garbitu eta baliogabeak (konponezinak) diren erregistroak
+    baztertu, gpd.read_file()-k egingo lukeen bezala guztiz huts egin
+    beharrean.
+    """
+    erregistroak = []
+    baztertuak = 0
+
+    with fiona.open(bidea) as jatorria:
+        crs = jatorria.crs
+        for erregistroa in jatorria:
+            geom_diktategia = erregistroa["geometry"]
+            if geom_diktategia is None:
+                baztertuak += 1
+                continue
+
+            geom_garbia = garbitu_geometria(geom_diktategia)
+            if geom_garbia is None:
+                baztertuak += 1
+                continue
+
+            try:
+                geometria = shape(geom_garbia)
+            except Exception:
+                baztertuak += 1
+                continue
+
+            erregistro_berria = dict(erregistroa["properties"])
+            erregistro_berria["geometry"] = geometria
+            erregistroak.append(erregistro_berria)
+
+    if baztertuak:
+        print(
+            "OHARRA: {} erregistro baztertu dira geometria baliogabea "
+            "zutelako".format(baztertuak)
+        )
+
+    return gpd.GeoDataFrame(erregistroak, crs=crs)
 
 
 def disolbatu(gdf, eremua):
@@ -99,7 +173,7 @@ def main():
     hasiera = time.time()
 
     print("Irakurtzen: {}".format(argumentuak.sarrera_gpkg))
-    gdf = gpd.read_file(argumentuak.sarrera_gpkg)
+    gdf = irakurri_gpkg(argumentuak.sarrera_gpkg)
 
     if FIELD not in gdf.columns:
         sys.exit("ERROREA: '{}' eremua ez dago sarrerako fitxategian".format(FIELD))
