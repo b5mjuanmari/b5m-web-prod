@@ -13,6 +13,7 @@ import sys
 import time
 
 import geopandas as gpd
+from shapely.geometry import MultiPolygon
 from shapely.ops import unary_union
 
 FIELD = "type"  # Disolbatzeko eremua
@@ -60,6 +61,12 @@ def disolbatu(gdf, eremua):
     handitu, bateratu, eta gero EPS beraekin txikitu, tamaina jatorrira
     itzuliz. Horrela, EPS baino txikiagoak diren zirrikituak ixten dira eta
     barne-mugak erabat desagertzen dira.
+
+    Emaitzak MultiPolygon bat izan badezake ere (adib. talde bereko bi
+    poligono elkarrengandik bereizita geratzen badira), funtzio honek
+    poligono bakunetan zatitzen du emaitza, eremuaren balioa poligono
+    bakoitzari errepikatuz — horrela, irteerako geometriak beti Polygon
+    dira, ez MultiPolygon.
     """
     disolbatuak = []
     balioak = []
@@ -69,8 +76,13 @@ def disolbatu(gdf, eremua):
         geometria_batua = unary_union(handituak)
         geometria_garbia = geometria_batua.buffer(-EPS)
 
-        disolbatuak.append(geometria_garbia)
-        balioak.append(balioa)
+        if isinstance(geometria_garbia, MultiPolygon):
+            for poligonoa in geometria_garbia.geoms:
+                disolbatuak.append(poligonoa)
+                balioak.append(balioa)
+        else:
+            disolbatuak.append(geometria_garbia)
+            balioak.append(balioa)
 
     emaitza = gpd.GeoDataFrame(
         {eremua: balioak, "geometry": disolbatuak}, crs=gdf.crs
