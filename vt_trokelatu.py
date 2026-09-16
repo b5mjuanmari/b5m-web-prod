@@ -7,25 +7,36 @@ Sarrera:
   - GPKG_B (gainekoa): trokel gisa jokatzen duen poligonoa(k).
 
 Irteera:
-  - GPKG_IRTEERA: A-ren geometria ken B-ren geometria (diferentzia),
-    A-ren atributuekin fusionatuta. Bi eremu:
-      - fid: automatikoki sortutako identifikatzailea (1, 2, 3, ...)
-      - type: azpiko GPKGtik jasotako balioa
+  - GPKG_IRTEERA: A-ren geometria ken B-ren geometria (diferentzia).
+    A-ren atributu guztiak mantentzen dira, 'fid' izan ezik; 'fid' berria
+    automatikoki sortzen da (1, 2, 3, ...).
 
 Erabilera:
   python3 <scripta> azpikoa.gpkg gainekoa.gpkg irteera.gpkg
+
+Oharra: Shapely 1.8.x-rekin bateragarria (query-ek geometriak itzultzen
+ditu, ez indizeak).
 """
 
 import sys
 import os
 import time
+import warnings
 import geopandas as gpd
 from shapely.ops import unary_union
 from shapely.validation import make_valid
+from shapely.strtree import STRtree
 
+# Shapely-ren STRtree deprecation abisua isildu.
+# Shapely 2.0-ra igarotzean, hau ezabatu ahal izango da.
+try:
+    from shapely.errors import ShapelyDeprecationWarning
+    warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning)
+except ImportError:
+    # Shapely bertsio zahar batzuk: mezuan oinarrituta isildu
+    warnings.filterwarnings("ignore", message=".*STRtree.*")
 
 def formatu_denbora(segundoak):
-    """Denbora irakurgarri bihurtu: 1h 23m 45.6s / 12m 03.4s / 8.42s"""
     if segundoak >= 3600:
         h = int(segundoak // 3600)
         m = int((segundoak % 3600) // 60)
@@ -40,39 +51,32 @@ def formatu_denbora(segundoak):
 
 
 def geruza_izena(gpkg_bidea):
-    """GPKG fitxategiaren izena itzuli, .gpkg atzizkia kenduta."""
     izena = os.path.basename(gpkg_bidea)
     if izena.lower().endswith(".gpkg"):
         izena = izena[:-5]
     return izena
 
 
-def aurkitu_type_eremua(gdf):
-    """Azpiko GPKGan 'type' izena duen eremua bilatu."""
-    hautagaiak = ["type", "TYPE", "Type", "mota", "MOTA"]
-    for izena in hautagaiak:
-        if izena in gdf.columns:
-            return izena
-    return None
+def _zuzendu_geometria(geom):
+    try:
+        return make_valid(geom)
+    except Exception:
+        try:
+            return geom.buffer(0)
+        except Exception:
+            return None
 
 
 def garbitu_geometriak(gdf, izena_testuingurua=""):
-    """Geometria nuluak kendu eta baliogabeak zuzendu.
-
-    'TopologyException' motako erroreak saihesteko erabiltzen da.
-    Itzultzen du: (gdf_garbitua, kendutako_kopurua, zuzendutako_kopurua)
-    """
     hasieran = len(gdf)
 
-    # 1. Geometria nuluak / hutsak kendu
     maskara = gdf.geometry.notna() & ~gdf.geometry.is_empty
-    kendutakoak = hasieran - maskara.sum()
+    kendutakoak = int(hasieran - maskara.sum())
     gdf = gdf[maskara].copy()
 
     if kendutakoak > 0:
         print(f"   {izena_testuingurua}: {kendutakoak} geometria nulu/huts kenduta.")
 
-    # 2. Geometria baliogabeak zuzendu
     baliogabeak = ~gdf.geometry.is_valid
     zuzendutakoak = int(baliogabeak.sum())
 
@@ -83,7 +87,6 @@ def garbitu_geometriak(gdf, izena_testuingurua=""):
         gdf.loc[baliogabeak, "geometry"] = gdf.loc[baliogabeak, "geometry"].apply(
             _zuzendu_geometria
         )
-        # Zuzentzean agian geometria nuluak sortu dira; hauek berriro kendu
         maskara2 = gdf.geometry.notna() & ~gdf.geometry.is_empty
         kendutakoak2 = int((~maskara2).sum())
         if kendutakoak2 > 0:
@@ -95,44 +98,31 @@ def garbitu_geometriak(gdf, izena_testuingurua=""):
     return gdf, kendutakoak, zuzendutakoak
 
 
-def _zuzendu_geometria(geom):
-    """Geometria bakarra zuzendu. make_valid-ek huts egiten badu, buffer(0)
-    erabili azken baliabide gisa."""
-    try:
-        return make_valid(geom)
-    except Exception:
-        try:
-            return geom.buffer(0)
-        except Exception:
-            return None
-
-
 def trokelatu(gpkg_azpikoa, gpkg_gainekoa, gpkg_irteera):
     t_hasiera = time.perf_counter()
 
     irteera_geruza = geruza_izena(gpkg_irteera)
 
-    # --- 1. Geruzak kargatu ---
+    # --- 1. Azpikoa irakurri ---
     t0 = time.perf_counter()
     gdf_azpi = gpd.read_file(gpkg_azpikoa)
-    gdf_gain = gpd.read_file(gpkg_gainekoa)
-    t_karga = time.perf_counter() - t0
-    print(f"Karga: {formatu_denbora(t_karga)} "
-          f"(azpikoa: {len(gdf_azpi)} elem., gainekoa: {len(gdf_gain)} elem.)")
+    t_azpi = time.perf_counter() - t0
+    print(f"Azpikoa kargatu: {formatu_denbora(t_azpi)} "
+          f"({len(gdf_azpi)} elem.)")
 
     if gdf_azpi.empty:
         raise ValueError(f"Azpiko GPKGa hutsik dago: {gpkg_azpikoa}")
+
+    # --- 2. Gainekoa irakurri, azpikoaren bbox-arekin iragazita ---
+    bbox = tuple(gdf_azpi.total_bounds)  # (minx, miny, maxx, maxy)
+    t0 = time.perf_counter()
+    gdf_gain = gpd.read_file(gpkg_gainekoa, bbox=bbox)
+    t_gain = time.perf_counter() - t0
+    print(f"Gainekoa kargatu (bbox iragazkiarekin): {formatu_denbora(t_gain)} "
+          f"({len(gdf_gain)} elem.)")
+
     if gdf_gain.empty:
         raise ValueError(f"Gaineko GPKGa hutsik dago: {gpkg_gainekoa}")
-
-    # --- 2. 'type' eremua aurkitu azpikoan ---
-    type_eremua = aurkitu_type_eremua(gdf_azpi)
-    if type_eremua is None:
-        raise ValueError(
-            "Azpiko GPKGan ez da 'type' izeneko eremurik aurkitu. "
-            f"Eskuragarri dauden eremuak: {list(gdf_azpi.columns)}"
-        )
-    print(f"'type' eremua aurkitu da: '{type_eremua}'")
 
     # --- 3. CRSa egiaztatu ---
     if gdf_azpi.crs is None or gdf_gain.crs is None:
@@ -144,7 +134,7 @@ def trokelatu(gpkg_azpikoa, gpkg_gainekoa, gpkg_irteera):
         gdf_gain = gdf_gain.to_crs(gdf_azpi.crs)
         print(f"   Birproiekzioa: {formatu_denbora(time.perf_counter() - t0)}")
 
-    # --- 4. Geometriak garbitu (errore topologikoak saihesteko) ---
+    # --- 4. Geometriak garbitu ---
     print("Geometriak garbitzen...")
     t0 = time.perf_counter()
     gdf_gain, _, _ = garbitu_geometriak(gdf_gain, "gainekoa")
@@ -156,26 +146,36 @@ def trokelatu(gpkg_azpikoa, gpkg_gainekoa, gpkg_irteera):
     if gdf_azpi.empty:
         raise ValueError("Azpiko GPKGan ez da geometria baliodunik geratzen.")
 
-    # --- 5. Trokelaren poligono guztiak geometria bakarrean batu ---
+    # --- 5. STRtree eraiki ---
+    print("STRtree-a eraikitzen...")
     t0 = time.perf_counter()
-    trokela = unary_union(gdf_gain.geometry.values)
-    t_batuketa = time.perf_counter() - t0
-    print(f"Trokela: {len(gdf_gain)} poligono batu dira "
-          f"({formatu_denbora(t_batuketa)}).")
+    geoms_gain = list(gdf_gain.geometry.values)
+    zuhaitza = STRtree(geoms_gain)
+    print(f"STRtree-a: {formatu_denbora(time.perf_counter() - t0)}")
 
-    # Trokelak berak baliogabea izan daiteke batuketaren ondoren
-    if not trokela.is_valid:
-        print("Trokela baliogabea da; make_valid aplikatzen...")
-        trokela = make_valid(trokela)
-
-    # --- 6. Diferentzia aplikatu (A - B) ---
+    # --- 6. Diferentzia zatika (Shapely 1.8.x: query-ek geometriak itzultzen ditu) ---
+    print("Diferentzia zatika...")
     t0 = time.perf_counter()
-    gdf_out = gdf_azpi.copy()
-    gdf_out["geometry"] = gdf_out.geometry.difference(trokela)
+    berria = []
+    for geom_azpi in gdf_azpi.geometry:
+        # Shapely 1.8.x: query() geometriak itzultzen ditu zuzenean
+        hautagaiak = zuhaitza.query(geom_azpi)
+        # Eskuz iragazi: soilik azpiarekin benetan ukitzen dutenak
+        baliozkoak = [g for g in hautagaiak if g.intersects(geom_azpi)]
+        if len(baliozkoak) == 0:
+            berria.append(geom_azpi)
+            continue
+        trokela_partziala = unary_union(baliozkoak)
+        if not trokela_partziala.is_valid:
+            trokela_partziala = make_valid(trokela_partziala)
+        berria.append(geom_azpi.difference(trokela_partziala))
     t_dif = time.perf_counter() - t0
     print(f"Diferentzia: {formatu_denbora(t_dif)}")
 
-    # --- 7. Geometria hutsak / nuluak ezabatu (guztiz estalita daudenak) ---
+    gdf_out = gdf_azpi.copy()
+    gdf_out["geometry"] = berria
+
+    # --- 7. Geometria hutsak / nuluak ezabatu ---
     aurretik = len(gdf_out)
     gdf_out = gdf_out[~gdf_out.geometry.is_empty & gdf_out.geometry.notna()]
     ondoren = len(gdf_out)
@@ -185,15 +185,20 @@ def trokelatu(gpkg_azpikoa, gpkg_gainekoa, gpkg_irteera):
     if gdf_out.empty:
         print("OHARRA: Emaitza hutsik dago; trokelak azpikoa guztiz estaltzen du.")
 
-    # --- 8. Fusionatu: 'fid' eta 'type' besterik ez ---
+    # --- 8. 'fid' zaharra kendu, berria sortu ---
     gdf_out = gdf_out.reset_index(drop=True)
-    gdf_out["fid"] = range(1, len(gdf_out) + 1)
-    gdf_out["type"] = gdf_out[type_eremua]
 
-    gdf_out = gdf_out[["fid", "type", "geometry"]]
+    if "fid" in gdf_out.columns:
+        gdf_out = gdf_out.drop(columns=["fid"])
+        print("'fid' zaharra kendu da azpiko GPKGtik.")
+
+    gdf_out.insert(0, "fid", range(1, len(gdf_out) + 1))
+
+    zutabeak = [c for c in gdf_out.columns if c != "geometry"] + ["geometry"]
+    gdf_out = gdf_out[zutabeak]
     gdf_out = gdf_out.set_geometry("geometry")
 
-    print(f"Fusioa: {len(gdf_out)} elementu, eremuak: fid, type, geometry")
+    print(f"Fusioa: {len(gdf_out)} elementu, eremuak: {list(gdf_out.columns)}")
 
     # --- 9. Emaitza gorde ---
     if os.path.exists(gpkg_irteera):
@@ -212,7 +217,7 @@ def trokelatu(gpkg_azpikoa, gpkg_gainekoa, gpkg_irteera):
 
 
 def main():
-    script_izena = os.path.basename(sys.argv[0]) or "trokelatu_gpkg.py"
+    script_izena = os.path.basename(sys.argv[0]) or "vt_trokelatu.py"
 
     if len(sys.argv) != 4:
         print(f"Erabilera: python3 {script_izena} <azpikoa.gpkg> "
