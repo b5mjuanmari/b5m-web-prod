@@ -21,7 +21,7 @@ cd "${HOME}/SCRIPTS/WEB_PROD"
 ./genRotu.sh
 ./genVT.sh
 
-python3 genBuildings3D.py
+#python3 genBuildings3D.py
 python3 vt_zentroideak.py /home/data/datos_explotacion/CUR/shape/EPSG_25830/Tiles
 
 # Toponimiaren aldaketak
