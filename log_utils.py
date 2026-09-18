@@ -9,11 +9,24 @@ Ezaugarriak:
   - Mezu bakoitzaren aurrean data/ordua: YYYYMMDD HH:MM:SS formatuan.
   - Log fitxategia ez da ezabatzen existitzen bada (append modua).
   - Hasiera/Bukaera mezuak automatikoki idazten dira.
+  - Python-en DeprecationWarning/FutureWarning abisuak isilarazten dira
+    (pyproj, shapely, geopandas, etab.-ek sortutakoak), log-a zikin ez
+    dezaten.
 """
 
 import sys
 import os
+import warnings
 from datetime import datetime
+
+
+# Isilarazi beharreko abisu-motak. Python 3.6-rekin pyproj-ek
+# FutureWarning ugari botatzen ditu '+init=' sintaxi zaharkituagatik.
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=UserWarning, module="pyproj")
+warnings.filterwarnings("ignore", category=UserWarning, module="fiona")
+warnings.filterwarnings("ignore", category=UserWarning, module="geopandas")
 
 
 class Log:
@@ -31,7 +44,6 @@ class Log:
         self._terminalera = sys.stdout.isatty()
         self._fitxategia = None
 
-        # Log fitxategia ematen bada, append moduan ireki (ez ezabatu)
         if self.log_bidea:
             try:
                 self._fitxategia = open(log_bidea, "a", encoding="utf-8")
@@ -42,17 +54,15 @@ class Log:
                 )
                 sys.exit(1)
 
-        # Hasiera mezua
         self._idatzi_hasiera()
 
     # ------------------------------------------------------------------
     # Barne-metodoak
     # ------------------------------------------------------------------
     def _denbora(self):
-        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        return datetime.now().strftime("%Y%m%d %H:%M:%S")
 
     def _argumentu_katea(self):
-        """Argumentuak zuriunez banatutako kate batean."""
         return " ".join(self.argumentuak)
 
     def _idatzi_hasiera(self):
@@ -70,8 +80,6 @@ class Log:
         self._idatzi(mezua)
 
     def _idatzi(self, mezua):
-        """Mezu bat log fitxategira eta/edo terminalera."""
-        # Log fitxategira (baldin badago)
         if self._fitxategia is not None:
             try:
                 self._fitxategia.write(mezua + "\n")
@@ -79,7 +87,6 @@ class Log:
             except OSError:
                 pass
 
-        # Terminalera soilik TTY bada
         if self._terminalera:
             print(mezua)
 
@@ -87,16 +94,15 @@ class Log:
     # API publikoa
     # ------------------------------------------------------------------
     def info(self, mezua):
-        self._idatzi(f"{self._denbora()} - Info - {mezua}")
+        self._idatzi(f"{self._denbora()} - INFO - {mezua}")
 
     def abisua(self, mezua):
-        self._idatzi(f"{self._denbora()} - Abisua - {mezua}")
+        self._idatzi(f"{self._denbora()} - ABISUA - {mezua}")
 
     def errorea(self, mezua):
-        self._idatzi(f"{self._denbora()} - Errorea - {mezua}")
+        self._idatzi(f"{self._denbora()} - ERROREA - {mezua}")
 
     def bukaera(self):
-        """Script-aren amaieran deitu behar da."""
         self._idatzi_bukaera()
         if self._fitxategia is not None:
             try:
@@ -112,8 +118,6 @@ class Log:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is not None:
-            self.errorea(
-                f"Salbuespena: {exc_type.__name__}: {exc_val}"
-            )
+            self.errorea(f"Salbuespena: {exc_type.__name__}: {exc_val}")
         self.bukaera()
         return False
