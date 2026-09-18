@@ -6,17 +6,24 @@ Poligono Shapefile guztiak (azpikarpetak barne) GPKG fitxategi bakar batean fusi
 GPKG-aren layer izena fitxategiaren izenetik eratortzen da (.gpkg atzizkia kenduta).
 
 Erabilera:
-    python script.py <shapefile_karpeta> <gpkg_bidea> [iragazkia]
+    python3 vt_fusionatu.py <shapefile_karpeta> <gpkg_bidea> [iragazkia] [log_fitxategia]
 
-Hirugarren parametroa aukerakoa da:
-  - Ematen bada: izenean kate hori duten Shapefile-ak soilik hartuko dira.
-  - Ez bada ematen: Shapefile guztiak hartuko dira.
+Argumentuak:
+    shapefile_karpeta : Shapefile-ak bilatzeko karpeta (azpikarpetak barne).
+    gpkg_bidea        : Irteerako GPKG fitxategiaren bidea.
+    iragazkia         : (aukerakoa) izenean kate hori duten Shapefile-ak soilik.
+    log_fitxategia    : (aukerakoa) log fitxategiaren bidea. Ez bada ematen,
+                        mezuak terminalera soilik joango dira (TTY bada).
+                        Iragazkirik gabe log-a eman nahi bada, erabili "":
+                            python3 vt_fusionatu.py <karpeta> <gpkg> "" <log>
 """
 
 import os
 import sys
 import time
 from osgeo import ogr
+
+from log_utils import Log
 
 
 # type balioaren mapaketa
@@ -31,170 +38,216 @@ TYPE_MAP = {
 def main():
     script_izena = os.path.basename(sys.argv[0])
 
-    if len(sys.argv) not in (3, 4):
-        print(f"Erabilera: {script_izena} <shapefile_karpeta> <gpkg_bidea> [iragazkia]",
-              file=sys.stderr)
+    # --- Argumentuak egiaztatu ---
+    # 2, 3 edo 4 argumentu onartzen dira:
+    #   2 -> karpeta + gpkg
+    #   3 -> karpeta + gpkg + iragazkia
+    #   4 -> karpeta + gpkg + iragazkia + log_fitxategia
+    if len(sys.argv) not in (3, 4, 5):
+        print(
+            f"Erabilera: {script_izena} <shapefile_karpeta> <gpkg_bidea> "
+            f"[iragazkia] [log_fitxategia]",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     karpeta = sys.argv[1]
     gpkg_bidea = sys.argv[2]
-    iragazkia = sys.argv[3] if len(sys.argv) == 4 else None
+    iragazkia = None
+    log_bidea = None
 
-    if not os.path.isdir(karpeta):
-        print(f"Errorea: '{karpeta}' ez da karpeta baliogarri bat.", file=sys.stderr)
-        sys.exit(1)
+    if len(sys.argv) == 4:
+        # Hirugarren argumentua: iragazkia
+        iragazkia = sys.argv[3] or None
+    elif len(sys.argv) == 5:
+        # Hirugarren argumentua: iragazkia ("" bada, None)
+        # Laugarren argumentua: log fitxategia
+        iragazkia = sys.argv[3] or None
+        log_bidea = sys.argv[4]
 
-    # GPKG-aren layer izena: fitxategiaren izena .gpkg atzizkia gabe
-    layer_izena = os.path.splitext(os.path.basename(gpkg_bidea))[0]
+    # --- Log sistema abiarazi ---
+    log = Log(log_bidea, script_izena, sys.argv[1:])
 
-    # GPKG driver-a egiaztatu aurretik
-    driver = ogr.GetDriverByName("GPKG")
-    if driver is None:
-        print("Errorea: GPKG driver-a ez dago erabilgarri.", file=sys.stderr)
-        sys.exit(1)
+    try:
+        if not os.path.isdir(karpeta):
+            log.errorea(f"'{karpeta}' ez da karpeta baliogarri bat.")
+            sys.exit(1)
 
-    if iragazkia:
-        print(f"Iragazkia: izenean '{iragazkia}' katea duten Shapefile-ak soilik")
-    else:
-        print("Iragazkirik ez: Shapefile guztiak hartuko dira")
+        # GPKG-aren layer izena: fitxategiaren izena .gpkg atzizkia gabe
+        layer_izena = os.path.splitext(os.path.basename(gpkg_bidea))[0]
 
-    # Shapefile-ak bilatu (azpikarpetak barne), iragazkia aplikatuta
-    shp_zerrenda = []
-    iragazkia_lower = iragazkia.lower() if iragazkia else None
-    for erroa, _, fitxategiak in os.walk(karpeta):
-        for fitxategia in fitxategiak:
-            if not fitxategia.lower().endswith(".shp"):
-                continue
-            if iragazkia_lower and iragazkia_lower not in fitxategia.lower():
-                continue
-            shp_zerrenda.append(os.path.join(erroa, fitxategia))
+        # GPKG driver-a egiaztatu aurretik
+        driver = ogr.GetDriverByName("GPKG")
+        if driver is None:
+            log.errorea("GPKG driver-a ez dago erabilgarri.")
+            sys.exit(1)
 
-    shp_zerrenda.sort()
-
-    if not shp_zerrenda:
         if iragazkia:
-            print(f"Ez da '{iragazkia}' katea duen Shapefile-ik aurkitu.")
+            log.info(
+                f"Iragazkia: izenean '{iragazkia}' katea duten "
+                f"Shapefile-ak soilik"
+            )
         else:
-            print("Ez da Shapefile-ik aurkitu.")
-        sys.exit(0)
+            log.info("Iragazkirik ez: Shapefile guztiak hartuko dira")
 
-    print(f"{len(shp_zerrenda)} Shapefile aurkitu dira.")
-    print(f"GPKG-aren layer izena: '{layer_izena}'")
+        # Shapefile-ak bilatu (azpikarpetak barne), iragazkia aplikatuta
+        shp_zerrenda = []
+        iragazkia_lower = iragazkia.lower() if iragazkia else None
+        for erroa, _, fitxategiak in os.walk(karpeta):
+            for fitxategia in fitxategiak:
+                if not fitxategia.lower().endswith(".shp"):
+                    continue
+                if iragazkia_lower and iragazkia_lower not in fitxategia.lower():
+                    continue
+                shp_zerrenda.append(os.path.join(erroa, fitxategia))
 
-    # GPKG-a ezabatu aurretik badago
-    if os.path.exists(gpkg_bidea):
-        os.remove(gpkg_bidea)
-        print(f"Aurreko GPKG ezabatu da: {gpkg_bidea}")
+        shp_zerrenda.sort()
 
-    # GPKG-a sortu
-    ds_out = driver.CreateDataSource(gpkg_bidea)
-    if ds_out is None:
-        print(f"Errorea: ezin izan da GPKG-a sortu: {gpkg_bidea}", file=sys.stderr)
-        sys.exit(1)
+        if not shp_zerrenda:
+            if iragazkia:
+                log.abisua(
+                    f"Ez da '{iragazkia}' katea duen Shapefile-ik aurkitu."
+                )
+            else:
+                log.abisua("Ez da Shapefile-ik aurkitu.")
+            sys.exit(0)
 
-    layer_out = None
-    srs_ref = None
-    denbora_hasiera = time.time()
+        log.info(f"{len(shp_zerrenda)} Shapefile aurkitu dira.")
+        log.info(f"GPKG-aren layer izena: '{layer_izena}'")
 
-    for idx, shp_bidea in enumerate(shp_zerrenda, 1):
-        hasiera = time.time()
-        izen_garbia = os.path.splitext(os.path.basename(shp_bidea))[0]
+        # GPKG-a ezabatu aurretik badago
+        if os.path.exists(gpkg_bidea):
+            os.remove(gpkg_bidea)
+            log.info(f"Aurreko GPKG ezabatu da: {gpkg_bidea}")
 
-        # 'type' balioa: lehenengo bi hizkiak kendu eta azpimarra kendu
-        type_gordina = izen_garbia[2:].lstrip("_") if len(izen_garbia) > 2 else izen_garbia
-        # Mapaketa aplikatu (ez badago, jatorrizkoa)
-        type_balioa = TYPE_MAP.get(type_gordina.lower(), type_gordina)
+        # GPKG-a sortu
+        ds_out = driver.CreateDataSource(gpkg_bidea)
+        if ds_out is None:
+            log.errorea(f"Ezin izan da GPKG-a sortu: {gpkg_bidea}")
+            sys.exit(1)
 
-        print(f"[{idx}/{len(shp_zerrenda)}] {os.path.basename(shp_bidea)} -> type='{type_balioa}'")
+        layer_out = None
+        srs_ref = None
+        denbora_hasiera = time.time()
 
-        ds_in = ogr.Open(shp_bidea, 0)
-        if ds_in is None:
-            print(f"  Abisua: ezin izan da ireki.", file=sys.stderr)
-            continue
+        for idx, shp_bidea in enumerate(shp_zerrenda, 1):
+            hasiera = time.time()
+            izen_garbia = os.path.splitext(os.path.basename(shp_bidea))[0]
 
-        layer_in = ds_in.GetLayer(0)
-        if layer_in is None:
-            print(f"  Abisua: ez du layer-ik.", file=sys.stderr)
-            ds_in = None
-            continue
+            # 'type' balioa: lehenengo bi hizkiak kendu eta azpimarra kendu
+            type_gordina = (
+                izen_garbia[2:].lstrip("_")
+                if len(izen_garbia) > 2
+                else izen_garbia
+            )
+            # Mapaketa aplikatu (ez badago, jatorrizkoa)
+            type_balioa = TYPE_MAP.get(type_gordina.lower(), type_gordina)
 
-        srs_in = layer_in.GetSpatialRef()
-
-        # Irteerako layer-a sortu (lehenengo aldian)
-        if layer_out is None:
-            srs_ref = srs_in
-            layer_out = ds_out.CreateLayer(
-                layer_izena, srs_ref, ogr.wkbMultiPolygon
+            log.info(
+                f"[{idx}/{len(shp_zerrenda)}] {os.path.basename(shp_bidea)} "
+                f"-> type='{type_balioa}'"
             )
 
-            # Eremuak: fid automatikoa + type (String)
-            field_type = ogr.FieldDefn("type", ogr.OFTString)
-            field_type.SetWidth(64)
-            layer_out.CreateField(field_type)
-        else:
-            # SRS-aren egiaztapena
-            if (srs_in is None) != (srs_ref is None):
-                print(f"  Abisua: SRS desberdina edo falta: {shp_bidea}", file=sys.stderr)
-            elif srs_in is not None and not srs_in.IsSame(srs_ref):
-                print(f"  Abisua: SRS desberdina: {shp_bidea}", file=sys.stderr)
-
-        layer_defn_out = layer_out.GetLayerDefn()
-        type_idx_out = layer_defn_out.GetFieldIndex("type")
-
-        layer_in.ResetReading()
-        kargatutakoa = 0
-        baztertutakoa = 0
-
-        layer_out.StartTransaction()
-        for feature_in in layer_in:
-            geom = feature_in.GetGeometryRef()
-            if geom is None or geom.IsEmpty():
-                baztertutakoa += 1
+            ds_in = ogr.Open(shp_bidea, 0)
+            if ds_in is None:
+                log.abisua(f"Ezin izan da ireki: {shp_bidea}")
                 continue
 
-            # Soilik poligonoak
-            geom_izena = geom.GetGeometryName()
-            if geom_izena not in ("POLYGON", "MULTIPOLYGON"):
-                baztertutakoa += 1
+            layer_in = ds_in.GetLayer(0)
+            if layer_in is None:
+                log.abisua(f"Ez du layer-ik: {shp_bidea}")
+                ds_in = None
                 continue
 
-            # buffer(0) geometria baliogabeak konpontzeko (GEOS 3.8 baino zaharragoentzat ere bai)
-            g = geom.Clone().Buffer(0)
-            if g is None or g.IsEmpty():
-                baztertutakoa += 1
-                continue
+            srs_in = layer_in.GetSpatialRef()
 
-            # Poligonoa Multipoligono bihurtu
-            if geom_izena == "POLYGON":
-                multi = ogr.Geometry(ogr.wkbMultiPolygon)
-                if multi.AddGeometry(g) != ogr.OGRERR_NONE:
+            # Irteerako layer-a sortu (lehenengo aldian)
+            if layer_out is None:
+                srs_ref = srs_in
+                layer_out = ds_out.CreateLayer(
+                    layer_izena, srs_ref, ogr.wkbMultiPolygon
+                )
+
+                # Eremuak: fid automatikoa + type (String)
+                field_type = ogr.FieldDefn("type", ogr.OFTString)
+                field_type.SetWidth(64)
+                layer_out.CreateField(field_type)
+            else:
+                # SRS-aren egiaztapena
+                if (srs_in is None) != (srs_ref is None):
+                    log.abisua(f"SRS desberdina edo falta: {shp_bidea}")
+                elif srs_in is not None and not srs_in.IsSame(srs_ref):
+                    log.abisua(f"SRS desberdina: {shp_bidea}")
+
+            layer_defn_out = layer_out.GetLayerDefn()
+            type_idx_out = layer_defn_out.GetFieldIndex("type")
+
+            layer_in.ResetReading()
+            kargatutakoa = 0
+            baztertutakoa = 0
+
+            layer_out.StartTransaction()
+            for feature_in in layer_in:
+                geom = feature_in.GetGeometryRef()
+                if geom is None or geom.IsEmpty():
                     baztertutakoa += 1
                     continue
-                geom_finala = multi
-            else:
-                geom_finala = g
 
-            feature_out = ogr.Feature(layer_defn_out)
-            feature_out.SetGeometry(geom_finala)
-            feature_out.SetField(type_idx_out, type_balioa)
+                # Soilik poligonoak
+                geom_izena = geom.GetGeometryName()
+                if geom_izena not in ("POLYGON", "MULTIPOLYGON"):
+                    baztertutakoa += 1
+                    continue
 
-            if layer_out.CreateFeature(feature_out) != ogr.OGRERR_NONE:
-                baztertutakoa += 1
-            else:
-                kargatutakoa += 1
-            feature_out = None
-        layer_out.CommitTransaction()
+                # buffer(0) geometria baliogabeak konpontzeko
+                g = geom.Clone().Buffer(0)
+                if g is None or g.IsEmpty():
+                    baztertutakoa += 1
+                    continue
 
-        ds_in = None  # itxi
+                # Poligonoa Multipoligono bihurtu
+                if geom_izena == "POLYGON":
+                    multi = ogr.Geometry(ogr.wkbMultiPolygon)
+                    if multi.AddGeometry(g) != ogr.OGRERR_NONE:
+                        baztertutakoa += 1
+                        continue
+                    geom_finala = multi
+                else:
+                    geom_finala = g
 
-        igarotakoa = time.time() - hasiera
-        print(f"  {kargatutakoa} poligono kargatu, {baztertutakoa} baztertu -> {igarotakoa:.2f} s")
+                feature_out = ogr.Feature(layer_defn_out)
+                feature_out.SetGeometry(geom_finala)
+                feature_out.SetField(type_idx_out, type_balioa)
 
-    ds_out = None  # GPKG-a itxi
+                if layer_out.CreateFeature(feature_out) != ogr.OGRERR_NONE:
+                    baztertutakoa += 1
+                else:
+                    kargatutakoa += 1
+                feature_out = None
+            layer_out.CommitTransaction()
 
-    denbora_totala = time.time() - denbora_hasiera
-    print(f"\nProzesu osoak {denbora_totala:.2f} segundo behar izan ditu.")
-    print(f"GPKG sortuta: {gpkg_bidea}")
+            ds_in = None  # itxi
+
+            igarotakoa = time.time() - hasiera
+            log.info(
+                f"{kargatutakoa} poligono kargatu, {baztertutakoa} baztertu "
+                f"-> {igarotakoa:.2f} s"
+            )
+
+        ds_out = None  # GPKG-a itxi
+
+        denbora_totala = time.time() - denbora_hasiera
+        log.info(
+            f"Prozesu osoak {denbora_totala:.2f} segundo behar izan ditu."
+        )
+        log.info(f"GPKG sortuta: {gpkg_bidea}")
+
+    except Exception as e:
+        log.errorea(f"Salbuespena: {type(e).__name__}: {e}")
+        raise
+
+    finally:
+        log.bukaera()
 
 
 if __name__ == "__main__":

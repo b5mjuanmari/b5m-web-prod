@@ -4,7 +4,11 @@
 GPKG fitxategi baten poligonoak 'type' eremuaren arabera disolbatzen ditu.
 
 Erabilera:
-    python3 <script_izena> sarrera.gpkg irteera.gpkg
+    python3 <script_izena> sarrera.gpkg irteera.gpkg [log_fitxategia]
+
+    log_fitxategia aukerakoa da:
+      - ematen bada: mezuak log fitxategira (eta terminalera TTY bada)
+      - ez bada ematen: mezuak terminalera soilik (TTY bada)
 """
 
 import argparse
@@ -16,6 +20,8 @@ import fiona
 import geopandas as gpd
 from shapely.geometry import MultiPolygon, shape
 from shapely.ops import unary_union
+
+from log_utils import Log
 
 FIELD = "type"  # Disolbatzeko eremua
 
@@ -36,18 +42,30 @@ def parseatu_argumentuak():
     )
     parser.add_argument("sarrera_gpkg", help="Sarrerako GPKG fitxategiaren bidea")
     parser.add_argument("irteera_gpkg", help="Irteerako GPKG fitxategiaren bidea")
+    parser.add_argument(
+        "log_fitxategia",
+        nargs="?",
+        default=None,
+        help="(aukerakoa) log fitxategiaren bidea. Ez bada ematen, "
+             "mezuak terminalera soilik joango dira (TTY bada).",
+    )
     return parser.parse_args()
 
 
-def egiaztatu_sarrera(bidea):
+def egiaztatu_sarrera(bidea, log):
     if not os.path.isfile(bidea):
-        sys.exit("ERROREA: sarrerako fitxategia ez da existitzen: {}".format(bidea))
+        log.errorea(
+            "Sarrerako fitxategia ez da existitzen: {}".format(bidea)
+        )
+        sys.exit(1)
 
 
-def ezabatu_irteera_baldin_badago(bidea):
+def ezabatu_irteera_baldin_badago(bidea, log):
     if os.path.exists(bidea):
         os.remove(bidea)
-        print("Aurretik zegoen irteerako fitxategia ezabatu da: {}".format(bidea))
+        log.info(
+            "Aurretik zegoen irteerako fitxategia ezabatu da: {}".format(bidea)
+        )
 
 
 def garbitu_geometria(geom_diktategia):
@@ -81,7 +99,7 @@ def garbitu_geometria(geom_diktategia):
     return geom_diktategia
 
 
-def irakurri_gpkg(bidea):
+def irakurri_gpkg(bidea, log):
     """
     GPKG fitxategia fiona bidez erregistroz erregistro irakurri, geometria
     bakoitza garbitu eta baliogabeak (konponezinak) diren erregistroak
@@ -115,8 +133,8 @@ def irakurri_gpkg(bidea):
             erregistroak.append(erregistro_berria)
 
     if baztertuak:
-        print(
-            "OHARRA: {} erregistro baztertu dira geometria baliogabea "
+        log.abisua(
+            "{} erregistro baztertu dira geometria baliogabea "
             "zutelako".format(baztertuak)
         )
 
@@ -165,27 +183,50 @@ def disolbatu(gdf, eremua):
 
 
 def main():
+    script_izena = os.path.basename(sys.argv[0])
+
+    # --- Argumentuak parseatu ---
+    # Log-a parseatu aurretik sortzen dugu, baina --help-ek argparse-k
+    # kudeatzen du eta ez du Log-a behar.
     argumentuak = parseatu_argumentuak()
 
-    egiaztatu_sarrera(argumentuak.sarrera_gpkg)
-    ezabatu_irteera_baldin_badago(argumentuak.irteera_gpkg)
+    # --- Log sistema abiarazi ---
+    log = Log(argumentuak.log_fitxategia, script_izena, sys.argv[1:])
 
-    hasiera = time.time()
+    try:
+        egiaztatu_sarrera(argumentuak.sarrera_gpkg, log)
+        ezabatu_irteera_baldin_badago(argumentuak.irteera_gpkg, log)
 
-    print("Irakurtzen: {}".format(argumentuak.sarrera_gpkg))
-    gdf = irakurri_gpkg(argumentuak.sarrera_gpkg)
+        hasiera = time.time()
 
-    if FIELD not in gdf.columns:
-        sys.exit("ERROREA: '{}' eremua ez dago sarrerako fitxategian".format(FIELD))
+        log.info("Irakurtzen: {}".format(argumentuak.sarrera_gpkg))
+        gdf = irakurri_gpkg(argumentuak.sarrera_gpkg, log)
 
-    print("Disolbatzen '{}' eremuaren arabera...".format(FIELD))
-    emaitza = disolbatu(gdf, FIELD)
+        if FIELD not in gdf.columns:
+            log.errorea(
+                "'{}' eremua ez dago sarrerako fitxategian".format(FIELD)
+            )
+            sys.exit(1)
 
-    print("Idazten: {}".format(argumentuak.irteera_gpkg))
-    emaitza.to_file(argumentuak.irteera_gpkg, driver="GPKG")
+        log.info(
+            "Disolbatzen '{}' eremuaren arabera...".format(FIELD)
+        )
+        emaitza = disolbatu(gdf, FIELD)
 
-    bukaera = time.time()
-    print("Amaituta. Denbora: {:.2f} segundo".format(bukaera - hasiera))
+        log.info("Idazten: {}".format(argumentuak.irteera_gpkg))
+        emaitza.to_file(argumentuak.irteera_gpkg, driver="GPKG")
+
+        bukaera = time.time()
+        log.info(
+            "Amaituta. Denbora: {:.2f} segundo".format(bukaera - hasiera)
+        )
+
+    except Exception as e:
+        log.errorea("Salbuespena: {}: {}".format(type(e).__name__, e))
+        raise
+
+    finally:
+        log.bukaera()
 
 
 if __name__ == "__main__":

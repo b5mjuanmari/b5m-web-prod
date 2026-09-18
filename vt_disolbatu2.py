@@ -10,7 +10,11 @@ Irteerako GPKG-ak bi eremu izango ditu:
 Irteerako geruzaren izena fitxategiaren izena izango da, .gpkg atzizkia gabe.
 
 Erabilera:
-    python3 script.py <sarrera_shp> <irteera_gpkg>
+    python3 vt_disolbatu2.py <sarrera_shp> <irteera_gpkg> [log_fitxategia]
+
+    log_fitxategia aukerakoa da:
+      - ematen bada: mezuak log fitxategira (eta terminalera TTY bada)
+      - ez bada ematen: mezuak terminalera soilik (TTY bada)
 """
 
 import sys
@@ -19,71 +23,88 @@ import time
 
 import geopandas as gpd
 
+from log_utils import Log
+
 
 def main():
     hasiera = time.time()
 
     # --- Argumentuak egiaztatu ---
-    if len(sys.argv) != 3:
+    # Gutxienez 2 argumentu behar dira (sarrera + irteera).
+    # Hirugarrena (log fitxategia) aukerakoa da.
+    if len(sys.argv) not in (3, 4):
         script_izena = os.path.basename(sys.argv[0])
-        print(f"Erabilera: {script_izena} <sarrera_shp> <irteera_gpkg>")
+        print(
+            f"Erabilera: {script_izena} "
+            f"<sarrera_shp> <irteera_gpkg> [log_fitxategia]"
+        )
         sys.exit(1)
 
     script_izena = os.path.basename(sys.argv[0])
     sarrera_bidea = sys.argv[1]
     irteera_bidea = sys.argv[2]
+    log_bidea = sys.argv[3] if len(sys.argv) == 4 else None
 
-    # --- Sarrerako fitxategia existitzen den egiaztatu ---
-    if not os.path.isfile(sarrera_bidea):
-        print(f"[ERROREA] Ez da fitxategia aurkitu: {sarrera_bidea}")
-        sys.exit(1)
+    # --- Log sistema abiarazi ---
+    log = Log(log_bidea, script_izena, sys.argv[1:])
 
-    # --- Irteerako fitxategia existitzen bada, ezabatu ---
-    if os.path.exists(irteera_bidea):
-        try:
-            os.remove(irteera_bidea)
-            print(f"[INFO] Aurreko irteera ezabatu da: {irteera_bidea}")
-        except OSError as e:
-            print(f"[ERROREA] Ezin izan da irteera ezabatu: {e}")
+    try:
+        # --- Sarrerako fitxategia existitzen den egiaztatu ---
+        if not os.path.isfile(sarrera_bidea):
+            log.errorea(f"Ez da fitxategia aurkitu: {sarrera_bidea}")
             sys.exit(1)
 
-    # --- Irteerako geruzaren izena: fitxategiaren izena .gpkg gabe ---
-    layer_izena = os.path.splitext(os.path.basename(irteera_bidea))[0]
-    print(f"[INFO] Irteerako geruzaren izena: {layer_izena}")
+        # --- Irteerako fitxategia existitzen bada, ezabatu ---
+        if os.path.exists(irteera_bidea):
+            try:
+                os.remove(irteera_bidea)
+                log.info(f"Aurreko irteera ezabatu da: {irteera_bidea}")
+            except OSError as e:
+                log.errorea(f"Ezin izan da irteera ezabatu: {e}")
+                sys.exit(1)
 
-    # --- Shapefile irakurri ---
-    print(f"[INFO] {sarrera_bidea} irakurtzen...")
-    gdf = gpd.read_file(sarrera_bidea)
-    print(f"[INFO] Sarrerako elementuak: {len(gdf)}")
-    print(f"[INFO] CRS: {gdf.crs}")
+        # --- Irteerako geruzaren izena: fitxategiaren izena .gpkg gabe ---
+        layer_izena = os.path.splitext(os.path.basename(irteera_bidea))[0]
+        log.info(f"Irteerako geruzaren izena: {layer_izena}")
 
-    # --- 'type' eremua sortu eta 'other' balioa jarri ---
-    gdf["type"] = "other"
-    print("[INFO] 'type' eremua sortu da 'other' balioarekin.")
+        # --- Shapefile irakurri ---
+        log.info(f"{sarrera_bidea} irakurtzen...")
+        gdf = gpd.read_file(sarrera_bidea)
+        log.info(f"Sarrerako elementuak: {len(gdf)}")
+        log.info(f"CRS: {gdf.crs}")
 
-    # --- 'type' eremuaren arabera disolbatu ---
-    print("[INFO] 'type' eremuaren arabera disolbatzen...")
-    gdf_disolbatu = gdf.dissolve(by="type").reset_index()
+        # --- 'type' eremua sortu eta 'other' balioa jarri ---
+        gdf["type"] = "other"
+        log.info("'type' eremua sortu da 'other' balioarekin.")
 
-    # --- Emaitzan soilik 'type' eremua mantendu ---
-    gdf_disolbatu = gdf_disolbatu[["type", "geometry"]]
-    gdf_disolbatu = gpd.GeoDataFrame(
-        gdf_disolbatu, geometry="geometry", crs=gdf.crs
-    )
+        # --- 'type' eremuaren arabera disolbatu ---
+        log.info("'type' eremuaren arabera disolbatzen...")
+        gdf_disolbatu = gdf.dissolve(by="type").reset_index()
 
-    print(f"[INFO] Disolbatu ondorengo elementuak: {len(gdf_disolbatu)}")
+        # --- Emaitzan soilik 'type' eremua mantendu ---
+        gdf_disolbatu = gdf_disolbatu[["type", "geometry"]]
+        gdf_disolbatu = gpd.GeoDataFrame(
+            gdf_disolbatu, geometry="geometry", crs=gdf.crs
+        )
 
-    # --- Irteera gorde GPKG gisa ---
-    # 'fid' eremua OGR/GDAL driver-ak automatikoki gehitzen du idaztean.
-    # index=False erabili, indize-oihartzerik egon ez dadin.
-    gdf_disolbatu.to_file(
-        irteera_bidea, driver="GPKG", layer=layer_izena, index=False
-    )
-    print(f"[INFO] Irteera gorde da: {irteera_bidea} (layer: {layer_izena})")
+        log.info(f"Disolbatu ondorengo elementuak: {len(gdf_disolbatu)}")
 
-    # --- Denbora kontagailua ---
-    iraupena = time.time() - hasiera
-    print(f"[INFO] Exekuzio denbora: {iraupena:.2f} segundo")
+        # --- Irteera gorde GPKG gisa ---
+        gdf_disolbatu.to_file(
+            irteera_bidea, driver="GPKG", layer=layer_izena, index=False
+        )
+        log.info(f"Irteera gorde da: {irteera_bidea} (layer: {layer_izena})")
+
+        # --- Denbora kontagailua ---
+        iraupena = time.time() - hasiera
+        log.info(f"Exekuzio denbora: {iraupena:.2f} segundo")
+
+    except Exception as e:
+        log.errorea(f"Salbuespena: {type(e).__name__}: {e}")
+        raise
+
+    finally:
+        log.bukaera()
 
 
 if __name__ == "__main__":
