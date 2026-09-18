@@ -60,7 +60,7 @@ class Log:
     # Barne-metodoak
     # ------------------------------------------------------------------
     def _denbora(self):
-        return datetime.now().strftime("%Y%m%d %H:%M:%S")
+        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     def _argumentu_katea(self):
         return " ".join(self.argumentuak)
