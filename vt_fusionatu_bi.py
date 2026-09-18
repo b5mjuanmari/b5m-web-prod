@@ -9,6 +9,7 @@ Bi GPKG fitxategi fusionatzen ditu hirugarren batean, geopandas erabiliz.
 - Atributu-egiturak berdinak badira, egitura mantentzen da.
 - Ezberdinak badira, eremu komunak mantentzen dira eta ezberdinak gehitzen dira.
 - Eremu berrietan NULL jartzen da (pandas-ek NaN gisa).
+- 'type' eta 'subtype' zutabeak badaude eta 'subtype' NULL bada, 'type'-ren balioa ezartzen zaio.
 - Irteerako geruzaren izena: irteerako fitxategiaren izena, .gpkg atzizkirik gabe.
 """
 
@@ -151,6 +152,21 @@ def main():
     # Fusionatu
     gdf_out = pd.concat([gdf1_align, gdf2_align], ignore_index=True)
     gdf_out = GeoDataFrame(gdf_out, geometry=out_geom_col, crs=srs1)
+
+    # 'type' eta 'subtype' zutabeak existitzen badira, bete 'subtype' NULL den tokietan
+    if "type" in gdf_out.columns and "subtype" in gdf_out.columns:
+        mask = gdf_out["subtype"].isna()
+        n_filled = int(mask.sum())
+        if n_filled > 0:
+            gdf_out.loc[mask, "subtype"] = gdf_out.loc[mask, "type"]
+            print(f"\n  'subtype' eremua bete da 'type'-ren balioarekin {n_filled} errenkadatan.")
+        else:
+            print(f"\n  'subtype' eremuan ez dago balio ezezagunik; ez da ezer aldatu.")
+    else:
+        if "type" not in gdf_out.columns:
+            print(f"\n  OHARRA: 'type' zutabea ez da aurkitu; ez da 'subtype' bete.")
+        if "subtype" not in gdf_out.columns:
+            print(f"\n  OHARRA: 'subtype' zutabea ez da aurkitu; ez da ezer egin.")
 
     # Irteera idatzi
     # Geruza-izena: irteerako fitxategiaren izena, .gpkg atzizkirik gabe
