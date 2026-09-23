@@ -3,12 +3,12 @@
 """
 GPKG bateko datuak bersailkatzen ditu:
   - 'type' eremu berria sortu eta balioak esleitu:
-      1. subtype_1 == 'intertidal' eta type_2 == 'meadow' -> type = 'marsh'
-      2. subtype_1 != 'intertidal' eta type_2 == 'meadow' -> type = subtype_1
-      3. subtype_1 ez null eta type_2 != 'meadow'         -> type = subtype_1
-      4. subtype_1 ez null eta type_2 null                 -> type = subtype_1
-      5. subtype_1 null eta type_2 ez null                 -> type = type_2
-  - Ondoren 'type_1', 'subtype_1' eta 'type_2' eremuak ezabatu.
+      1. type_1 == 'intertidal' eta type_2 == 'meadow' -> type = 'marsh'
+      2. type_1 != 'intertidal' eta type_2 == 'meadow' -> type = type_1
+      3. type_1 ez null eta type_2 != 'meadow'         -> type = type_1
+      4. type_1 ez null eta type_2 null                 -> type = type_1
+      5. type_1 null eta type_2 ez null                 -> type = type_2
+  - Ondoren 'type_1' eta 'type_2' eremuak ezabatu.
 
 Erabilera:
     python3 vt_reclass.py <sarrerako.gpkg> <irteerako.gpkg> [log_fitxategia]
@@ -71,7 +71,7 @@ def main():
         log.info(f"Jatorrizko eremuak: {list(gdf.columns)}")
 
         # Beharrezko eremuak existitzen diren egiaztatu
-        beharrezkoak = ['subtype_1', 'type_2']
+        beharrezkoak = ['type_1', 'type_2']
         falta = [c for c in beharrezkoak if c not in gdf.columns]
         if falta:
             log.errorea(
@@ -83,32 +83,38 @@ def main():
         gdf['type'] = None
 
         # Maskarak prestatu
-        subtype_1_ez_null = gdf['subtype_1'].notna()
+        type_1_ez_null = gdf['type_1'].notna()
         type_2_ez_null = gdf['type_2'].notna()
-        subtype_1_intertidal = gdf['subtype_1'] == 'intertidal'
+        type_1_intertidal = gdf['type_1'] == 'intertidal'
         type_2_meadow = gdf['type_2'] == 'meadow'
 
-        # 1. kasua: subtype_1 == 'intertidal' eta type_2 == 'meadow'
-        mask1 = subtype_1_intertidal & type_2_meadow
-        # 2. kasua: subtype_1 != 'intertidal' eta type_2 == 'meadow'
-        mask2 = ~subtype_1_intertidal & type_2_meadow
-        # 5. kasua: subtype_1 null eta type_2 ez null
-        mask5 = ~subtype_1_ez_null & type_2_ez_null
-        # 3. kasua: subtype_1 ez null eta type_2 != 'meadow'
-        #    (4. kasua eta 2. kasua kanpoan utzita)
-        mask3 = subtype_1_ez_null & ~type_2_meadow & ~mask2
-        # 4. kasua: subtype_1 ez null eta type_2 null
-        mask4 = subtype_1_ez_null & ~type_2_ez_null
+        # 1. kasua: type_1 == 'intertidal' eta type_2 == 'meadow'
+        mask1 = type_1_intertidal & type_2_meadow
+        # 2. kasua: type_1 != 'intertidal' eta type_2 == 'meadow'
+        mask2 = ~type_1_intertidal & type_2_meadow
+        # 4. kasua: type_1 ez null eta type_2 null
+        mask4 = type_1_ez_null & ~type_2_ez_null
+        # 5. kasua: type_1 null eta type_2 ez null
+        mask5 = ~type_1_ez_null & type_2_ez_null
+        # 3. kasua: type_1 ez null eta type_2 != 'meadow'
+        #    (2., 4. eta 5. kasuak kanpoan utzita)
+        mask3 = (
+            type_1_ez_null
+            & ~type_2_meadow
+            & ~mask2
+            & ~mask4
+            & ~mask5
+        )
 
         # Balioak esleitu maskararen arabera
         # 1. kasua: type = 'marsh'
         gdf.loc[mask1, 'type'] = 'marsh'
-        # 2. kasua: type = subtype_1
-        gdf.loc[mask2, 'type'] = gdf.loc[mask2, 'subtype_1']
-        # 3. kasua: type = subtype_1
-        gdf.loc[mask3, 'type'] = gdf.loc[mask3, 'subtype_1']
-        # 4. kasua: type = subtype_1
-        gdf.loc[mask4, 'type'] = gdf.loc[mask4, 'subtype_1']
+        # 2. kasua: type = type_1
+        gdf.loc[mask2, 'type'] = gdf.loc[mask2, 'type_1']
+        # 3. kasua: type = type_1
+        gdf.loc[mask3, 'type'] = gdf.loc[mask3, 'type_1']
+        # 4. kasua: type = type_1
+        gdf.loc[mask4, 'type'] = gdf.loc[mask4, 'type_1']
         # 5. kasua: type = type_2
         gdf.loc[mask5, 'type'] = gdf.loc[mask5, 'type_2']
 
@@ -120,17 +126,17 @@ def main():
             f"    2. kasua (!intertidal + meadow): {mask2.sum()}"
         )
         log.info(
-            f"    3. kasua (subtype_1 + type_2 != meadow): {mask3.sum()}"
+            f"    3. kasua (type_1 + type_2 != meadow): {mask3.sum()}"
         )
         log.info(
-            f"    4. kasua (subtype_1 + type_2 null): {mask4.sum()}"
+            f"    4. kasua (type_1 + type_2 null): {mask4.sum()}"
         )
         log.info(
-            f"    5. kasua (subtype_1 null + type_2 ez null): {mask5.sum()}"
+            f"    5. kasua (type_1 null + type_2 ez null): {mask5.sum()}"
         )
 
-        # Ezabatu beharreko eremuak
-        ezabatzeko = [c for c in ['type_1', 'subtype_1', 'type_2']
+        # Ezabatu beharreko eremuak: type_1 eta type_2
+        ezabatzeko = [c for c in ['type_1', 'type_2']
                       if c in gdf.columns]
         if ezabatzeko:
             gdf = gdf.drop(columns=ezabatzeko)
