@@ -4,9 +4,9 @@
 GPKG bateko datuak bersailkatzen ditu:
   - 'type' eremu berria sortu eta balioak esleitu:
       1. subtype_1 ez null eta type_2 != 'meadow' -> type = subtype_1
-      2. subtype_1 ez null eta type_2 == 'meadow' -> type = subtype_1 + ' ' + type_2
-      3. subtype_1 ez null eta type_2 null         -> type = subtype_1
-      4. subtype_1 null eta type_2 ez null         -> type = type_2
+      2. subtype_1 ez null eta type_2 null         -> type = subtype_1
+      3. subtype_1 null eta type_2 ez null         -> type = type_2
+      4. subtype_1 == 'intertidal' eta type_2 == 'meadow' -> type = 'marsh'
   - Ondoren 'type_1', 'subtype_1' eta 'type_2' eremuak ezabatu.
 
 Erabilera:
@@ -84,34 +84,34 @@ def main():
         # Maskarak prestatu
         subtype_1_ez_null = gdf['subtype_1'].notna()
         type_2_ez_null = gdf['type_2'].notna()
+        subtype_1_intertidal = gdf['subtype_1'] == 'intertidal'
         type_2_meadow = gdf['type_2'] == 'meadow'
 
+        # 4. kasua: subtype_1 == 'intertidal' eta type_2 == 'meadow'
+        mask4 = subtype_1_intertidal & type_2_meadow
+        # 3. kasua: subtype_1 null eta type_2 ez null
+        mask3 = ~subtype_1_ez_null & type_2_ez_null
+        # 2. kasua: subtype_1 ez null eta type_2 null
+        mask2 = subtype_1_ez_null & ~type_2_ez_null
         # 1. kasua: subtype_1 ez null eta type_2 != 'meadow'
-        #    (type_2 null ere sartzen da hemen, baina 3. kasuak berariaz
-        #     tratatzen du; hala ere, emaitza bera da: type = subtype_1)
-        mask1 = subtype_1_ez_null & ~type_2_meadow
-        # 2. kasua: subtype_1 ez null eta type_2 == 'meadow'
-        mask2 = subtype_1_ez_null & type_2_meadow
-        # 4. kasua: subtype_1 null eta type_2 ez null
-        mask4 = ~subtype_1_ez_null & type_2_ez_null
+        #    (2. kasua eta 4. kasua kanpoan utzita)
+        mask1 = subtype_1_ez_null & ~type_2_meadow & ~mask2
 
         # Balioak esleitu maskararen arabera
-        # 1. eta 3. kasuak: type = subtype_1
+        # 1. kasua: type = subtype_1
         gdf.loc[mask1, 'type'] = gdf.loc[mask1, 'subtype_1']
-        # 2. kasua: type = subtype_1 + ' ' + type_2
-        gdf.loc[mask2, 'type'] = (
-            gdf.loc[mask2, 'subtype_1'].astype(str)
-            + ' '
-            + gdf.loc[mask2, 'type_2'].astype(str)
-        )
-        # 4. kasua: type = type_2
-        gdf.loc[mask4, 'type'] = gdf.loc[mask4, 'type_2']
+        # 2. kasua: type = subtype_1
+        gdf.loc[mask2, 'type'] = gdf.loc[mask2, 'subtype_1']
+        # 3. kasua: type = type_2
+        gdf.loc[mask3, 'type'] = gdf.loc[mask3, 'type_2']
+        # 4. kasua: type = 'marsh'
+        gdf.loc[mask4, 'type'] = 'marsh'
 
         log.info(f"  'type' eremua sortu eta balioak esleitu:")
         log.info(f"    1. kasua (subtype_1 + type_2 != meadow): {mask1.sum()}")
-        log.info(f"    2. kasua (subtype_1 + type_2 == meadow): {mask2.sum()}")
-        log.info(f"    3. kasua (subtype_1 + type_2 null): barne 1. kasuan")
-        log.info(f"    4. kasua (subtype_1 null + type_2 ez null): {mask4.sum()}")
+        log.info(f"    2. kasua (subtype_1 + type_2 null): {mask2.sum()}")
+        log.info(f"    3. kasua (subtype_1 null + type_2 ez null): {mask3.sum()}")
+        log.info(f"    4. kasua (intertidal + meadow -> marsh): {mask4.sum()}")
 
         # Ezabatu beharreko eremuak
         ezabatzeko = [c for c in ['type_1', 'subtype_1', 'type_2']
