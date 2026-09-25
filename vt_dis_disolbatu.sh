@@ -2,13 +2,15 @@
 #
 # vt_dis_disolbatu.sh
 #
-# vt_landuse_12_vegetation_gipu3.gpkg fitxategiko poligonoak 'type' eremuaren
-# arabera disolbatzen ditu, baina SOILIK TYPE jakin batzuetarako. Gainerako
-# type-ak jatorrian bezala uzten dira (denbora aurrezteko).
+# GPKG fitxategi bateko poligonoak 'type' eremuaren arabera disolbatzen ditu,
+# baina SOILIK TYPE jakin batzuetarako. Gainerako type-ak jatorrian bezala
+# uzten dira (denbora aurrezteko).
 #
 # Erabilera:
-#   ./vt_dis_disolbatu.sh [log_fitxategia]
+#   ./vt_dis_disolbatu.sh <sarrera.gpkg> [log_fitxategia]
 #
+#   sarrera.gpkg    (derrigorrezkoa) Disolbatu beharreko GPKG fitxategia.
+#                   Fitxategia existitzen dela egiaztatzen da.
 #   log_fitxategia  (aukerakoa) Log fitxategiaren bidea. Ematen bada, mezu
 #                   guztiak fitxategi horri gehituko zaizkio (ez da
 #                   ezabatzen) eta terminalean EZ da ezer idatziko.
@@ -20,7 +22,13 @@ set -euo pipefail
 # Argumentuak
 # ---------------------------------------------------------------------------
 
-LOG_FITXATEGIA="${1:-}"
+if [[ $# -lt 1 ]]; then
+    echo "Erabilera: $(basename "$0") <sarrera.gpkg> [log_fitxategia]" >&2
+    exit 1
+fi
+
+SARRERA="$1"
+LOG_FITXATEGIA="${2:-}"
 
 # ---------------------------------------------------------------------------
 # Log sistema
@@ -29,7 +37,7 @@ LOG_FITXATEGIA="${1:-}"
 # Ez bada ematen: mezuak terminalera soilik.
 
 log() {
-    local mezua="$(date '+%Y-%m-%d %H:%M:%S') $*"
+    local mezua="[$(date '+%Y-%m-%d %H:%M:%S')] $*"
     if [[ -n "$LOG_FITXATEGIA" ]]; then
         echo "$mezua" >> "$LOG_FITXATEGIA"
     else
@@ -38,7 +46,7 @@ log() {
 }
 
 errorea() {
-    local mezua="$(date '+%Y-%m-%d %H:%M:%S') ERROREA: $*"
+    local mezua="[$(date '+%Y-%m-%d %H:%M:%S')] ERROREA: $*"
     if [[ -n "$LOG_FITXATEGIA" ]]; then
         echo "$mezua" >> "$LOG_FITXATEGIA"
     else
@@ -46,13 +54,19 @@ errorea() {
     fi
 }
 
+# Komandoak exekutatu, irteera log fitxategira edo terminalera birbideratuz.
+exekutatu() {
+    if [[ -n "$LOG_FITXATEGIA" ]]; then
+        "$@" >> "$LOG_FITXATEGIA" 2>&1
+    else
+        "$@"
+    fi
+}
+
 # ---------------------------------------------------------------------------
 # Ezarpenak
 # ---------------------------------------------------------------------------
 
-DAT_DIR="./dat"
-SARRERA="${DAT_DIR}/vt_landuse_12_vegetation_gipu3.gpkg"
-IRTEERA="${DAT_DIR}/vt_landuse_12_vegetation_gipu3.gpkg"
 SCRIPT_DISOLBATU="vt_disolbatu.py"
 FIELD="type"
 
@@ -70,7 +84,8 @@ DISOLBATU=(
     "water other"
 )
 
-# Bitarteko fitxategiak (ez dira inoiz $SARRERA-rekin nahasten)
+# Bitarteko fitxategiak: sarrerako fitxategiaren karpeta berean, izen bereziak.
+DAT_DIR="$(dirname "$SARRERA")"
 TMP_DIS="${DAT_DIR}/vt_tmp_dis.gpkg"
 TMP_DIS_OUT="${DAT_DIR}/vt_tmp_dis_out.gpkg"
 TMP_REST="${DAT_DIR}/vt_tmp_rest.gpkg"
@@ -90,6 +105,7 @@ garbitu() {
 
 log "=== HASI: $(basename "$0") ==="
 log "Argumentuak: $*"
+log "Sarrera: $SARRERA"
 
 if [[ ! -f "$SARRERA" ]]; then
     errorea "Sarrerako fitxategia ez da existitzen: $SARRERA"
@@ -122,10 +138,9 @@ log "Disolbatu beharreko type-ak: ${DISOLBATU[*]}"
 log "1/5 Disolbatu beharreko type-ak ateratzen..."
 
 rm -f "$TMP_DIS"
-/usr/local/bin/ogr2ogr -f GPKG "$TMP_DIS" "$SARRERA" \
+exekutatu ogr2ogr -f GPKG "$TMP_DIS" "$SARRERA" \
     -sql "SELECT * FROM $(basename "${SARRERA%.gpkg}") WHERE ${where_dis}" \
-    -nln "vt_tmp_dis" \
-    >> "${LOG_FITXATEGIA:-/dev/null}" 2>&1
+    -nln "vt_tmp_dis"
 
 # ---------------------------------------------------------------------------
 # 2. Disolbatu
@@ -133,8 +148,7 @@ rm -f "$TMP_DIS"
 
 log "2/5 Disolbatzen (${SCRIPT_DISOLBATU})..."
 rm -f "$TMP_DIS_OUT"
-python3 "$SCRIPT_DISOLBATU" "$TMP_DIS" "$TMP_DIS_OUT" "${LOG_FITXATEGIA:-}" \
-    >> "${LOG_FITXATEGIA:-/dev/null}" 2>&1
+exekutatu python3 "$SCRIPT_DISOLBATU" "$TMP_DIS" "$TMP_DIS_OUT" "${LOG_FITXATEGIA:-}"
 
 # ---------------------------------------------------------------------------
 # 3. Gainerako type-ak atera (disolbatu gabe)
@@ -145,11 +159,10 @@ log "3/5 Gainerako type-ak ateratzen (disolbatu gabe)..."
 where_rest="NOT (${where_dis})"
 
 rm -f "$TMP_REST"
-/usr/local/bin/ogr2ogr -f GPKG "$TMP_REST" "$SARRERA" \
+exekutatu ogr2ogr -f GPKG "$TMP_REST" "$SARRERA" \
     -dialect SQLITE \
     -sql "SELECT \"${FIELD}\", geom FROM $(basename "${SARRERA%.gpkg}") WHERE ${where_rest}" \
-    -nln "vt_tmp_rest" \
-    >> "${LOG_FITXATEGIA:-/dev/null}" 2>&1
+    -nln "vt_tmp_rest"
 
 # ---------------------------------------------------------------------------
 # 4. Dena batu
@@ -158,21 +171,23 @@ rm -f "$TMP_REST"
 log "4/5 Disolbatuak eta gainerakoak batzen..."
 
 rm -f "$TMP_BATU"
-/usr/local/bin/ogr2ogr -f GPKG "$TMP_BATU" "$TMP_REST" -nln "vt_tmp_batu" \
-    >> "${LOG_FITXATEGIA:-/dev/null}" 2>&1
-/usr/local/bin/ogr2ogr -update -append "$TMP_BATU" "$TMP_DIS_OUT" \
+exekutatu ogr2ogr -f GPKG "$TMP_BATU" "$TMP_REST" -nln "vt_tmp_batu"
+exekutatu ogr2ogr -update -append "$TMP_BATU" "$TMP_DIS_OUT" \
     -nln "vt_tmp_batu" \
-    -sql "SELECT \"${FIELD}\", geom FROM vt_tmp_dis_out" \
-    >> "${LOG_FITXATEGIA:-/dev/null}" 2>&1
+    -sql "SELECT \"${FIELD}\", geom FROM vt_tmp_dis_out"
 
 # ---------------------------------------------------------------------------
 # 5. Azken fitxategia sortu
 # ---------------------------------------------------------------------------
 
+# Azken fitxategia: sarrerakoaren izen bera, baina '_dis' atzizkiarekin.
+# Horrela, ez da jatorrizkoa gainidazten eta ez da babes-kopiarik behar.
+IZEN_HUTSA="$(basename "${SARRERA%.gpkg}")"
+IRTEERA="${DAT_DIR}/${IZEN_HUTSA}_dis.gpkg"
+
 log "5/5 Azken fitxategia sortzen: $IRTEERA"
 rm -f "$IRTEERA"
-/usr/local/bin/ogr2ogr -f GPKG "$IRTEERA" "$TMP_BATU" -nln "vt_landuse_12_vegetation_gipu3" \
-    >> "${LOG_FITXATEGIA:-/dev/null}" 2>&1
+exekutatu ogr2ogr -f GPKG "$IRTEERA" "$TMP_BATU" -nln "$IZEN_HUTSA"
 
 # ---------------------------------------------------------------------------
 # Garbiketa
