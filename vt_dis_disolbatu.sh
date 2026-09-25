@@ -138,7 +138,7 @@ log "Disolbatu beharreko type-ak: ${DISOLBATU[*]}"
 log "1/5 Disolbatu beharreko type-ak ateratzen..."
 
 rm -f "$TMP_DIS"
-exekutatu ogr2ogr -f GPKG "$TMP_DIS" "$SARRERA" \
+exekutatu /usr/local/bin/ogr2ogr -f GPKG "$TMP_DIS" "$SARRERA" \
     -sql "SELECT * FROM $(basename "${SARRERA%.gpkg}") WHERE ${where_dis}" \
     -nln "vt_tmp_dis"
 
@@ -159,7 +159,7 @@ log "3/5 Gainerako type-ak ateratzen (disolbatu gabe)..."
 where_rest="NOT (${where_dis})"
 
 rm -f "$TMP_REST"
-exekutatu ogr2ogr -f GPKG "$TMP_REST" "$SARRERA" \
+exekutatu /usr/local/bin/ogr2ogr -f GPKG "$TMP_REST" "$SARRERA" \
     -dialect SQLITE \
     -sql "SELECT \"${FIELD}\", geom FROM $(basename "${SARRERA%.gpkg}") WHERE ${where_rest}" \
     -nln "vt_tmp_rest"
@@ -171,8 +171,8 @@ exekutatu ogr2ogr -f GPKG "$TMP_REST" "$SARRERA" \
 log "4/5 Disolbatuak eta gainerakoak batzen..."
 
 rm -f "$TMP_BATU"
-exekutatu ogr2ogr -f GPKG "$TMP_BATU" "$TMP_REST" -nln "vt_tmp_batu"
-exekutatu ogr2ogr -update -append "$TMP_BATU" "$TMP_DIS_OUT" \
+exekutatu /usr/local/bin/ogr2ogr -f GPKG "$TMP_BATU" "$TMP_REST" -nln "vt_tmp_batu"
+exekutatu /usr/local/bin/ogr2ogr -update -append "$TMP_BATU" "$TMP_DIS_OUT" \
     -nln "vt_tmp_batu" \
     -sql "SELECT \"${FIELD}\", geom FROM vt_tmp_dis_out"
 
@@ -187,7 +187,7 @@ IRTEERA="${DAT_DIR}/${IZEN_HUTSA}_dis.gpkg"
 
 log "5/5 Azken fitxategia sortzen: $IRTEERA"
 rm -f "$IRTEERA"
-exekutatu ogr2ogr -f GPKG "$IRTEERA" "$TMP_BATU" -nln "$IZEN_HUTSA"
+exekutatu /usr/local/bin/ogr2ogr -f GPKG "$IRTEERA" "$TMP_BATU" -nln "$IZEN_HUTSA"
 
 # ---------------------------------------------------------------------------
 # Garbiketa
