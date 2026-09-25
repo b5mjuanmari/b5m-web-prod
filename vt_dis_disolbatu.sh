@@ -37,7 +37,7 @@ LOG_FITXATEGIA="${2:-}"
 # Ez bada ematen: mezuak terminalera soilik.
 
 log() {
-    local mezua="[$(date '+%Y-%m-%d %H:%M:%S')] $*"
+    local mezua="$(date '+%Y-%m-%d %H:%M:%S') $*"
     if [[ -n "$LOG_FITXATEGIA" ]]; then
         echo "$mezua" >> "$LOG_FITXATEGIA"
     else
@@ -46,7 +46,7 @@ log() {
 }
 
 errorea() {
-    local mezua="[$(date '+%Y-%m-%d %H:%M:%S')] ERROREA: $*"
+    local mezua="$(date '+%Y-%m-%d %H:%M:%S') ERROREA: $*"
     if [[ -n "$LOG_FITXATEGIA" ]]; then
         echo "$mezua" >> "$LOG_FITXATEGIA"
     else
