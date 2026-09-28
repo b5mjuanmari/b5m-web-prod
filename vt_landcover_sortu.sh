@@ -43,8 +43,11 @@ python3 vt_beach.py /home5/SHP/Edificios/playas.shp ./dat/vt_landcover_beach.gpk
 python3 vt_water.py /home5/SHP/Agua/ITSASOind.shp ./dat/vt_landcover_water.gpkg $log
 
 python3 vt_trokelatu.py ./dat/vt_landcover_water.gpkg ./dat/vt_landcover_beach.gpkg ./dat/vt_landcover_water_trok.gpkg $log # 4s
+rm ./dat/vt_landcover_water.gpkg 2> /dev/null
 
 python3 vt_fusionatu_bi.py ./dat/vt_landcover_beach.gpkg ./dat/vt_landcover_water_trok.gpkg ./dat/vt_landcover_12.gpkg $log # 3s
+rm ./dat/vt_landcover_beach.gpkg 2> /dev/null
+rm ./dat/vt_landcover_water_trok.gpkg 2> /dev/null
 
 python3 vt_fusionatu_bi.py ./dat/vt_landcover_forest.gpkg ./dat/vt_landcover_meadow.gpkg ./dat/vt_landcover_forest_meadow.gpkg $log # 2m17s
 python3 vt_fusionatu_bi.py ./dat/vt_landcover_scrub.gpkg ./dat/vt_landcover_tree.gpkg ./dat/vt_landcover_scrub_tree.gpkg $log # 1m55s
@@ -53,16 +56,23 @@ rm ./dat/vt_landcover_scrub_tree.gpkg 2> /dev/null
 rm ./dat/vt_landcover_forest_meadow.gpkg 2> /dev/null
 
 python3 vt_barru_ukitu.py ./dat/gipuzkoa.gpkg ./dat/vt_landcover_12.gpkg ./dat/vt_landcover_12_gipu.gpkg $log # 58s
+rm ./dat/vt_landcover_12.gpkg 2> /dev/null
 python3 vt_rename_subtype.py ./dat/vt_landcover_12_gipu.gpkg ./dat/vt_landcover_12_gipu2.gpkg $log # 2s
+rm ./dat/vt_landcover_12_gipu.gpkg 2> /dev/null
 
 python3 vt_moztu.py ./dat/vt_landcover_vegetation.gpkg ./dat/gipuzkoa.gpkg ./dat/vt_landcover_vegetation_gipu.gpkg $log # 5h46m
 
 # Overlay
 python3 vt_overlay.py ./dat/vt_landcover_12_gipu2.gpkg ./dat/vt_landcover_vegetation_gipu.gpkg ./dat/vt_landcover_12_vegetation_gipu.gpkg $log # 28m5s
+rm ./dat/vt_landcover_12_gipu2.gpkg 2> /dev/null
+rm ./dat/vt_landcover_vegetation_gipu.gpkg 2> /dev/null
 python3 vt_reclass.py ./dat/vt_landcover_12_vegetation_gipu.gpkg ./dat/vt_landcover_12_vegetation_gipu2.gpkg $log # 4m18s (intertidal + meadow = marsh)
+rm ./dat/vt_landcover_12_vegetation_gipu.gpkg 2> /dev/null
 
 ./vt_dis_disolbatu.sh ./dat/vt_landcover_12_vegetation_gipu2.gpkg $log # 1m52s
 python3 vt_fusionatu_bi.py ./dat/vt_landcover_other_trok3.gpkg ./dat/vt_landcover_12_vegetation_gipu2_dis.gpkg ./dat/vt_landcover_1.gpkg $log # 13m14s
+#rm ./dat/vt_landcover_other_trok3.gpkg 2> /dev/null
+rm ./dat/vt_landcover_12_vegetation_gipu2_dis.gpkg 2> /dev/null
 
 # Pier
 echo "$(date +"%Y-%m-%d %H:%M:%S") - 4. Pier" >> "$log" # 15s
@@ -136,6 +146,7 @@ done
 echo "$(date +"%Y-%m-%d %H:%M:%S") - Amaituta (5. Arroka solteak pier geruzan)" >> "$log"
 
 python3 vt_fusionatu_bi.py ./dat/vt_landcover_1.gpkg ./dat/vt_pier7.gpkg ./dat/vt_landcover.gpkg $log # 12m40s
+rm ./dat/vt_pier7.gpkg 2> /dev/null
 rm ./dat/vt_landcover_1.gpkg 2> /dev/null
 
 # Bukaera
