@@ -43,7 +43,6 @@ python3 vt_beach.py /home5/SHP/Edificios/playas.shp ./dat/vt_landcover_beach.gpk
 python3 vt_water.py /home5/SHP/Agua/ITSASOind.shp ./dat/vt_landcover_water.gpkg $log
 
 python3 vt_trokelatu.py ./dat/vt_landcover_water.gpkg ./dat/vt_landcover_beach.gpkg ./dat/vt_landcover_water_trok.gpkg $log # 4s
-rm ./dat/vt_landcover_water.gpkg 2> /dev/null
 
 python3 vt_fusionatu_bi.py ./dat/vt_landcover_beach.gpkg ./dat/vt_landcover_water_trok.gpkg ./dat/vt_landcover_12.gpkg $log # 3s
 rm ./dat/vt_landcover_beach.gpkg 2> /dev/null
@@ -69,10 +68,13 @@ rm ./dat/vt_landcover_vegetation_gipu.gpkg 2> /dev/null
 python3 vt_reclass.py ./dat/vt_landcover_12_vegetation_gipu.gpkg ./dat/vt_landcover_12_vegetation_gipu2.gpkg $log # 4m18s (intertidal + meadow = marsh)
 rm ./dat/vt_landcover_12_vegetation_gipu.gpkg 2> /dev/null
 
+python3 vt_trokelatu.py ./dat/vt_landcover_other.gpkg ./dat/vt_landcover_12_vegetation_gipu2.gpkg ./dat/vt_landcover_other_trok1.gpkg $log # 22h58m
+python3 vt_multi2poly.py ./dat/vt_landcover_other_trok1.gpkg ./dat/vt_landcover_other_trok2.gpkg $log # 8m44s
+
 ./vt_dis_disolbatu.sh ./dat/vt_landcover_12_vegetation_gipu2.gpkg $log # 1m52s
-python3 vt_fusionatu_bi.py ./dat/vt_landcover_other_trok3.gpkg ./dat/vt_landcover_12_vegetation_gipu2_dis.gpkg ./dat/vt_landcover_1.gpkg $log # 13m14s
-#rm ./dat/vt_landcover_other_trok3.gpkg 2> /dev/null
-rm ./dat/vt_landcover_12_vegetation_gipu2_dis.gpkg 2> /dev/null
+python3 vt_fusionatu_bi.py ./dat/vt_landcover_other_trok2.gpkg ./dat/vt_landcover_12_vegetation_gipu2_dis.gpkg ./dat/vt_landcover_1.gpkg $log # 13m5s
+#rm ./dat/vt_landcover_other_trok2.gpkg 2> /dev/null
+#rm ./dat/vt_landcover_12_vegetation_gipu2_dis.gpkg 2> /dev/null
 
 # Pier
 echo "$(date +"%Y-%m-%d %H:%M:%S") - 4. Pier" >> "$log" # 15s
@@ -90,6 +92,7 @@ python3 vt_trokelatu.py ./dat/vt_pier1.gpkg ./dat/gipuzkoa.gpkg ./dat/vt_pier2.g
 rm ./dat/vt_pier1.gpkg 2> /dev/null
 rm ./dat/vt_landcover_water_intertidal.gpkg 2> /dev/null
 /usr/local/bin/ogr2ogr -f GPKG ./dat/vt_landcover_water_intertidal.gpkg ./dat/vt_landcover_water.gpkg -sql "SELECT * FROM vt_landcover_water WHERE subtype = 'intertidal'" -nln "vt_landcover_water_intertidal" 2>> "$log" >> "$log" # 6s
+rm ./dat/vt_landcover_water.gpkg 2> /dev/null
 python3 vt_trokelatu.py ./dat/vt_pier2.gpkg ./dat/vt_landcover_water_intertidal.gpkg ./dat/vt_pier3.gpkg $log # 6s
 rm ./dat/vt_pier2.gpkg 2> /dev/null
 rm ./dat/vt_landcover_water_intertidal.gpkg 2> /dev/null
@@ -145,9 +148,9 @@ for coord in "${coords[@]}"; do
 done
 echo "$(date +"%Y-%m-%d %H:%M:%S") - Amaituta (5. Arroka solteak pier geruzan)" >> "$log"
 
-python3 vt_fusionatu_bi.py ./dat/vt_landcover_1.gpkg ./dat/vt_pier7.gpkg ./dat/vt_landcover.gpkg $log # 12m40s
-rm ./dat/vt_pier7.gpkg 2> /dev/null
-rm ./dat/vt_landcover_1.gpkg 2> /dev/null
+python3 vt_fusionatu_bi.py ./dat/vt_landcover_1.gpkg ./dat/vt_pier7.gpkg ./dat/vt_landcover.gpkg $log # 12m51s
+#rm ./dat/vt_pier7.gpkg 2> /dev/null
+#rm ./dat/vt_landcover_1.gpkg 2> /dev/null
 
 # Bukaera
 echo >> "$log"
