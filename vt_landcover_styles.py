@@ -6,7 +6,11 @@ GeoPackage fitxategi batean QGIS estilo bat (.qml) gordetzen du
 layer_styles taulan, QGIS-ek erabiltzen duen estrukturarekin.
 
 Erabilera:
-    python3 vt_landcover_styles.py <gpkg> <geruza_izena> <geom_eremua> <estilo_izena> <qml_fitxategia>
+    python3 vt_landcover_styles.py <gpkg> <geruza_izena> <geom_eremua> <estilo_izena> <qml_fitxategia> [log_fitxategia]
+
+    log_fitxategia aukerakoa da:
+      - ematen bada: mezuak log fitxategira (eta terminalera TTY bada)
+      - ez bada ematen: mezuak terminalera soilik (TTY bada)
 
 Adibidea:
     python3 vt_landcover_styles.py ./dat/vt_landcover_SIOSEAR2.gpkg \
@@ -19,8 +23,10 @@ import os
 import sqlite3
 import sys
 
+from log_utils import Log
 
-def ensure_layer_styles_table(cur):
+
+def ensure_layer_styles_table(cur, log):
     """Sortu layer_styles taula QGIS-en estruktura ofizialarekin, ez badago."""
     cur.execute("""
         CREATE TABLE IF NOT EXISTS layer_styles (
@@ -41,7 +47,7 @@ def ensure_layer_styles_table(cur):
     """)
 
 
-def register_in_gpkg_contents(cur, table_name="layer_styles"):
+def register_in_gpkg_contents(cur, log, table_name="layer_styles"):
     """Erregistratu layer_styles gpkg_contents-en, QGIS-ek egiten duen bezala.
     Taula edo eremuak ez badaude, isilpean jarraitu."""
     try:
@@ -71,11 +77,11 @@ def register_in_gpkg_contents(cur, table_name="layer_styles"):
         """, (table_name, table_name))
     except sqlite3.Error as e:
         # Ez da kritikoa; abisua eman eta jarraitu
-        print(f"Abisua: ezin izan da gpkg_contents eguneratu: {e}",
-              file=sys.stderr)
+        log.abisua(f"Ezin izan da gpkg_contents eguneratu: {e}")
 
 
-def insert_style(gpkg, layer, geom_col, style_name, qml_path, use_default=True):
+def insert_style(gpkg, layer, geom_col, style_name, qml_path, log,
+                 use_default=True):
     if not os.path.isfile(gpkg):
         raise FileNotFoundError(f"Ez da GPKG fitxategia aurkitu: {gpkg}")
     if not os.path.isfile(qml_path):
@@ -87,12 +93,20 @@ def insert_style(gpkg, layer, geom_col, style_name, qml_path, use_default=True):
     if not qml.strip():
         raise ValueError(f"QML fitxategia hutsik dago: {qml_path}")
 
+    log.info(f"GPKG: {gpkg}")
+    log.info(f"Geruza: {layer}")
+    log.info(f"Geometria-eremua: {geom_col}")
+    log.info(f"Estilo-izena: {style_name}")
+    log.info(f"QML fitxategia: {qml_path}")
+    log.info(f"QML luzera: {len(qml)} karaktere")
+    log.info(f"Lehenetsi gisa: {'bai' if use_default else 'ez'}")
+
     con = sqlite3.connect(gpkg)
     try:
         cur = con.cursor()
 
-        ensure_layer_styles_table(cur)
-        register_in_gpkg_contents(cur)
+        ensure_layer_styles_table(cur, log)
+        register_in_gpkg_contents(cur, log)
 
         # Estilo bera bazegoen, ezabatu (berridazteko)
         cur.execute("""
@@ -121,14 +135,10 @@ def insert_style(gpkg, layer, geom_col, style_name, qml_path, use_default=True):
             raise RuntimeError("Estiloa txertatu ondoren ez da aurkitu.")
 
         sid, qml_len, usedef = row
-        print(f"OK: estiloa gorde da.")
-        print(f"  GPKG:        {gpkg}")
-        print(f"  Geruza:      {layer}")
-        print(f"  Geometria:   {geom_col}")
-        print(f"  Estilo-izena:{style_name}")
-        print(f"  ID:          {sid}")
-        print(f"  QML luzera:  {qml_len} karaktere")
-        print(f"  Lehenetsia:  {'bai' if usedef else 'ez'}")
+        log.info("OK: estiloa gorde da.")
+        log.info(f"  ID:          {sid}")
+        log.info(f"  QML luzera:  {qml_len} karaktere")
+        log.info(f"  Lehenetsia:  {'bai' if usedef else 'ez'}")
     finally:
         con.close()
 
@@ -143,12 +153,22 @@ def main():
     parser.add_argument("style_name", help="Estiloaren izena GPKG barruan")
     parser.add_argument("qml", help=".qml estilo fitxategiaren bidea")
     parser.add_argument(
+        "log_path",
+        nargs="?",
+        default=None,
+        help="Log fitxategiaren bidea (aukerakoa)",
+    )
+    parser.add_argument(
         "--no-default",
         action="store_true",
         help="Ez markatu estiloa lehenetsi gisa (useAsDefault=0)",
     )
 
     args = parser.parse_args()
+
+    # --- Log sistema abiarazi ---
+    izena = os.path.basename(sys.argv[0])
+    log = Log(args.log_path, izena, sys.argv[1:])
 
     try:
         insert_style(
@@ -157,11 +177,15 @@ def main():
             geom_col=args.geom_col,
             style_name=args.style_name,
             qml_path=args.qml,
+            log=log,
             use_default=not args.no_default,
         )
     except Exception as e:
-        print(f"Errorea: {e}", file=sys.stderr)
+        log.errorea(f"{type(e).__name__}: {e}")
+        log.bukaera()
         sys.exit(1)
+
+    log.bukaera()
 
 
 if __name__ == "__main__":
