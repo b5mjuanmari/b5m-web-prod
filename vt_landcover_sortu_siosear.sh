@@ -15,24 +15,43 @@ has="$(date +"%Y-%m-%d %H:%M:%S")"
 echo "${has} - Hasiera" >> "$log"
 
 # SIOSEAR
+# 1. Erabiliko dugun taula erauzi
 echo "$(date +"%Y-%m-%d %H:%M:%S") - 1. Erabiliko dugun taula erauzi" >> "$log"
 rm ./dat/SIOSEAR_20_1.gpkg 2> /dev/null
 /usr/local/bin/ogr2ogr -f GPKG ./dat/SIOSEAR_20_1.gpkg /home9/SHP/vt_landcover/SIOSEAR/SAR2020_20_GUIPUZCOA_GPKG/20_GUIPUZCOA.gpkg -nln SIOSEAR_20_1 sar_20_t_combinada 2>> "$log" >> "$log" # 9s
 
+# 2. CSV baten arabera bersailkatu
 echo "$(date +"%Y-%m-%d %H:%M:%S") - 2. CSV baten arabera bersailkatu" >> "$log"
 python3 vt_reclass_siosear.py ./dat/SIOSEAR_20_1.gpkg /home9/SHP/vt_landcover/SIOSEAR/CONF/SIOSEAR_types.csv ./dat/SIOSEAR_20_2.gpkg $log # 1m43s
 
-echo "$(date +"%Y-%m-%d %H:%M:%S") - 3. Emaitza disolbatu" >> "$log"
-python3 vt_disolbatu.py ./dat/SIOSEAR_20_2.gpkg ./dat/SIOSEAR_20_3.gpkg $log # 1h25m16s
+# 3. Hiriguneko arrokak (rock) artifizial (artificial) jarri
+echo "$(date +"%Y-%m-%d %H:%M:%S") - 3. Hiriguneko arrokak (rock) artifizial (artificial) jarri" >> "$log"
+# 3.1. GPKG berria sortu kopia gisa
+rm ./dat/SIOSEAR_20_3.gpkg 2> /dev/null
+/usr/local/bin/ogr2ogr -f "GPKG" ./dat/SIOSEAR_20_3.gpkg ./dat/SIOSEAR_20_2.gpkg -nln SIOSEAR_20_3 2>> "$log" >> "$log" # 4s
+
+# 3.2. cascos.shp inportatu geruza laguntzaile gisa
+/usr/local/bin/ogr2ogr -f "GPKG" -update -nln _tmp_cascos ./dat/SIOSEAR_20_3.gpkg /home5/SHP/Edificios/cascos.shp 2>> "$log" >> "$log" # 1s
+
+# 3.3. Eguneratu
+/usr/local/bin/ogrinfo ./dat/SIOSEAR_20_3.gpkg -dialect SQLITE -sql "UPDATE SIOSEAR_20_3 SET type = 'artificial' WHERE type = 'rock' AND EXISTS (SELECT 1 FROM _tmp_cascos s WHERE ST_Intersects(SIOSEAR_20_3.geom, s.geom))" 2>> "$log" >> "$log" # 45s
+
+# 3.4. Geruza laguntzailea kendu
+/usr/local/bin/ogrinfo ./dat/SIOSEAR_20_3.gpkg -sql "DROP TABLE _tmp_cascos" 2>> "$log" >> "$log"
+/usr/local/bin/ogrinfo ./dat/SIOSEAR_20_3.gpkg -dialect SQLITE -sql "DELETE FROM gpkg_contents WHERE table_name = '_tmp_cascos'; DELETE FROM gpkg_geometry_columns WHERE table_name = '_tmp_cascos'" 2>> "$log" >> "$log"
 
 # Ondoren...
 # B5m marearteko eta igerilekuen datuak txertatu
 # Eta agian zerbait gehiago...
 
-# Behin behineko GPKGa eta estiloa kargatu
-echo "$(date +"%Y-%m-%d %H:%M:%S") - 4. Behin behineko GPKGa eta estiloa kargatu" >> "$log"
+# 4. Emaitza disolbatu
+echo "$(date +"%Y-%m-%d %H:%M:%S") - 4. Emaitza disolbatu" >> "$log"
+python3 vt_disolbatu.py ./dat/SIOSEAR_20_3.gpkg ./dat/SIOSEAR_20_4.gpkg $log # 1h25m16s
+
+# 5. Behin behineko GPKGa eta estiloa kargatu
+echo "$(date +"%Y-%m-%d %H:%M:%S") - 5. Behin behineko GPKGa eta estiloa kargatu" >> "$log"
 rm ./dat/vt_landcover_SIOSEAR.gpkg 2> /dev/null
-/usr/local/bin/ogr2ogr -f GPKG ./dat/vt_landcover_SIOSEAR.gpkg ./dat/SIOSEAR_20_3.gpkg -nln vt_landcover_SIOSEAR 2>> "$log" >> "$log" # 4s
+/usr/local/bin/ogr2ogr -f GPKG ./dat/vt_landcover_SIOSEAR.gpkg ./dat/SIOSEAR_20_4.gpkg -nln vt_landcover_SIOSEAR 2>> "$log" >> "$log" # 4s
 
 python3 vt_landcover_styles.py ./dat/vt_landcover_SIOSEAR.gpkg vt_landcover_SIOSEAR geom vt_landcover_SIOSEAR_style /home9/SHP/vt_landcover/SIOSEAR/CONF/vt_landcover_SIOSEAR.qml $log # 1s
 
