@@ -1,111 +1,292 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
-INPUTB="vt_landcover_SIOSEAR_QT59"
-OUTPUTB="vt_landcover_SIOSEAR_QT59_lowzoom"
+##############################################################################
+# ERABILERA
+#
+# ./vt_simplify_grid.sh \
+#     vt_landcover_SIOSEAR \
+#     10000 \
+#     0.1 \
+#     5000 \
+#     3000
+#
+# PARAMETROAK
+#
+# $1 layer/gpkg oinarrizko izena
+# $2 rmarea threshold (m2)
+# $3 snap threshold (m)
+# $4 tile tamaina (m)
+# $5 buffer tamaina (m)
+##############################################################################
 
-AREA_THRESHOLD="${1:-10000}"
-SNAP_THRESHOLD="${2:-0.1}"
+INPUTB="${1}"
+AREA_THRESHOLD="${2:-10000}"
+SNAP_THRESHOLD="${3:-0.1}"
+TILE_SIZE="${4:-5000}"
+BUFFER_SIZE="${5:-3000}"
 
-INPUT="$(readlink -f ./dat/${INPUTB}.gpkg)"
-OUTPUT="$(readlink -f ./dat/${OUTPUTB}.gpkg)"
+INPUT="./dat/${INPUTB}.gpkg"
+OUTPUT="./dat/${INPUTB}_lowzoom.gpkg"
+OUTPUT_DISS="./dat/${INPUTB}_lowzoom_dissolved.gpkg"
 
+##############################################################################
+
+WORKDIR=$(mktemp -d)
 GISDBASE=$(mktemp -d)
-TMPDIR=$(mktemp -d)
-
-SRC_SHP="${TMPDIR}/src.shp"
-OUT_SHP="${TMPDIR}/out.shp"
 
 cleanup() {
-    echo "Cleaning up temporary files..."
+    echo "Cleaning up..."
+    rm -rf "${WORKDIR}"
     rm -rf "${GISDBASE}"
-    rm -rf "${TMPDIR}"
 }
 
 trap cleanup EXIT
 
-echo "AREA_THRESHOLD=${AREA_THRESHOLD}"
-echo "SNAP_THRESHOLD=${SNAP_THRESHOLD}"
+##############################################################################
+# EXTENT
+##############################################################################
 
-echo "STEP 1/5: GPKG -> Shapefile"
+EXTENT=$(ogrinfo -so "${INPUT}" "${INPUTB}" |
+grep "Extent:" |
+sed -E 's/Extent: \(([^,]+), ([^)]+)\) - \(([^,]+), ([^)]+)\)/\1 \2 \3 \4/')
 
-ogr2ogr \
-    -overwrite \
-    "${SRC_SHP}" \
-    "${INPUT}" \
-    "${INPUTB}"
+read XMIN YMIN XMAX YMAX <<< "${EXTENT}"
 
-echo "STEP 2/5: Shapefile -> GRASS"
+XMIN=$(printf "%.0f" "${XMIN}")
+YMIN=$(printf "%.0f" "${YMIN}")
+XMAX=$(printf "%.0f" "${XMAX}")
+YMAX=$(printf "%.0f" "${YMAX}")
 
-grass -c EPSG:25830 "${GISDBASE}/work" --exec bash -c "
+echo
+echo "INPUT            : ${INPUT}"
+echo "AREA_THRESHOLD   : ${AREA_THRESHOLD}"
+echo "SNAP_THRESHOLD   : ${SNAP_THRESHOLD}"
+echo "TILE_SIZE        : ${TILE_SIZE}"
+echo "BUFFER_SIZE      : ${BUFFER_SIZE}"
+echo
 
-    echo 'Importing...'
+##############################################################################
+# GARBITU AURREKO EMAITZAK
+##############################################################################
 
-    v.in.ogr \
-        input='${SRC_SHP}' \
-        output=landcover \
-        snap=${SNAP_THRESHOLD} \
-        --overwrite
+rm -f "${OUTPUT}"
+rm -f "${OUTPUT_DISS}"
 
-    echo 'Removing polygons smaller than ${AREA_THRESHOLD} m2...'
+FIRST_TILE=1
 
-    v.clean \
-        input=landcover \
-        output=landcover_rmarea \
-        tool=rmarea \
-        threshold=${AREA_THRESHOLD} \
-        --overwrite
+##############################################################################
+# TILE LOOP
+##############################################################################
 
-    echo 'Rebuilding topology...'
+for ((TXMIN=XMIN; TXMIN<XMAX; TXMIN+=TILE_SIZE))
+do
+for ((TYMIN=YMIN; TYMIN<YMAX; TYMIN+=TILE_SIZE))
+do
 
-    v.build \
-        map=landcover_rmarea
+    TXMAX=$((TXMIN + TILE_SIZE))
+    TYMAX=$((TYMIN + TILE_SIZE))
 
-    echo 'Simplifying geometries...'
+    BXMIN=$((TXMIN - BUFFER_SIZE))
+    BYMIN=$((TYMIN - BUFFER_SIZE))
+    BXMAX=$((TXMAX + BUFFER_SIZE))
+    BYMAX=$((TYMAX + BUFFER_SIZE))
 
-    v.generalize \
-        input=landcover_rmarea \
-        output=landcover_gen \
-        method=douglas \
-        threshold=50 \
-        --overwrite
+    TILE_ID="${TXMIN}_${TYMIN}"
 
-    echo 'Building final topology...'
+    echo
+    echo "=================================================="
+    echo "Tile ${TILE_ID}"
+    echo "=================================================="
 
-    v.build \
-        map=landcover_gen
+    TILE_GPKG="${WORKDIR}/${TILE_ID}_buffer.gpkg"
+    TILE_SHP="${WORKDIR}/${TILE_ID}.shp"
+    TILE_OUT_SHP="${WORKDIR}/${TILE_ID}_out.shp"
+    TILE_OUT_GPKG="${WORKDIR}/${TILE_ID}_out.gpkg"
+    TILE_CORE_GPKG="${WORKDIR}/${TILE_ID}_core.gpkg"
 
-    echo 'Exporting result...'
+    ##########################################################################
+    # BUFFERREKO ELEMENTUAK ATERA
+    ##########################################################################
 
-    v.out.ogr \
-        input=landcover_gen \
-        output='${OUT_SHP}' \
-        format=ESRI_Shapefile \
-        --overwrite
-"
+    ogr2ogr \
+        -overwrite \
+        "${TILE_GPKG}" \
+        "${INPUT}" \
+        "${INPUTB}" \
+        -spat \
+        ${BXMIN} \
+        ${BYMIN} \
+        ${BXMAX} \
+        ${BYMAX}
 
-echo "STEP 3/5: Shapefile -> GeoPackage"
+    COUNT=$(ogrinfo -so "${TILE_GPKG}" "${INPUTB}" 2>/dev/null \
+        | awk '/Feature Count/ {print $3}')
+
+    [ -z "${COUNT}" ] && COUNT=0
+
+    if [ "${COUNT}" = "0" ]
+    then
+        echo "Tile hutsa"
+        continue
+    fi
+
+    echo "Features: ${COUNT}"
+
+    ##########################################################################
+    # GPKG -> SHP
+    ##########################################################################
+
+    ogr2ogr \
+        -overwrite \
+        "${TILE_SHP}" \
+        "${TILE_GPKG}"
+
+    ##########################################################################
+    # GRASS
+    ##########################################################################
+
+    TILE_GRASS="${GISDBASE}/tile_${TILE_ID}"
+
+    grass -c EPSG:25830 "${TILE_GRASS}" --exec bash -c "
+
+        v.in.ogr \
+            input='${TILE_SHP}' \
+            output=landcover \
+            snap=${SNAP_THRESHOLD} \
+            --overwrite
+
+        v.clean \
+            input=landcover \
+            output=landcover_rmarea \
+            tool=rmarea \
+            threshold=${AREA_THRESHOLD} \
+            --overwrite
+
+        v.build \
+            map=landcover_rmarea
+
+        v.generalize \
+            input=landcover_rmarea \
+            output=landcover_gen \
+            method=douglas \
+            threshold=50 \
+            --overwrite
+
+        v.build \
+            map=landcover_gen
+
+        v.out.ogr \
+            input=landcover_gen \
+            output='${TILE_OUT_SHP}' \
+            format=ESRI_Shapefile \
+            --overwrite
+    "
+
+    ##########################################################################
+    # SHP -> GPKG
+    ##########################################################################
+
+    ogr2ogr \
+        -overwrite \
+        -f GPKG \
+        "${TILE_OUT_GPKG}" \
+        "${TILE_OUT_SHP}" \
+        -nln landcover
+
+    ##########################################################################
+    # ERDIKO TILEA BAKARRIK GORDE
+    ##########################################################################
+
+    ogr2ogr \
+        -overwrite \
+        "${TILE_CORE_GPKG}" \
+        "${TILE_OUT_GPKG}" \
+        landcover \
+        -clipsrc \
+        ${TXMIN} \
+        ${TYMIN} \
+        ${TXMAX} \
+        ${TYMAX}
+
+    ##########################################################################
+    # APPEND
+    ##########################################################################
+
+    if [ ${FIRST_TILE} -eq 1 ]
+    then
+
+        ogr2ogr \
+            -overwrite \
+            -f GPKG \
+            "${OUTPUT}" \
+            "${TILE_CORE_GPKG}" \
+            -nln merged
+
+        FIRST_TILE=0
+
+    else
+
+        ogr2ogr \
+            -append \
+            "${OUTPUT}" \
+            "${TILE_CORE_GPKG}" \
+            -nln merged
+
+    fi
+
+done
+done
+
+##############################################################################
+# DISSOLVE
+##############################################################################
+
+echo
+echo "Final dissolve..."
 
 ogr2ogr \
     -overwrite \
     -f GPKG \
+    "${OUTPUT_DISS}" \
     "${OUTPUT}" \
-    "${OUT_SHP}" \
-    -nln "${OUTPUTB}"
+    -dialect SQLITE \
+    -sql "
+        SELECT
+            type,
+            ST_Union(geom) AS geom
+        FROM merged
+        GROUP BY type
+    " \
+    -nln "${INPUTB}_lowzoom"
 
-echo "STEP 4/5: Spatial index"
+##############################################################################
+# SPATIAL INDEX
+##############################################################################
 
-ogrinfo "${OUTPUT}" \
-    -sql "SELECT CreateSpatialIndex('${OUTPUTB}','geom')" \
-    > /dev/null 2>&1 || true
+ogrinfo "${OUTPUT_DISS}" \
+    -sql "
+        SELECT CreateSpatialIndex(
+            '${INPUTB}_lowzoom',
+            'geom'
+        )
+    " \
+    >/dev/null 2>&1 || true
 
-echo "STEP 5/5: Statistics"
+##############################################################################
+# ESTATISTIKAK
+##############################################################################
+
+echo
+echo "RESULT"
 
 ogrinfo -so \
-    "${OUTPUT}" \
-    "${OUTPUTB}"
+    "${OUTPUT_DISS}" \
+    "${INPUTB}_lowzoom"
 
 echo
 echo "DONE"
-echo "Output: ${OUTPUT}"
+echo
+echo "Output:"
+echo "  ${OUTPUT_DISS}"
