@@ -1,5 +1,26 @@
 #!/bin/bash
 
+HOME="/home/juanmari"
+work="SCRIPTS/WEB_PROD"
+gaur="$(date +"%Y%m%d")"
+script=$(basename "$0" | sed 's/\..*$//')
+LOG_FILE="./log/${script}_${gaur}.log"
+
+cd "$HOME"
+source ~/.bashrc
+cd "$work"
+
+rm -f "${LOG_FILE}" 2> /dev/null
+
+exec >> "${LOG_FILE}" 2>&1
+
+echo "=================================================="
+echo "START : $(date '+%Y-%m-%d %H:%M:%S')"
+echo "SCRIPT: ${SCRIPT_NAME}"
+echo "LOG   : ${LOG_FILE}"
+echo "=================================================="
+echo
+
 set -euo pipefail
 
 ##############################################################################
@@ -48,7 +69,7 @@ trap cleanup EXIT
 # EXTENT
 ##############################################################################
 
-EXTENT=$(ogrinfo -so "${INPUT}" "${INPUTB}" |
+EXTENT=$(/usr/local/bin/ogrinfo -so "${INPUT}" "${INPUTB}" |
 grep "Extent:" |
 sed -E 's/Extent: \(([^,]+), ([^)]+)\) - \(([^,]+), ([^)]+)\)/\1 \2 \3 \4/')
 
@@ -110,7 +131,7 @@ do
     # BUFFERREKO ELEMENTUAK ATERA
     ##########################################################################
 
-    ogr2ogr \
+    /usr/local/bin/ogr2ogr \
         -overwrite \
         "${TILE_GPKG}" \
         "${INPUT}" \
@@ -121,7 +142,7 @@ do
         ${BXMAX} \
         ${BYMAX}
 
-    COUNT=$(ogrinfo -so "${TILE_GPKG}" "${INPUTB}" 2>/dev/null \
+    COUNT=$(/usr/local/bin/ogrinfo -so "${TILE_GPKG}" "${INPUTB}" 2>/dev/null \
         | awk '/Feature Count/ {print $3}')
 
     [ -z "${COUNT}" ] && COUNT=0
@@ -138,7 +159,7 @@ do
     # GPKG -> SHP
     ##########################################################################
 
-    ogr2ogr \
+    /usr/local/bin/ogr2ogr \
         -overwrite \
         "${TILE_SHP}" \
         "${TILE_GPKG}"
@@ -188,7 +209,7 @@ do
     # SHP -> GPKG
     ##########################################################################
 
-    ogr2ogr \
+    /usr/local/bin/ogr2ogr \
         -overwrite \
         -f GPKG \
         "${TILE_OUT_GPKG}" \
@@ -199,7 +220,7 @@ do
     # ERDIKO TILEA BAKARRIK GORDE
     ##########################################################################
 
-    ogr2ogr \
+    /usr/local/bin/ogr2ogr \
         -overwrite \
         "${TILE_CORE_GPKG}" \
         "${TILE_OUT_GPKG}" \
@@ -217,7 +238,7 @@ do
     if [ ${FIRST_TILE} -eq 1 ]
     then
 
-        ogr2ogr \
+        /usr/local/bin/ogr2ogr \
             -overwrite \
             -f GPKG \
             "${OUTPUT}" \
@@ -228,7 +249,7 @@ do
 
     else
 
-        ogr2ogr \
+        /usr/local/bin/ogr2ogr \
             -append \
             "${OUTPUT}" \
             "${TILE_CORE_GPKG}" \
@@ -246,7 +267,7 @@ done
 echo
 echo "Final dissolve..."
 
-ogr2ogr \
+/usr/local/bin/ogr2ogr \
     -overwrite \
     -f GPKG \
     "${OUTPUT_DISS}" \
@@ -265,7 +286,7 @@ ogr2ogr \
 # SPATIAL INDEX
 ##############################################################################
 
-ogrinfo "${OUTPUT_DISS}" \
+/usr/local/bin/ogrinfo "${OUTPUT_DISS}" \
     -sql "
         SELECT CreateSpatialIndex(
             '${INPUTB}_lowzoom',
@@ -281,7 +302,7 @@ ogrinfo "${OUTPUT_DISS}" \
 echo
 echo "RESULT"
 
-ogrinfo -so \
+/usr/local/bin/ogrinfo -so \
     "${OUTPUT_DISS}" \
     "${INPUTB}_lowzoom"
 
@@ -290,3 +311,10 @@ echo "DONE"
 echo
 echo "Output:"
 echo "  ${OUTPUT_DISS}"
+
+echo
+echo "=================================================="
+echo "END : $(date '+%Y-%m-%d %H:%M:%S')"
+echo "=================================================="
+
+exit 0
