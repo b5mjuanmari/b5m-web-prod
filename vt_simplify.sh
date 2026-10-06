@@ -16,7 +16,7 @@ exec >> "${LOG_FILE}" 2>&1
 
 echo "=================================================="
 echo "START : $(date '+%Y-%m-%d %H:%M:%S')"
-echo "SCRIPT: ${SCRIPT_NAME}"
+echo "SCRIPT: ${script}"
 echo "LOG   : ${LOG_FILE}"
 echo "=================================================="
 echo
@@ -26,20 +26,13 @@ set -euo pipefail
 ##############################################################################
 # ERABILERA
 #
-# ./vt_simplify_grid.sh \
-#     vt_landcover_SIOSEAR \
-#     10000 \
-#     0.1 \
-#     5000 \
-#     3000
-#
-# PARAMETROAK
+# ./vt_simplify.sh <layer_gpkg_oinarrizko_izena> [rmarea] [snap] [tile] [buffer]
 #
 # $1 layer/gpkg oinarrizko izena
-# $2 rmarea threshold (m2)
-# $3 snap threshold (m)
-# $4 tile tamaina (m)
-# $5 buffer tamaina (m)
+# $2 rmarea threshold (m2)     - lehenetsia: 10000
+# $3 snap threshold (m)        - lehenetsia: 0.1
+# $4 tile tamaina (m)          - lehenetsia: 5000
+# $5 buffer tamaina (m)        - lehenetsia: 3000
 ##############################################################################
 
 INPUTB="${1}"
@@ -51,6 +44,12 @@ BUFFER_SIZE="${5:-3000}"
 INPUT="./dat/${INPUTB}.gpkg"
 OUTPUT="./dat/${INPUTB}_lowzoom.gpkg"
 OUTPUT_DISS="./dat/${INPUTB}_lowzoom_dissolved.gpkg"
+
+# GRASS 7.4.0 exekutagarria (egizu behar izanez gero)
+GRASS_BIN="${GRASS_BIN:-grass74}"
+
+OGR2OGR=/usr/local/bin/ogr2ogr
+OGRINFO=/usr/local/bin/ogrinfo
 
 ##############################################################################
 
@@ -66,19 +65,64 @@ cleanup() {
 trap cleanup EXIT
 
 ##############################################################################
+# GRASS barruko tile-prozesamendua (funtzio hau --exec bidez deitzen da)
+##############################################################################
+
+process_tile() {
+    TILE_SHP="${1}"
+    TILE_OUT_SHP="${2}"
+    SNAP_THRESHOLD="${3}"
+    AREA_THRESHOLD="${4}"
+
+    v.in.ogr \
+        input="${TILE_SHP}" \
+        output=landcover \
+        snap="${SNAP_THRESHOLD}" \
+        --overwrite
+
+    v.clean \
+        input=landcover \
+        output=landcover_rmarea \
+        tool=rmarea \
+        threshold="${AREA_THRESHOLD}" \
+        --overwrite
+
+    v.build \
+        map=landcover_rmarea
+
+    v.generalize \
+        input=landcover_rmarea \
+        output=landcover_gen \
+        method=douglas \
+        threshold=50 \
+        --overwrite
+
+    v.build \
+        map=landcover_gen
+
+    v.out.ogr \
+        input=landcover_gen \
+        output="${TILE_OUT_SHP}" \
+        format=ESRI_Shapefile \
+        --overwrite
+}
+
+export -f process_tile
+
+##############################################################################
 # EXTENT
 ##############################################################################
 
-EXTENT=$(/usr/local/bin/ogrinfo -so "${INPUT}" "${INPUTB}" |
+EXTENT=$(${OGRINFO} -so "${INPUT}" "${INPUTB}" |
 grep "Extent:" |
 sed -E 's/Extent: \(([^,]+), ([^)]+)\) - \(([^,]+), ([^)]+)\)/\1 \2 \3 \4/')
 
 read XMIN YMIN XMAX YMAX <<< "${EXTENT}"
 
-XMIN=$(printf "%.0f" "${XMIN}")
-YMIN=$(printf "%.0f" "${YMIN}")
-XMAX=$(printf "%.0f" "${XMAX}")
-YMAX=$(printf "%.0f" "${YMAX}")
+XMIN=${XMIN%.*}
+YMIN=${YMIN%.*}
+XMAX=${XMAX%.*}
+YMAX=${YMAX%.*}
 
 echo
 echo "INPUT            : ${INPUT}"
@@ -131,7 +175,7 @@ do
     # BUFFERREKO ELEMENTUAK ATERA
     ##########################################################################
 
-    /usr/local/bin/ogr2ogr \
+    ${OGR2OGR} \
         -overwrite \
         "${TILE_GPKG}" \
         "${INPUT}" \
@@ -142,7 +186,7 @@ do
         ${BXMAX} \
         ${BYMAX}
 
-    COUNT=$(/usr/local/bin/ogrinfo -so "${TILE_GPKG}" "${INPUTB}" 2>/dev/null \
+    COUNT=$(${OGRINFO} -so "${TILE_GPKG}" "${INPUTB}" 2>/dev/null \
         | awk '/Feature Count/ {print $3}')
 
     [ -z "${COUNT}" ] && COUNT=0
@@ -159,57 +203,26 @@ do
     # GPKG -> SHP
     ##########################################################################
 
-    /usr/local/bin/ogr2ogr \
+    ${OGR2OGR} \
         -overwrite \
+        -lco ENCODING=UTF-8 \
         "${TILE_SHP}" \
         "${TILE_GPKG}"
 
     ##########################################################################
-    # GRASS
+    # GRASS 7.4.0
     ##########################################################################
 
     TILE_GRASS="${GISDBASE}/tile_${TILE_ID}"
 
-    grass -c EPSG:25830 "${TILE_GRASS}" --exec bash -c "
-
-        v.in.ogr \
-            input='${TILE_SHP}' \
-            output=landcover \
-            snap=${SNAP_THRESHOLD} \
-            --overwrite
-
-        v.clean \
-            input=landcover \
-            output=landcover_rmarea \
-            tool=rmarea \
-            threshold=${AREA_THRESHOLD} \
-            --overwrite
-
-        v.build \
-            map=landcover_rmarea
-
-        v.generalize \
-            input=landcover_rmarea \
-            output=landcover_gen \
-            method=douglas \
-            threshold=50 \
-            --overwrite
-
-        v.build \
-            map=landcover_gen
-
-        v.out.ogr \
-            input=landcover_gen \
-            output='${TILE_OUT_SHP}' \
-            format=ESRI_Shapefile \
-            --overwrite
-    "
+    "${GRASS_BIN}" -c EPSG:25830 "${TILE_GRASS}" --exec \
+        bash -c "process_tile '${TILE_SHP}' '${TILE_OUT_SHP}' '${SNAP_THRESHOLD}' '${AREA_THRESHOLD}'"
 
     ##########################################################################
     # SHP -> GPKG
     ##########################################################################
 
-    /usr/local/bin/ogr2ogr \
+    ${OGR2OGR} \
         -overwrite \
         -f GPKG \
         "${TILE_OUT_GPKG}" \
@@ -220,7 +233,7 @@ do
     # ERDIKO TILEA BAKARRIK GORDE
     ##########################################################################
 
-    /usr/local/bin/ogr2ogr \
+    ${OGR2OGR} \
         -overwrite \
         "${TILE_CORE_GPKG}" \
         "${TILE_OUT_GPKG}" \
@@ -238,7 +251,7 @@ do
     if [ ${FIRST_TILE} -eq 1 ]
     then
 
-        /usr/local/bin/ogr2ogr \
+        ${OGR2OGR} \
             -overwrite \
             -f GPKG \
             "${OUTPUT}" \
@@ -249,7 +262,7 @@ do
 
     else
 
-        /usr/local/bin/ogr2ogr \
+        ${OGR2OGR} \
             -append \
             "${OUTPUT}" \
             "${TILE_CORE_GPKG}" \
@@ -267,7 +280,7 @@ done
 echo
 echo "Final dissolve..."
 
-/usr/local/bin/ogr2ogr \
+${OGR2OGR} \
     -overwrite \
     -f GPKG \
     "${OUTPUT_DISS}" \
@@ -286,7 +299,7 @@ echo "Final dissolve..."
 # SPATIAL INDEX
 ##############################################################################
 
-/usr/local/bin/ogrinfo "${OUTPUT_DISS}" \
+${OGRINFO} "${OUTPUT_DISS}" \
     -sql "
         SELECT CreateSpatialIndex(
             '${INPUTB}_lowzoom',
@@ -302,7 +315,7 @@ echo "Final dissolve..."
 echo
 echo "RESULT"
 
-/usr/local/bin/ogrinfo -so \
+${OGRINFO} -so \
     "${OUTPUT_DISS}" \
     "${INPUTB}_lowzoom"
 
