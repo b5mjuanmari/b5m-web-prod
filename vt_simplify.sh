@@ -26,26 +26,27 @@ set -euo pipefail
 ##############################################################################
 # ERABILERA
 #
-# ./vt_simplify.sh <layer_gpkg_oinarrizko_izena> [rmarea] [snap] [tile] [buffer]
-#
-# $1 layer/gpkg oinarrizko izena
-# $2 rmarea threshold (m2)     - lehenetsia: 10000
-# $3 snap threshold (m)        - lehenetsia: 0.1
-# $4 tile tamaina (m)          - lehenetsia: 5000
-# $5 buffer tamaina (m)        - lehenetsia: 3000
+# ./vt_simplify.sh <gpkg_oinarrizko_izena> [rmarea] [snap] [tile] [buffer]
 ##############################################################################
 
-INPUTB="${1}"
+INPUTB=$(basename "${1}" .gpkg)
 AREA_THRESHOLD="${2:-10000}"
 SNAP_THRESHOLD="${3:-0.1}"
 TILE_SIZE="${4:-5000}"
 BUFFER_SIZE="${5:-3000}"
 
-INPUT="./dat/${INPUTB}.gpkg"
-OUTPUT="./dat/${INPUTB}_lowzoom.gpkg"
-OUTPUT_DISS="./dat/${INPUTB}_lowzoom_dissolved.gpkg"
+# Izen berria: punturik gabe
+SNAP_NODOT=$(echo "${SNAP_THRESHOLD}" | tr -d '.')
 
-# GRASS 7.4.0 exekutagarria (egizu behar izanez gero)
+INPUT="./dat/${INPUTB}.gpkg"
+OUTPUT_MERGED="./dat/${INPUTB}_merged_tmp.gpkg"
+OUTPUT="./dat/${INPUTB}_${AREA_THRESHOLD}_${SNAP_NODOT}.gpkg"
+
+if [ ! -f "${INPUT}" ]; then
+    echo "ERROR: Ez da aurkitu ${INPUT}"
+    exit 1
+fi
+
 GRASS_BIN="${GRASS_BIN:-grass74}"
 
 OGR2OGR=/usr/local/bin/ogr2ogr
@@ -65,7 +66,7 @@ cleanup() {
 trap cleanup EXIT
 
 ##############################################################################
-# GRASS barruko tile-prozesamendua (funtzio hau --exec bidez deitzen da)
+# GRASS barruko tile-prozesamendua
 ##############################################################################
 
 process_tile() {
@@ -74,37 +75,21 @@ process_tile() {
     SNAP_THRESHOLD="${3}"
     AREA_THRESHOLD="${4}"
 
-    v.in.ogr \
-        input="${TILE_SHP}" \
-        output=landcover \
-        snap="${SNAP_THRESHOLD}" \
-        --overwrite
+    v.in.ogr input="${TILE_SHP}" output=landcover \
+        snap="${SNAP_THRESHOLD}" --overwrite
 
-    v.clean \
-        input=landcover \
-        output=landcover_rmarea \
-        tool=rmarea \
-        threshold="${AREA_THRESHOLD}" \
-        --overwrite
+    v.clean input=landcover output=landcover_rmarea \
+        tool=rmarea threshold="${AREA_THRESHOLD}" --overwrite
 
-    v.build \
-        map=landcover_rmarea
+    v.build map=landcover_rmarea
 
-    v.generalize \
-        input=landcover_rmarea \
-        output=landcover_gen \
-        method=douglas \
-        threshold=50 \
-        --overwrite
+    v.generalize input=landcover_rmarea output=landcover_gen \
+        method=douglas threshold=50 --overwrite
 
-    v.build \
-        map=landcover_gen
+    v.build map=landcover_gen
 
-    v.out.ogr \
-        input=landcover_gen \
-        output="${TILE_OUT_SHP}" \
-        format=ESRI_Shapefile \
-        --overwrite
+    v.out.ogr input=landcover_gen output="${TILE_OUT_SHP}" \
+        format=ESRI_Shapefile --overwrite
 }
 
 export -f process_tile
@@ -116,6 +101,11 @@ export -f process_tile
 EXTENT=$(${OGRINFO} -so "${INPUT}" "${INPUTB}" |
 grep "Extent:" |
 sed -E 's/Extent: \(([^,]+), ([^)]+)\) - \(([^,]+), ([^)]+)\)/\1 \2 \3 \4/')
+
+if [ -z "${EXTENT}" ]; then
+    echo "ERROR: Ez da Extent irakurri ahal izan ${INPUT} fitxaitik"
+    exit 1
+fi
 
 read XMIN YMIN XMAX YMAX <<< "${EXTENT}"
 
@@ -130,14 +120,15 @@ echo "AREA_THRESHOLD   : ${AREA_THRESHOLD}"
 echo "SNAP_THRESHOLD   : ${SNAP_THRESHOLD}"
 echo "TILE_SIZE        : ${TILE_SIZE}"
 echo "BUFFER_SIZE      : ${BUFFER_SIZE}"
+echo "OUTPUT           : ${OUTPUT}"
 echo
 
 ##############################################################################
 # GARBITU AURREKO EMAITZAK
 ##############################################################################
 
+rm -f "${OUTPUT_MERGED}"
 rm -f "${OUTPUT}"
-rm -f "${OUTPUT_DISS}"
 
 FIRST_TILE=1
 
@@ -171,110 +162,51 @@ do
     TILE_OUT_GPKG="${WORKDIR}/${TILE_ID}_out.gpkg"
     TILE_CORE_GPKG="${WORKDIR}/${TILE_ID}_core.gpkg"
 
-    ##########################################################################
-    # BUFFERREKO ELEMENTUAK ATERA
-    ##########################################################################
-
-    ${OGR2OGR} \
-        -overwrite \
-        "${TILE_GPKG}" \
-        "${INPUT}" \
-        "${INPUTB}" \
-        -spat \
-        ${BXMIN} \
-        ${BYMIN} \
-        ${BXMAX} \
-        ${BYMAX}
+    ${OGR2OGR} -overwrite \
+        "${TILE_GPKG}" "${INPUT}" "${INPUTB}" \
+        -spat ${BXMIN} ${BYMIN} ${BXMAX} ${BYMAX}
 
     COUNT=$(${OGRINFO} -so "${TILE_GPKG}" "${INPUTB}" 2>/dev/null \
         | awk '/Feature Count/ {print $3}')
 
     [ -z "${COUNT}" ] && COUNT=0
 
-    if [ "${COUNT}" = "0" ]
-    then
+    if [ "${COUNT}" = "0" ]; then
         echo "Tile hutsa"
         continue
     fi
 
     echo "Features: ${COUNT}"
 
-    ##########################################################################
-    # GPKG -> SHP
-    ##########################################################################
-
-    ${OGR2OGR} \
-        -overwrite \
-        -lco ENCODING=UTF-8 \
-        "${TILE_SHP}" \
-        "${TILE_GPKG}"
-
-    ##########################################################################
-    # GRASS 7.4.0
-    ##########################################################################
+    ${OGR2OGR} -overwrite -lco ENCODING=UTF-8 \
+        "${TILE_SHP}" "${TILE_GPKG}"
 
     TILE_GRASS="${GISDBASE}/tile_${TILE_ID}"
 
     "${GRASS_BIN}" -c EPSG:25830 "${TILE_GRASS}" --exec \
         bash -c "process_tile '${TILE_SHP}' '${TILE_OUT_SHP}' '${SNAP_THRESHOLD}' '${AREA_THRESHOLD}'"
 
-    ##########################################################################
-    # SHP -> GPKG
-    ##########################################################################
+    ${OGR2OGR} -overwrite -f GPKG \
+        "${TILE_OUT_GPKG}" "${TILE_OUT_SHP}" -nln landcover
 
-    ${OGR2OGR} \
-        -overwrite \
-        -f GPKG \
-        "${TILE_OUT_GPKG}" \
-        "${TILE_OUT_SHP}" \
-        -nln landcover
+    ${OGR2OGR} -overwrite \
+        "${TILE_CORE_GPKG}" "${TILE_OUT_GPKG}" landcover \
+        -clipsrc ${TXMIN} ${TYMIN} ${TXMAX} ${TYMAX}
 
-    ##########################################################################
-    # ERDIKO TILEA BAKARRIK GORDE
-    ##########################################################################
-
-    ${OGR2OGR} \
-        -overwrite \
-        "${TILE_CORE_GPKG}" \
-        "${TILE_OUT_GPKG}" \
-        landcover \
-        -clipsrc \
-        ${TXMIN} \
-        ${TYMIN} \
-        ${TXMAX} \
-        ${TYMAX}
-
-    ##########################################################################
-    # APPEND
-    ##########################################################################
-
-    if [ ${FIRST_TILE} -eq 1 ]
-    then
-
-        ${OGR2OGR} \
-            -overwrite \
-            -f GPKG \
-            "${OUTPUT}" \
-            "${TILE_CORE_GPKG}" \
-            -nln merged
-
+    if [ ${FIRST_TILE} -eq 1 ]; then
+        ${OGR2OGR} -overwrite -f GPKG \
+            "${OUTPUT_MERGED}" "${TILE_CORE_GPKG}" -nln merged
         FIRST_TILE=0
-
     else
-
-        ${OGR2OGR} \
-            -append \
-            "${OUTPUT}" \
-            "${TILE_CORE_GPKG}" \
-            -nln merged
-
+        ${OGR2OGR} -append \
+            "${OUTPUT_MERGED}" "${TILE_CORE_GPKG}" -nln merged
     fi
 
 done
 done
 
 ##############################################################################
-# DISSOLVE
+# DISSOLVE -> GPKG BAKARRA
 ##############################################################################
 
 echo
@@ -283,8 +215,8 @@ echo "Final dissolve..."
 ${OGR2OGR} \
     -overwrite \
     -f GPKG \
-    "${OUTPUT_DISS}" \
     "${OUTPUT}" \
+    "${OUTPUT_MERGED}" \
     -dialect SQLITE \
     -sql "
         SELECT
@@ -293,37 +225,40 @@ ${OGR2OGR} \
         FROM merged
         GROUP BY type
     " \
-    -nln "${INPUTB}_lowzoom"
+    -nln "${INPUTB}"
 
 ##############################################################################
 # SPATIAL INDEX
 ##############################################################################
 
-${OGRINFO} "${OUTPUT_DISS}" \
+${OGRINFO} "${OUTPUT}" \
     -sql "
         SELECT CreateSpatialIndex(
-            '${INPUTB}_lowzoom',
+            '${INPUTB}',
             'geom'
         )
     " \
     >/dev/null 2>&1 || true
 
 ##############################################################################
-# ESTATISTIKAK
+# AMAIERA: garbitu eta END azken mezua
 ##############################################################################
+
+rm -f "${OUTPUT_MERGED}"
+
+cleanup
+trap - EXIT          # trap-a desaktibatu: ez da berriz exekutatuko
 
 echo
 echo "RESULT"
 
-${OGRINFO} -so \
-    "${OUTPUT_DISS}" \
-    "${INPUTB}_lowzoom"
+${OGRINFO} -so "${OUTPUT}" "${INPUTB}"
 
 echo
 echo "DONE"
 echo
 echo "Output:"
-echo "  ${OUTPUT_DISS}"
+echo "  ${OUTPUT}"
 
 echo
 echo "=================================================="
