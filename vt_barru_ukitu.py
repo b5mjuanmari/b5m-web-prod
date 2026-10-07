@@ -6,7 +6,8 @@ Araua:
   - gpkg2-ko elementuak hautatzen dira baldin eta gpkg1-eko edozein
     elementurekin CONTAINS (within) edo OVERLAPBDYINTERSECT erlazioa
     badute.
-  - SALBUESPENA: gpkg2-ko elementuak 'subtype == "intertidal"' badira,
+  - SALBUESPENA: gpkg2-ko elementuak 'type == "mareartekoa"'
+    edo 'subtype == "intertidal"' badira,
     ez dira erlazio horiek egiaztatzen; beti gehitzen dira emaitzari.
 
 Irteerako GPKG-ren geruzaren izena fitxategiaren izena izango da,
@@ -92,19 +93,26 @@ def main():
             )
             gdf2 = gdf2.to_crs(gdf1.crs)
 
-        # 'subtype' eremua beharrezkoa da
-        if "subtype" not in gdf2.columns:
+        # 'type' edi 'subtype' eremua beharrezkoak dira
+        if "type" not in gdf2.columns and "subtype" not in gdf2.columns:
             log.errorea(
-                "gpkg2-ko atributu taulan ez dago 'subtype' eremurik."
+                "gpkg2-ko atributu taulan ez dago 'type' edo 'subtype' eremurik."
             )
             sys.exit(1)
 
         # Intertidal maskara
-        intertidal_maskara = gdf2["subtype"] == "intertidal"
-        log.info(
-            f"'intertidal' motako elementuak (beti gehituko dira): "
-            f"{intertidal_maskara.sum()}"
-        )
+        if "subtype" in gdf2.columns:
+            intertidal_maskara = gdf2["subtype"] == "intertidal"
+            log.info(
+                f"'intertidal' motako elementuak (beti gehituko dira): "
+                f"{intertidal_maskara.sum()}"
+            )
+        else:
+            intertidal_maskara = gdf2["type"] == "mareartekoa"
+            log.info(
+                f"'mareartekoa' motako elementuak (beti gehituko dira): "
+                f"{intertidal_maskara.sum()}"
+            )
 
         # gdf1-en indize espaziala
         gdf1_sindex = gdf1.sindex
