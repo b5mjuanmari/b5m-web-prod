@@ -29,18 +29,21 @@ python3 vt_reclass_siosear2.py ./dat/SIOSEAR_20_1.gpkg /home9/SHP/vt_landcover/S
 echo "$(date +"%Y-%m-%d %H:%M:%S") - 3. b5m itsasoa txertatu (itsasoa)" >> "$log"
 rm ./dat/SIOSEAR_ITSASO_01.gpkg 2> /dev/null
 /usr/local/bin/ogr2ogr -f "GPKG" ./dat/SIOSEAR_ITSASO_01.gpkg /home5/SHP/Agua/ITSASOind.shp -sql "select SUBTIPO_E as type from ITSASOind" -nln SIOSEAR_ITSASO_01 2>> "$log" >> "$log" # 1s
+python3 vt_disolbatu2.py /home5/SHP/LimMun/GIPUTZ.shp /home9/SHP/vt_landcover/gipuzkoa.gpkg $log # 1s
+python3 vt_barru_ukitu.py /home9/SHP/vt_landcover/gipuzkoa.gpkg ./dat/SIOSEAR_ITSASO_01.gpkg ./dat/SIOSEAR_ITSASO_02.gpkg $log # 57s
 rm ./dat/SIOSEAR_BEACH_01.gpkg 2> /dev/null
 /usr/local/bin/ogr2ogr -f "GPKG" ./dat/SIOSEAR_BEACH_01.gpkg ./dat/SIOSEAR_20_2.gpkg -sql "select type, geom from SIOSEAR_20_2 where type = 'beach'" -nln SIOSEAR_BEACH_01 # 1s
-python3 vt_trokelatu2.py ./dat/SIOSEAR_ITSASO_01.gpkg ./dat/SIOSEAR_BEACH_01.gpkg ./dat/SIOSEAR_ITSASO_02.gpkg # 5s
-/usr/local/bin/ogrinfo ./dat/SIOSEAR_ITSASO_02.gpkg -dialect SQLITE -sql "UPDATE SIOSEAR_ITSASO_02 SET type = CASE WHEN type = 'mareartekoa' THEN 'intertidal' WHEN type = 'baltsa' THEN 'pond' WHEN type = 'igerilekuko ura' THEN 'swimming pool' WHEN type = 'urmaela' THEN 'pool' WHEN type = 'urtegia' THEN 'reservoir' WHEN type = 'baltsa' THEN 'pond' WHEN type = 'baltsa' THEN 'pond' WHEN type = 'baltsa' THEN 'pond' ELSE 'water' END" 2>> "$log" >> "$log" # 1s
-python3 vt_trokelatu2.py ./dat/SIOSEAR_20_2.gpkg ./dat/SIOSEAR_ITSASO_02.gpkg ./dat/SIOSEAR_20_3.gpkg $log # 3m48s
-python3 vt_fusionatu_bi.py ./dat/SIOSEAR_20_3.gpkg ./dat/SIOSEAR_ITSASO_02.gpkg ./dat/SIOSEAR_20_4.gpkg $log # 1m33s
+python3 vt_trokelatu2.py ./dat/SIOSEAR_ITSASO_02.gpkg ./dat/SIOSEAR_BEACH_01.gpkg ./dat/SIOSEAR_ITSASO_03.gpkg # 5s
+/usr/local/bin/ogrinfo ./dat/SIOSEAR_ITSASO_03.gpkg -dialect SQLITE -sql "UPDATE SIOSEAR_ITSASO_03 SET type = CASE WHEN type = 'mareartekoa' THEN 'intertidal' WHEN type = 'baltsa' THEN 'pond' WHEN type = 'igerilekuko ura' THEN 'swimming pool' WHEN type = 'urmaela' THEN 'pool' WHEN type = 'urtegia' THEN 'reservoir' WHEN type = 'baltsa' THEN 'pond' WHEN type = 'baltsa' THEN 'pond' WHEN type = 'baltsa' THEN 'pond' ELSE 'water' END" 2>> "$log" >> "$log" # 1s
+python3 vt_trokelatu2.py ./dat/SIOSEAR_20_2.gpkg ./dat/SIOSEAR_ITSASO_03.gpkg ./dat/SIOSEAR_20_3.gpkg $log # 3m48s
+python3 vt_fusionatu_bi.py ./dat/SIOSEAR_20_3.gpkg ./dat/SIOSEAR_ITSASO_03.gpkg ./dat/SIOSEAR_20_4.gpkg $log # 1m33s
 
 # 4. Emaitza disolbatu
 echo "$(date +"%Y-%m-%d %H:%M:%S") - 4. Emaitza disolbatu" >> "$log"
 python3 vt_disolbatu3.py ./dat/SIOSEAR_20_4.gpkg ./dat/SIOSEAR_20_5.gpkg $log # 19m9s
 
-# 6. Azalera handiak moztu (oraingoz type = 'artificial')
+# 5. Azalera handiak moztu (oraingoz type = 'artificial')
+echo "$(date +"%Y-%m-%d %H:%M:%S") - 5. Azalera handiak moztu" >> "$log"
 python3 vt_split.py ./dat/SIOSEAR_20_5.gpkg ./dat/SIOSEAR_20_6.gpkg "type = 'artificial'" $log # 2m15s
 
 # 6. Behin behineko GPKGa eta estiloa kargatu
@@ -55,7 +58,7 @@ python3 vt_landcover_styles.py ./dat/vt_landcover_SIOSEAR.gpkg vt_landcover_SIOS
 #/usr/bin/sqlite3 ./dat/vt_landcover_SIOSEAR.gpkg "SELECT styleQML FROM layer_styles;"
 #/usr/bin/sqlite3 ./dat/vt_landcover_SIOSEAR.gpkg "SELECT id, styleName, length(styleQML) AS bytes, useAsDefault, typeof(styleQML) FROM layer_styles;"
 
-# Bukaera
+# Bukaera 31m30s
 echo >> "$log"
 echo "${has} - Hasiera" >> "$log"
 echo "$(date +"%Y-%m-%d %H:%M:%S") - Bukaera" >> "$log"
