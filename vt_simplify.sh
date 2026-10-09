@@ -60,8 +60,9 @@ rm -f "${LOG_FILE}" 2> /dev/null
 
 exec >> "${LOG_FILE}" 2>&1
 
+hasi="$(date +"%Y-%m-%d %H:%M:%S")"
 echo "=================================================="
-echo "START : $(date '+%Y-%m-%d %H:%M:%S')"
+echo "START : ${hasi}"
 echo "SCRIPT: ${script}"
 echo "LOG   : ${LOG_FILE}"
 echo "=================================================="
@@ -313,7 +314,8 @@ echo "  ${OUTPUT}  (taula: ${OUTPUT_TABLE})"
 
 echo
 echo "=================================================="
-echo "END : $(date '+%Y-%m-%d %H:%M:%S')"
+echo "START : ${hasi}"
+echo "END :   $(date '+%Y-%m-%d %H:%M:%S')"
 echo "=================================================="
 
 exit 0
