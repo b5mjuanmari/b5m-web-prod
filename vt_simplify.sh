@@ -47,7 +47,7 @@ SNAP_TAG="${SNAP_THRESHOLD//./}"
 
 INPUT="./dat/${INPUTB}.gpkg"
 OUTPUT_MERGED="./dat/${INPUTB}_merged_tmp.gpkg"
-OUTPUT="./dat/${INPUTB}_${AREA_THRESHOLD}_${SNAP_TAG}.gpkg"
+OUTPUT="./dat/${INPUTB}_${AREA_THRESHOLD}_${SNAP_TAG}_${SIMPLIFY_THRESHOLD}.gpkg"
 OUTPUT_TABLE="$(basename "${OUTPUT}" .gpkg)"
 
 if [ ! -f "${INPUT}" ]; then
