@@ -172,6 +172,12 @@ rm -f "${OUTPUT_MERGED}" "${OUTPUT}"
 
 FIRST_TILE=1
 
+# Tesela kopuru osoa (extent-a TILE_SIZE-ra lerrokatuta dago) eta kontagailua
+TOTAL_TILES=$(( ((XMAX - XMIN) / TILE_SIZE) * ((YMAX - YMIN) / TILE_SIZE) ))
+TILE_N=0
+
+echo "TESELA KOPURUA   : ${TOTAL_TILES}"
+
 ##############################################################################
 # TILE LOOP
 ##############################################################################
@@ -190,10 +196,11 @@ do
     BYMAX=$((TYMAX + BUFFER_SIZE))
 
     TILE_ID="${TXMIN}_${TYMIN}"
+    TILE_N=$((TILE_N + 1))
 
     echo
     echo "=================================================="
-    echo "Tile ${TILE_ID}"
+    echo "Tile ${TILE_N}/${TOTAL_TILES}  (${TILE_ID})  $(date '+%H:%M:%S')"
     echo "=================================================="
 
     TILE_GPKG="${WORKDIR}/${TILE_ID}_buffer.gpkg"
