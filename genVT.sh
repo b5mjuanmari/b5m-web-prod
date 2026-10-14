@@ -19,12 +19,14 @@ landuse_uar="vt_landuse_urban_areas_roads"
 landuse_veg="vt_landuse_vegetation"
 tren="t_tren"
 viales="t_viales2"
+carre="t_carre2"
 
 # Egiteko
 landuse_uar1=0
 landuse_veg1=0
 tren1=1
 viales1=1
+carre1=1
 
 if [ $landuse_uar1 -eq 1 ]
 then
@@ -143,13 +145,13 @@ then
   ogr2ogr -nlt PROMOTE_TO_MULTI \
   "${tren_tmp}.shp" "/home5/SHP/Viales/tren.shp" \
   -dialect sqlite \
-  -sql "SELECT nombre, CASE WHEN puente IN (1,2,4) THEN 1 ELSE 0 END AS OCULTO, geometry FROM tren" \
+  -sql "SELECT nombre as name, CASE WHEN puente IN (1,2,4) THEN 1 ELSE 0 END AS hidden, geometry FROM tren" \
   || { echo "ERROREA: $tren - 1 - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"; exit 1; }
   rm ${tren_f}.* 2> /dev/null
   ogr2ogr "${tren_f}.shp" "${tren_tmp}.shp" \
   -explodecollections \
   -dialect sqlite \
-  -sql "SELECT ST_LineMerge(ST_Collect(geometry)) AS geometry, NOMBRE, OCULTO FROM ${tren}_tmp GROUP BY NOMBRE, OCULTO" \
+  -sql "SELECT ST_LineMerge(ST_Collect(geometry)) AS geometry, name, hidden FROM ${tren}_tmp GROUP BY name, hidden" \
   || { echo "ERROREA: $tren - 2 - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"; exit 1; }
   rm ${tren_tmp}.* 2> /dev/null
 fi
@@ -165,15 +167,37 @@ then
   ogr2ogr -nlt PROMOTE_TO_MULTI \
   "${viales_tmp}.shp" "/home5/SHP/Viales/vialesind.shp" \
   -dialect sqlite \
-  -sql "SELECT CASE WHEN puente IN (1,2,4) THEN 1 ELSE 0 END AS OCULTO, geometry FROM vialesind WHERE codvial not in ('0990', '9000')" \
+  -sql "SELECT CASE WHEN puente IN (1,2,4) THEN 1 ELSE 0 END AS hidden, geometry FROM vialesind WHERE codvial not in ('0990', '9000')" \
   || { echo "ERROREA: $viales - 1 - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"; exit 1; }
   rm ${viales_f}.* 2> /dev/null
   ogr2ogr "${viales_f}.shp" "${viales_tmp}.shp" \
   -explodecollections \
   -dialect sqlite \
-  -sql "SELECT ST_LineMerge(ST_Collect(geometry)) AS geometry, OCULTO FROM ${viales}_tmp GROUP BY OCULTO" \
+  -sql "SELECT ST_LineMerge(ST_Collect(geometry)) AS geometry, hidden FROM ${viales}_tmp GROUP BY hidden" \
   || { echo "ERROREA: $viales - 2 - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"; exit 1; }
   rm ${viales_tmp}.* 2> /dev/null
+fi
+
+if [ $carre1 -eq 1 ]
+then
+  # 5. carre
+  echo "$carre - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
+  carre_f="${dir}/${carre}"
+
+  carre_tmp="/tmp/${carre}_tmp"
+  rm ${carre_tmp}.* 2> /dev/null
+  ogr2ogr -nlt PROMOTE_TO_MULTI \
+  "${carre_tmp}.shp" "/home5/SHP/Viales/carre.shp" \
+  -dialect sqlite \
+  -sql "SELECT nombre as name, case WHEN tipo = 'amarilla' then 'yellow' WHEN tipo = 'gris principal' then 'grey main' WHEN tipo = 'gris secundaria' then 'grey secondary' WHEN tipo = 'naranja' then 'orange' WHEN tipo = 'roja' then 'red' WHEN tipo = 'verde' then 'green' END as type, CASE WHEN puente IN (1,2,4) THEN 1 ELSE 0 END AS hidden, geometry FROM carre" \
+  || { echo "ERROREA: $carre - 1 - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"; exit 1; }
+  rm ${carre_f}.* 2> /dev/null
+  ogr2ogr "${carre_f}.shp" "${carre_tmp}.shp" \
+  -explodecollections \
+  -dialect sqlite \
+  -sql "SELECT ST_LineMerge(ST_Collect(geometry)) AS geometry, name, type, hidden FROM ${carre}_tmp GROUP BY name, type, hidden" \
+  || { echo "ERROREA: $carre - 2 - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"; exit 1; }
+  rm ${carre_tmp}.* 2> /dev/null
 fi
 
 # Bukaera
