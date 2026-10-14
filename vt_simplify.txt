@@ -1,13 +1,15 @@
 # vt_simplify.sh scriptaren erabilera
 
-./vt_simplify.sh vt_landcover_SIOSEAR 100000 5 5000 1000 100 # z10
-./vt_simplify.sh vt_landcover_SIOSEAR 50000 2 5000 1000 50 # z11
-./vt_simplify.sh vt_landcover_SIOSEAR 25000 1 5000 1000 25 # z12
-./vt_simplify.sh vt_landcover_SIOSEAR 12500 0.5 5000 1000 10 # z13
-./vt_simplify.sh vt_landcover_SIOSEAR 6250 0.25 5000 1000 5 # z14
-./vt_simplify.sh vt_landcover_SIOSEAR 3125 0.1 5000 1000 2 # z15
+./vt_simplify.sh vt_landcover_SIOSEAR 250000 5 5000 1000 100 # z10
+./vt_simplify.sh vt_landcover_SIOSEAR 100000 5 5000 1000 100 # z11
+./vt_simplify.sh vt_landcover_SIOSEAR 50000 2 5000 1000 50 # z12
+./vt_simplify.sh vt_landcover_SIOSEAR 25000 1 5000 1000 25 # z13
+./vt_simplify.sh vt_landcover_SIOSEAR 12500 0.5 5000 1000 10 # z14
+./vt_simplify.sh vt_landcover_SIOSEAR 6250 0.25 5000 1000 5 # z15
+./vt_simplify.sh vt_landcover_SIOSEAR 3125 0.1 5000 1000 2 # z16
 
 # Nola txertatu GPKG taula nagusia, estiloak bigarrenean
+a="vt_landcover_SIOSEAR_250000_5_100"
 a="vt_landcover_SIOSEAR_100000_5_100"
 a="vt_landcover_SIOSEAR_50000_2_50"
 a="vt_landcover_SIOSEAR_25000_1_25"
@@ -15,6 +17,7 @@ a="vt_landcover_SIOSEAR_12500_05_10"
 a="vt_landcover_SIOSEAR_6250_025_5"
 a="vt_landcover_SIOSEAR_3125_01_2"
 
+a="vt_landcover_SIOSEAR_250000_5_100"
 python3 vt_multi2poly.py "./dat/${a}.gpkg" "./dat/${a}_pol.gpkg"
 rm "./dat/${a}.gpkg"
 ogr2ogr -f GPKG "./dat/${a}.gpkg" "./dat/${a}_pol.gpkg" -nln "$a"
