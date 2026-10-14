@@ -17,10 +17,12 @@ echo "Hasiera: $has" >> "$log"
 # Shapefileak
 landuse_uar="vt_landuse_urban_areas_roads"
 landuse_veg="vt_landuse_vegetation"
+tren="t_tren"
 
 # Egiteko
-landuse_uar1=1
-landuse_veg1=1
+landuse_uar1=0
+landuse_veg1=0
+tren1=1
 
 if [ $landuse_uar1 -eq 1 ]
 then
@@ -126,6 +128,27 @@ then
   cp "${landuse_veg_tmp}.dbf" "${landuse_veg_f}.dbf"
   cp "${landuse_veg_tmp}.prj" "${landuse_veg_f}.prj"
   rm ${landuse_veg_tmp}.* 2> /dev/null
+fi
+
+if [ $tren1 -eq 1 ]
+then
+  # 3. tren
+  echo "$tren - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"
+  tren_f="${dir}/${tren}"
+
+  tren_tmp="/tmp/${tren}_tmp"
+  rm ${tren_tmp}.* 2> /dev/null
+  ogr2ogr -nlt PROMOTE_TO_MULTI \
+  "${tren_tmp}.shp" "/home5/SHP/Viales/tren.shp" \
+  -dialect sqlite \
+  -sql "SELECT nombre, CASE WHEN puente IN (1,2,4) THEN 1 ELSE 0 END AS OCULTO, geometry FROM tren" \
+  || { echo "ERROREA: $tren - 1 - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"; exit 1; }
+  rm ${tren_f}.* 2> /dev/null
+  ogr2ogr "${tren_f}.shp" "${tren_tmp}.shp" \
+  -dialect sqlite \
+  -sql "SELECT ST_LineMerge(ST_Collect(geometry)) AS geometry, NOMBRE, OCULTO FROM ${tren}_tmp GROUP BY NOMBRE, OCULTO" \
+  || { echo "ERROREA: $tren - 2 - $(date '+%Y-%m-%d %H:%M:%S')" >> "$log"; exit 1; }
+  rm ${tren_tmp}.* 2> /dev/null
 fi
 
 # Bukaera
