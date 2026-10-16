@@ -3,5 +3,6 @@ dat/
 log/
 topo/__pycache__/
 topo/log/
+vrt/
 *.dsv
 *.pyc
