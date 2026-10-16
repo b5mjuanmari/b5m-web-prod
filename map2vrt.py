@@ -381,6 +381,8 @@ def build_entry(layer, mapnode, scale, mapdir, shapepath, args):
             al = aliases.get(it.lower())
             cols.append('%s AS "%s"' % (col, al) if al else col)
         select = ', '.join(cols)
+        if src.lower().endswith('.gpkg') or 'gpkg' in src.lower():
+            select += ', *'
     else:
         select = '*'
 
