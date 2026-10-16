@@ -418,6 +418,113 @@ def write_vrt(path, z, scale, entries):
         fh.write('\n'.join(out) + '\n')
 
 
+SCRIPT_TEMPLATE = r'''#!/bin/bash
+# map2vrt.py-k sortua.
+#
+# Erabilera: ./make_tiles.sh [irteera-karpeta] [zoomak] [prozesuak]
+#   zoomak:    zerrenda koma bidez (9,11), tartea marratxoarekin (9-11)
+#              edo biak nahastuta (9-11,15). Lehenetsia: @@ZRANGE@@
+#   prozesuak: aldi berean exekutatuko diren zoom kopurua.
+#              Lehenetsia: CPU nukleo kopurua (nproc).
+#   Adibideak:
+#     ./make_tiles.sh teselak 9,11        -> 9 eta 11
+#     ./make_tiles.sh teselak 9-19 4      -> 9-19, 4 zoom batera
+#     ./make_tiles.sh teselak 9-19 1      -> 9-19, banan-banan
+set -e
+
+OGR2OGR="@@OGR2OGR@@"
+AQUI="$(cd "$(dirname "$0")" && pwd)"
+OUT="${1:-teselak}"
+ZOOMS_ARG="${2:-@@ZRANGE@@}"
+JOBS="${3:-$(nproc 2>/dev/null || echo 1)}"
+TMP="${OUT}_tmp"
+LOGS="${OUT}_logs"
+
+# Mezu guztiak orduarekin hasten dira: [HH:MM:SS]
+log() { echo "[$(date +%H:%M:%S)] $*"; }
+fmt() { local s=$1; printf '%d h %02d min %02d s' $((s / 3600)) $((s % 3600 / 60)) $((s % 60)); }
+
+log "== Hasiera (zoomak: $ZOOMS_ARG, prozesuak: $JOBS) =="
+
+if ! [[ "$JOBS" =~ ^[0-9]+$ ]] || [ "$JOBS" -lt 1 ]; then
+  log "Prozesu kopuru okerra: '$JOBS'" >&2
+  exit 1
+fi
+
+# Zoomen zerrenda aztertu
+ZOOMS=()
+IFS=',' read -ra PARTS <<< "$ZOOMS_ARG"
+for p in "${PARTS[@]}"; do
+  p="${p// /}"
+  if [[ "$p" =~ ^([0-9]+)-([0-9]+)$ ]]; then
+    a=$((10#${BASH_REMATCH[1]})); b=$((10#${BASH_REMATCH[2]}))
+    for ((i = a; i <= b; i++)); do ZOOMS+=("$i"); done
+  elif [[ "$p" =~ ^[0-9]+$ ]]; then
+    ZOOMS+=("$((10#$p))")
+  else
+    log "Zoom zerrenda okerra: '$p' (adibideak: 9,11 | 9-11 | 9-11,15)" >&2
+    exit 1
+  fi
+done
+# Bikoizketak kendu eta handienetik txikienera ordenatu: zoom handienak
+# astunenak dira, eta lehenengo hasita denbora osoa laburtzen da.
+ZOOMS=($(printf '%s\n' "${ZOOMS[@]}" | sort -nru))
+
+make_zoom() {
+  local z=$1 t0=$SECONDS vrt
+  vrt="$(printf '%s/@@PREFIX@@_z%02d.vrt' "$AQUI" "$z")"
+  if [ ! -f "$vrt" ]; then
+    log "== zooma $z: ez dago VRT-rik, saltatu da =="
+    return 0
+  fi
+  log "== zooma $z: hasiera =="
+  rm -rf "$TMP/$z"
+  if ! "$OGR2OGR" -f MVT@@ENC@@ "$TMP/$z" "$vrt" -dsco FORMAT=DIRECTORY \
+      -dsco MINZOOM="$z" -dsco MAXZOOM="$z" -dsco EXTENT=@@EXTENT@@ -dsco BUFFER=@@BUFFER@@ \
+      -dsco COMPRESS=NO > "$LOGS/zooma_$z.log" 2>&1; then
+    log "ERROREA zooma $z (log: $LOGS/zooma_$z.log):" >&2
+    sed 's/^/    /' "$LOGS/zooma_$z.log" >&2
+    return 1
+  fi
+  if [ ! -d "$TMP/$z/$z" ]; then
+    log "== zooma $z: ez da teselarik sortu =="
+    rm -rf "$TMP/$z"
+    return 0
+  fi
+@@COLLECT@@
+  rm -rf "$TMP/$z"
+  log "== zooma $z: amaiera ($(fmt $((SECONDS - t0)))) =="
+}
+
+mkdir -p "$TMP" "$OUT" "$LOGS"
+rm -f "$TMP"/FAIL_*
+
+for z in "${ZOOMS[@]}"; do
+  while [ "$(jobs -rp | wc -l)" -ge "$JOBS" ]; do sleep 1; done
+  ( make_zoom "$z" || touch "$TMP/FAIL_$z" ) &
+done
+wait
+
+FAILED="$(ls "$TMP"/FAIL_* 2>/dev/null | sed 's/.*FAIL_//' | sort -n | tr '\n' ' ')"
+if [ -n "$FAILED" ]; then
+  log "== ERROREAK zoma hauetan: $FAILED(logak: $LOGS) ==" >&2
+  exit 1
+fi
+rm -rf "$TMP"
+log "== Amaiera: $OUT (denbora osoa: $(fmt $SECONDS)) =="
+'''
+
+COLLECT_PLAIN = '''  cp -a "$TMP/$z/$z" "$OUT/" || return 1'''
+
+COLLECT_TMS = '''  local n=$(( (1 << z) - 1 )) f x y
+  for f in "$TMP/$z/$z"/*/*.pbf; do
+    [ -e "$f" ] || continue
+    x=$(basename "$(dirname "$f")"); y=$(basename "$f" .pbf)
+    mkdir -p "$OUT/$z/$x" || return 1
+    cp "$f" "$OUT/$z/$x/$((n - 10#$y)).pbf" || return 1
+  done'''
+
+
 def write_script(path, zooms, prefix, encodings, args):
     enc = ''
     if len(encodings) > 1:
@@ -425,86 +532,18 @@ def write_script(path, zooms, prefix, encodings, args):
              'make_tiles.sh-n' % ', '.join(sorted(encodings)))
     if encodings:
         enc = ' --config SHAPE_ENCODING %s' % sorted(encodings)[0]
-
-    if args.tms:
-        collect = [
-            '  local n=$(( (1 << z) - 1 ))',
-            '  local f x y',
-            '  for f in "$TMP/$z/$z"/*/*.pbf; do',
-            '    [ -e "$f" ] || continue',
-            '    x=$(basename "$(dirname "$f")"); y=$(basename "$f" .pbf)',
-            '    mkdir -p "$OUT/$z/$x"',
-            '    cp "$f" "$OUT/$z/$x/$((n - 10#$y)).pbf"',
-            '  done',
-        ]
-    else:
-        collect = ['  cp -a "$TMP/$z/$z" "$OUT/"']
-
-    sh = [
-        '#!/bin/bash',
-        '# map2vrt.py-k sortua.',
-        '#',
-        '# Erabilera: ./make_tiles.sh [irteera-karpeta] [zoomak]',
-        '#   zoomak: zerrenda koma bidez (9,11), tartea marratxoarekin (9-11)',
-        '#           edo biak nahastuta (9-11,15). Lehenetsia: %d-%d' % (zooms[0], zooms[-1]),
-        '#   Adibideak:',
-        '#     ./make_tiles.sh teselak 9,11     -> 9 eta 11',
-        '#     ./make_tiles.sh teselak 9-11     -> 9, 10 eta 11',
-        'set -e',
-        '',
-        'OGR2OGR="%s"' % args.ogr2ogr,
-        'AQUI="$(cd "$(dirname "$0")" && pwd)"',
-        'OUT="${1:-teselak}"',
-        'ZOOMS_ARG="${2:-%d-%d}"' % (zooms[0], zooms[-1]),
-        'TMP="${OUT}_tmp"',
-        '',
-        '# Mezu guztiak orduarekin hasten dira: [HH:MM:SS]',
-        'log() { echo "[$(date +%H:%M:%S)] $*"; }',
-        '',
-        'log "== Hasiera (zoomak: $ZOOMS_ARG) =="',
-        '',
-        '# Zoomen zerrenda aztertu',
-        'ZOOMS=()',
-        'IFS=\',\' read -ra PARTS <<< "$ZOOMS_ARG"',
-        'for p in "${PARTS[@]}"; do',
-        '  p="${p// /}"',
-        '  if [[ "$p" =~ ^([0-9]+)-([0-9]+)$ ]]; then',
-        '    a=$((10#${BASH_REMATCH[1]})); b=$((10#${BASH_REMATCH[2]}))',
-        '    for ((i = a; i <= b; i++)); do ZOOMS+=("$i"); done',
-        '  elif [[ "$p" =~ ^[0-9]+$ ]]; then',
-        '    ZOOMS+=("$((10#$p))")',
-        '  else',
-        '    log "Zoom zerrenda okerra: \'$p\' (adibideak: 9,11 | 9-11 | 9-11,15)" >&2',
-        '    exit 1',
-        '  fi',
-        'done',
-        '',
-        'make_zoom() {',
-        '  local z=$1',
-        '  local vrt',
-        '  vrt="$(printf \'%s/' + prefix + '_z%02d.vrt\' "$AQUI" "$z")"',
-        '  if [ ! -f "$vrt" ]; then',
-        '    log "== zooma $z: ez dago VRT-rik, saltatu da =="',
-        '    return',
-        '  fi',
-        '  log "== zooma $z =="',
-        '  rm -rf "$TMP/$z"',
-        '  "$OGR2OGR" -f MVT%s "$TMP/$z" "$vrt" -dsco FORMAT=DIRECTORY \\' % enc,
-        '    -dsco MINZOOM="$z" -dsco MAXZOOM="$z" -dsco EXTENT=%d -dsco BUFFER=%d \\' % (args.extent, args.buffer),
-        '    -dsco COMPRESS=NO',
-    ] + collect + [
-        '}',
-        '',
-        'rm -rf "$TMP"',
-        'mkdir -p "$TMP" "$OUT"',
-        'for z in "${ZOOMS[@]}"; do',
-        '  make_zoom "$z"',
-        'done',
-        'rm -rf "$TMP"',
-        'log "== Amaiera: $OUT =="',
-    ]
+    text = SCRIPT_TEMPLATE
+    for key, val in (
+            ('@@OGR2OGR@@', args.ogr2ogr),
+            ('@@ZRANGE@@', '%d-%d' % (zooms[0], zooms[-1])),
+            ('@@PREFIX@@', prefix),
+            ('@@ENC@@', enc),
+            ('@@EXTENT@@', str(args.extent)),
+            ('@@BUFFER@@', str(args.buffer)),
+            ('@@COLLECT@@', COLLECT_TMS if args.tms else COLLECT_PLAIN)):
+        text = text.replace(key, val)
     with io.open(path, 'w', encoding='utf-8') as fh:
-        fh.write('\n'.join(sh) + '\n')
+        fh.write(text)
     os.chmod(path, 0o755)
 
 
