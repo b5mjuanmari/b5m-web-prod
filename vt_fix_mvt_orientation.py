@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-fix_mvt_orientation.py
+vt_fix_mvt_orientation.py
 
 MapServer-ek sortutako MVT teselen (PBF) poligonoetan, batzuetan lehen
 eraztuna (kanpo-eraztuna) alderantzizko orientazioan idazten da. MVT
@@ -13,9 +13,9 @@ bada, eraztun hori bakarrik alderantzikatzen du. Gainerakoa (zuloak, beste
 elementuak, atributuak, geruzak) byte-mailan ukitu gabe uzten da.
 
 Erabilera:
-  python3 fix_mvt_orientation.py tesela.pbf -o zuzenduta/
-  python3 fix_mvt_orientation.py karpeta/ --inplace
-  python3 fix_mvt_orientation.py karpeta/ -n          # probatu, ez idatzi
+  python3 vt_fix_mvt_orientation.py tesela.pbf -o zuzenduta/
+  python3 vt_fix_mvt_orientation.py karpeta/ --inplace
+  python3 vt_fix_mvt_orientation.py karpeta/ -n          # probatu, ez idatzi
 
 Fitxategiak gzip-ekin konprimatuta badaude, konprimatuta mantentzen dira.
 Python 3.6+ (kanpoko libururik gabe).
