@@ -20,12 +20,18 @@ Bi erabilera:
   b) Pass-through: beste edozein helbide (adibidez WMS eskaera osoa, "?map=...")
      MapServer-i bere horretan bidaltzen zaio, eta erantzuna MVT bada, zuzendu egiten da.
 
+     MAP fitxategia helbidean badoa (Apache bidez), erabili --map-in-path eta, behar bada, --format:
+       python3 vt_mvt_fix_proxy.py --upstream http://lidar1/ogc/api/tiles/vt/ --map-in-path \\
+           --format application/x-protobuf --port 8020
+     Orduan MapServer-i hau eskatzen zaio:
+       http://lidar1/ogc/api/tiles/vt/map-dev3?VERSION=1.1.1&REQUEST=GetMap&SERVICE=WMS&STYLES=&
+       BBOX=...&WIDTH=256&HEIGHT=256&FORMAT=application%2Fx-protobuf&SRS=EPSG%3A3857&layers=map-dev3
+
 Python 3.6+ (kanpoko libururik gabe). vt_fix_mvt_orientation.py fitxategia karpeta berean
 egon behar da.
 
 Adibidea:
-  python3 vt_mvt_fix_proxy.py --upstream http://lidar1:8010/ \\
-      --mapdir /home/lidar/apache/htdocs/ogc/api/tiles/vt --port 8020
+  python3 vt_mvt_fix_proxy.py --upstream http://lidar1/ogc/api/tiles/vt/ --map-in-path --format application/x-protobuf --port 8020
 
 PROBETARAKO da: hari bakarreko zerbitzaria (hari anitz), cacherik gabe (lehenetsia).
 """
@@ -101,15 +107,18 @@ class Handler(BaseHTTPRequestHandler):
             return up.rstrip('/') + path_and_query, None
         name, z, x, y = m.group(1), int(m.group(2)), int(m.group(3)), int(m.group(4))
         bbox = tile_bbox(z, x, y, self.server.tms)
-        params = [
-            ('map', '%s/%s.map' % (self.server.mapdir.rstrip('/'), name)),
+        params = []
+        if not self.server.map_in_path:
+            params.append(('map', '%s/%s.map' % (self.server.mapdir.rstrip('/'), name)))
+        params += [
             ('VERSION', '1.1.1'), ('REQUEST', 'GetMap'), ('SERVICE', 'WMS'),
             ('STYLES', ''),
             ('BBOX', '%.6f,%.6f,%.6f,%.6f' % bbox),
             ('WIDTH', '256'), ('HEIGHT', '256'),
-            ('FORMAT', MVT_MIME), ('SRS', 'EPSG:3857'), ('layers', name),
+            ('FORMAT', self.server.fmt), ('SRS', 'EPSG:3857'), ('layers', name),
         ]
-        return up + '?' + urllib.parse.urlencode(params), '%d/%d/%d' % (z, x, y)
+        base = up + name if self.server.map_in_path else up
+        return base + '?' + urllib.parse.urlencode(params), '%d/%d/%d' % (z, x, y)
 
     # ------------------------------------------------------------- methods
     def do_OPTIONS(self):
@@ -162,10 +171,13 @@ class Handler(BaseHTTPRequestHandler):
         ms = int((time.time() - t0) * 1000)
         is_mvt = 'vector-tile' in ctype or 'protobuf' in ctype
         if not is_mvt:
-            # MapServer-en errorea (XML...) edo MVT ez den edukia: bere horretan
-            status = 502 if 'xml' in ctype and label else 200
+            # MVT ez den edukia (MapServer-en errorea: HTML/XML testua...).
+            # XYZ moduan 502 itzultzen da, eta errorearen testua logean ikusten da.
+            snippet = body[:300].decode('utf-8', 'replace').strip().replace('\n', ' ')
+            status = 502 if label else 200
             self._send(status, body, ctype or 'application/octet-stream')
             log('GET %s -> %d, MVT ez (%s), %d ms' % (self.path, status, ctype, ms))
+            log('  MapServer-en erantzuna: %s' % snippet)
             return
         try:
             fixed, npoly, nfixed = fix_tile(body)
@@ -188,6 +200,12 @@ def main():
                     help='MapServer-en helbidea (lehenetsia: http://lidar1:8010/)')
     ap.add_argument('--mapdir', default='/home/lidar/apache/htdocs/ogc/api/tiles/vt',
                     help='MAP fitxategien karpeta, MapServer-ek ikusten duen bidea (docker barruan)')
+    ap.add_argument('--map-in-path', action='store_true',
+                    help='MAP fitxategia helbidean doa: <upstream><map-izena>?VERSION=... '
+                         '(bestela: <upstream>?map=<mapdir>/<map-izena>.map&...)')
+    ap.add_argument('--format', default=MVT_MIME,
+                    help='MapServer-i eskatuko zaion FORMAT (MAP-eko outputformat-aren mimetype-arekin '
+                         'bat etorri behar du). Lehenetsia: %s' % MVT_MIME)
     ap.add_argument('--host', default='0.0.0.0')
     ap.add_argument('--port', type=int, default=8020)
     ap.add_argument('--tms', action='store_true', help='bezeroak TMS (Y alderantzikatua) erabiltzen du')
@@ -201,13 +219,16 @@ def main():
     srv = Server((args.host, args.port), Handler)
     srv.upstream = args.upstream if args.upstream.endswith('/') else args.upstream + '/'
     srv.mapdir = args.mapdir
+    srv.map_in_path = args.map_in_path
+    srv.fmt = args.format
     srv.tms = args.tms
     srv.timeout = args.timeout
     srv.cache = args.cache
     srv.opener = (urllib.request.build_opener() if args.use_env_proxy
                   else urllib.request.build_opener(urllib.request.ProxyHandler({})))
-    log('Proxy martxan: http://%s:%d/  ->  %s  (tms=%s, ingurune-proxya: %s)' % (
-        args.host, args.port, srv.upstream, args.tms, 'bai' if args.use_env_proxy else 'ez'))
+    log('Proxy martxan: http://%s:%d/  ->  %s  (tms=%s, map-in-path=%s, format=%s, ingurune-proxya: %s)' % (
+        args.host, args.port, srv.upstream, args.tms, args.map_in_path, args.format,
+        'bai' if args.use_env_proxy else 'ez'))
     try:
         srv.serve_forever()
     except KeyboardInterrupt:
