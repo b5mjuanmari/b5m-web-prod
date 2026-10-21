@@ -8,8 +8,7 @@ Erabilera:
 - Sarrerako Shapefile-a existitzen dela egiaztatzen du.
 - Irteerako GPKG-a existitzen bada, ezabatu egiten du.
 - Irteerako geruzak hiru eremu ditu: 'fid' (automatikoa), 'type' eta 'subtype'.
-- 'type' eremua beti 'water' da.
-- 'subtype' eremua jatorrizko 'SUBTIPO_E' eremutik eratortzen da:
+- 'type' eremua jatorrizko 'SUBTIPO_E' eremutik eratortzen da:
     * 'baltsa'          -> 'pond'
     * 'bestelako ura'   -> 'water other'
     * 'igerilekuko ura' -> 'swimming pool'
@@ -30,7 +29,7 @@ from log_utils import Log
 
 
 # SUBTIPO_E -> subtype balioen mapaketa
-SUBTYPE_MAP = {
+TYPE_MAP = {
     "baltsa": "pond",
     "bestelako ura": "water other",
     "igerilekuko ura": "swimming pool",
@@ -39,8 +38,6 @@ SUBTYPE_MAP = {
     "urmaela": "pool",
     "urtegia": "reservoir",
 }
-
-TYPE_VALUE = "water"
 
 
 def main():
@@ -125,12 +122,8 @@ def main():
 
         # 'type' eta 'subtype' eremuak
         type_field = ogr.FieldDefn("type", ogr.OFTString)
-        type_field.SetWidth(32)
+        type_field.SetWidth(64)
         dst_layer.CreateField(type_field)
-
-        subtype_field = ogr.FieldDefn("subtype", ogr.OFTString)
-        subtype_field.SetWidth(64)
-        dst_layer.CreateField(subtype_field)
 
         dst_defn = dst_layer.GetLayerDefn()
         dst_layer.StartTransaction()
@@ -142,14 +135,14 @@ def main():
         for src_feat in src_layer:
             count_in += 1
 
-            subtipo = src_feat.GetField("SUBTIPO_E")
-            if subtipo is None:
+            tipo = src_feat.GetField("SUBTIPO_E")
+            if tipo is None:
                 skipped += 1
                 continue
 
-            subtipo_norm = subtipo.strip()
-            new_subtype = SUBTYPE_MAP.get(subtipo_norm)
-            if new_subtype is None:
+            tipo_norm = tipo.strip()
+            new_type = TYPE_MAP.get(tipo_norm)
+            if new_type is None:
                 skipped += 1
                 continue
 
@@ -160,8 +153,7 @@ def main():
 
             out_feat = ogr.Feature(dst_defn)
             out_feat.SetGeometry(geom.Clone())
-            out_feat.SetField("type", TYPE_VALUE)
-            out_feat.SetField("subtype", new_subtype)
+            out_feat.SetField("type", new_type)
 
             if dst_layer.CreateFeature(out_feat) != ogr.OGRERR_NONE:
                 log.abisua("Elementu bat ezin izan da idatzi.")
