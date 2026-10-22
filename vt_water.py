@@ -10,10 +10,10 @@ Erabilera:
 - Irteerako geruzak hiru eremu ditu: 'fid' (automatikoa), 'type' eta 'subtype'.
 - 'type' eremua jatorrizko 'SUBTIPO_E' eremutik eratortzen da:
     * 'baltsa'          -> 'pond'
-    * 'bestelako ura'   -> 'water other'
+    * 'bestelako ura'   -> 'inner water'
     * 'igerilekuko ura' -> 'swimming pool'
     * 'itsasoa'         -> 'sea'
-    * 'mareartekoa'     -> 'intertidal'
+    * 'mareartekoa'     -> 'intertidal water'
     * 'urmaela'         -> 'pool'
     * 'urtegia'         -> 'reservoir'
 - Beste balio guztiak baztertu egiten dira.
@@ -31,10 +31,10 @@ from log_utils import Log
 # SUBTIPO_E -> subtype balioen mapaketa
 TYPE_MAP = {
     "baltsa": "pond",
-    "bestelako ura": "water other",
+    "bestelako ura": "inner water",
     "igerilekuko ura": "swimming pool",
     "itsasoa": "sea",
-    "mareartekoa": "intertidal",
+    "mareartekoa": "intertidal water",
     "urmaela": "pool",
     "urtegia": "reservoir",
 }
