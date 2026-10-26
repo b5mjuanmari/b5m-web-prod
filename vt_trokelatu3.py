@@ -1,22 +1,30 @@
 #!/usr/bin/env python3
 """
 Bi GPKG poligonen arteko trokelatzea, 10x10 km-ko laukien bidez eta
-«type» eremuaren arabera disolbatuta.
+«type» eremuaren arabera disolbatuta (eremu hori badago soilik).
 
 =============================================================================
 SARRERA / IRTEERA
 =============================================================================
 Sarrera:
   - GPKG_A (azpikoa): oinarrizko poligonoak eta haien atributuak.
-                      'type' eremua (EREMU_DISOLBA) izan behar du.
+                      'type' eremua (EREMU_DISOLBA) aukerakoa da: badago,
+                      emaitza disolbatu egiten da; ez badago, ez da
+                      disolbatzen.
   - GPKG_B (gainekoa): trokel gisa jokatzen duten poligonoak.
 
-Irteera:
-  - GPKG_IRTEERA: (A ken B) diferentzia espaziala, 'type' eremuaren arabera
-    disolbatuta. Elementu bat 'type' balio bakoitzeko (geometria
-    MultiPolygon izan ohi da). Eremuak: 'fid' (1, 2, 3, ...), 'type' eta
-    geometria. A-ren gainerako atributuak ez dira mantentzen, disoluzioan
-    zentzurik ez dutelako (elementu askoren artean bateratzen dira).
+Irteera (bi modu, A-n 'type' eremua dagoen ala ez):
+  - 'type' BADAGO -> DISOLBATUTAKO modua: (A ken B) diferentzia espaziala,
+    'type' eremuaren arabera disolbatuta. Elementu bat 'type' balio
+    bakoitzeko (geometria MultiPolygon izan ohi da). Eremuak: 'fid'
+    (1, 2, 3, ...), 'type' eta geometria. A-ren gainerako atributuak ez
+    dira mantentzen, disoluzioan zentzurik ez dutelako.
+  - 'type' EZ BADAGO -> EZ DISOLBATU modua: (A ken B) diferentzia
+    espaziala, A-ren elementu bakoitza bere aldetik. A-ren atributu guztiak
+    mantentzen dira ('fid' izan ezik; 'fid' berria sortzen da). Guztiz
+    estalitako elementuak ezabatzen dira. Elementu bakoitzaren laukiko
+    zatiak elementu bakarrean berriro batzen dira (laukien mugak ez dira
+    ikusten).
 
 Erabilera:
   python3 <scripta> azpikoa.gpkg gainekoa.gpkg irteera.gpkg [log_fitxategia]
@@ -82,15 +90,24 @@ mugak ezabatzen ditu.
        (A ken B) ∩ lauki.
 
   7. Laukien emaitzak bildu: (A-ren indizea, geometria) bikoteak
-     'type' balioaren arabera taldekatu (A-ren 'type' balioa erabiliz).
+     taldekatu. Taldekatze-gakoa:
+       - 'type' badago: A-ren 'type' balioa (DISOLBATUTAKO modua).
+       - 'type' ez badago: A-ren elementuaren indizea (EZ DISOLBATU modua).
 
-  8. DISOLUZIOA: 'type' talde bakoitzeko zati guztiak unary_union-ekin
-     batu. Horrek (a) laukien arteko mugak ezabatzen ditu eta (b) 'type'
-     bereko poligono ukitzaileak/gainjarriak bateratzen ditu. Taldeak
-     prozesu anitzetan banatzen dira.
+  8. BATZEA: talde bakoitzeko zati guztiak unary_union-ekin batu.
+       - DISOLBATUTAKO moduan, horrek (a) laukien arteko mugak ezabatzen
+         ditu eta (b) 'type' bereko poligono ukitzaileak/gainjarriak
+         bateratzen ditu.
+       - EZ DISOLBATU moduan, A-ren elementu bakoitzaren zatiak soilik
+         berriro itsasten dira (laukien mugak ezabatzeko); ez da inolako
+         elementurik bateratzen.
+     Taldeak prozesu anitzetan banatzen dira.
 
-  9. Irteera osatu: 'fid' berria, 'type' eta geometria. Aukeran
-     MultiPolygon-era bihurtu (BIHURTU_MULTI) eta GPKG-ra idatzi
+  9. Irteera osatu:
+       - DISOLBATUTAKO moduan: 'fid' berria, 'type' eta geometria.
+       - EZ DISOLBATU moduan: A-ren atributu guztiak (jatorrizko ordenan,
+         'fid' berriarekin) eta geometria berria.
+     Aukeran MultiPolygon-era bihurtu (BIHURTU_MULTI) eta GPKG-ra idatzi
      (atomikoki: '.tmp.gpkg' fitxategi tenporala + os.replace).
 
 =============================================================================
@@ -98,6 +115,8 @@ OHARRAK
 =============================================================================
   - Python 3.6+, Shapely 1.8.x eta 2.x-rekin bateragarria. Prozesu anitzak
     'fork' bidez (Linux); fork ez badago, prozesu bakarrean exekutatzen da.
+  - 'type' eremua ez badago, ez da errorerik ematen: abisu bat idazten da
+    eta EZ DISOLBATU moduan exekutatzen da.
   - 'type' balio nuluak talde propio gisa tratatzen dira (ez dira galtzen).
   - Laukien mugetan clip_by_rect-ek erpin berriak sortzen ditu. Auzoko
     laukietan kalkulu berdina egiten denez, disoluzioak ondo itsasten ditu;
@@ -589,9 +608,15 @@ def trokelatu(gpkg_azpikoa, gpkg_gainekoa, gpkg_irteera, log):
     if gdf_azpi.empty:
         raise ValueError(f"Azpiko GPKGa hutsik dago: {gpkg_azpikoa}")
 
-    if EREMU_DISOLBA not in gdf_azpi.columns:
-        raise ValueError(
-            f"Azpiko GPKGak ez du '{EREMU_DISOLBA}' eremurik. Eremuak: "
+    # Modua: 'type' eremua badago disolbatu egiten da; bestela ez.
+    disolbatu = EREMU_DISOLBA in gdf_azpi.columns
+    if disolbatu:
+        log.info(f"'{EREMU_DISOLBA}' eremua aurkitu da: emaitza disolbatuko da.")
+    else:
+        log.abisua(
+            f"Azpiko GPKGak ez du '{EREMU_DISOLBA}' eremurik: ez da "
+            f"disolbatuko. A-ren elementu bakoitza bere aldetik trokelatuko "
+            f"da, atributuak mantenduz. Eremuak: "
             f"{[c for c in gdf_azpi.columns if c != 'geometry']}"
         )
 
@@ -672,7 +697,9 @@ def trokelatu(gpkg_azpikoa, gpkg_gainekoa, gpkg_irteera, log):
     # prozesuen artean partekatu behar.
     azpi = list(gdf_azpi.geometry.values)
     gain = list(gdf_gain.geometry.values)
-    tipoak = [_type_gakoa(v) for v in gdf_azpi[EREMU_DISOLBA].values]
+    tipoak = None
+    if disolbatu:
+        tipoak = [_type_gakoa(v) for v in gdf_azpi[EREMU_DISOLBA].values]
 
     log.info("Lauki bakoitzeko kandidatuak bilatzen...")
     t0 = time.perf_counter()
@@ -710,14 +737,16 @@ def trokelatu(gpkg_azpikoa, gpkg_gainekoa, gpkg_irteera, log):
     finally:
         _AZPI = _GAIN = _LAUKIAK = _LAUKI_A = _LAUKI_B = None
 
-    # --- 9. Zatiak 'type' arabera taldekatu -------------------------------
+    # --- 9. Zatiak taldekatu ------------------------------------------------
+    # Gakoa: 'type' balioa (disolbatu) edo A-ren indizea (ez disolbatu).
     taldeak = {}
     zati_guztira = 0
     akats_guztira = 0
     for _, zatiak, akatsak in emaitzak:
         akats_guztira += akatsak
         for a, geom in zatiak:
-            taldeak.setdefault(tipoak[a], []).append(geom)
+            gakoa = tipoak[a] if disolbatu else a
+            taldeak.setdefault(gakoa, []).append(geom)
             zati_guztira += 1
 
     if akats_guztira > 0:
@@ -727,7 +756,8 @@ def trokelatu(gpkg_azpikoa, gpkg_gainekoa, gpkg_irteera, log):
         )
     log.info(
         f"Diferentzia laukika: {formatu_denbora(time.perf_counter() - t0)} "
-        f"({zati_guztira} zati, {len(taldeak)} 'type' balio)."
+        f"({zati_guztira} zati, {len(taldeak)} "
+        f"{'type balio' if disolbatu else 'azpiko elementu'})."
     )
 
     if not taldeak:
@@ -735,13 +765,18 @@ def trokelatu(gpkg_azpikoa, gpkg_gainekoa, gpkg_irteera, log):
             "Emaitza hutsik dago; trokelak azpikoa guztiz estaltzen du."
         )
 
-    # --- 10. DISOLUZIOA 'type' arabera --------------------------------------
-    # Taldeak ordenatzen dira (None azkenik) irteera deterministikoa izan
-    # dadin.
-    taldeak_zerrenda = sorted(
-        taldeak.items(), key=lambda kv: (kv[0] is None, str(kv[0]))
-    )
-    log.info(f"Disoluzioa ('{EREMU_DISOLBA}' arabera)...")
+    # --- 10. BATZEA: disoluzioa ('type') edo elementu bakoitzaren zatiak ----
+    # Taldeak ordenatzen dira irteera deterministikoa izan dadin: 'type'
+    # moduan balioaren arabera (None azkenik); bestela A-ren jatorrizko
+    # ordenan (indizea).
+    if disolbatu:
+        taldeak_zerrenda = sorted(
+            taldeak.items(), key=lambda kv: (kv[0] is None, str(kv[0]))
+        )
+        log.info(f"Disoluzioa ('{EREMU_DISOLBA}' arabera)...")
+    else:
+        taldeak_zerrenda = sorted(taldeak.items(), key=lambda kv: kv[0])
+        log.info("Elementu bakoitzaren zatiak batzen (disoluziorik gabe)...")
     t0 = time.perf_counter()
     _TALDEAK = taldeak_zerrenda
     try:
@@ -761,12 +796,12 @@ def trokelatu(gpkg_azpikoa, gpkg_gainekoa, gpkg_irteera, log):
     # Taldeen ordena berreskuratu (disolbatuak ordena desberdinean etor
     # daitezke).
     disolbatuak.sort(key=lambda p: p[0])
-    irteera_type = []
+    irteera_gakoak = []   # 'type' balioak (disolbatu) edo A-ren indizeak
     irteera_geom = []
     for t, geom in disolbatuak:
         if geom is None or geom.is_empty:
             continue
-        irteera_type.append(taldeak_zerrenda[t][0])
+        irteera_gakoak.append(taldeak_zerrenda[t][0])
         irteera_geom.append(geom)
 
     # --- 11. Irteera osatu -----------------------------------------------
@@ -776,20 +811,38 @@ def trokelatu(gpkg_azpikoa, gpkg_gainekoa, gpkg_irteera, log):
             for g in irteera_geom
         ]
 
-    gdf_out = gpd.GeoDataFrame(
-        {
-            "fid": list(range(1, len(irteera_geom) + 1)),
-            EREMU_DISOLBA: irteera_type,
-            "geometry": irteera_geom,
-        },
-        geometry="geometry",
-        crs=gdf_azpi.crs,
-    )
-
-    log.info(
-        f"Elementuak: {len(gdf_azpi)} (azpikoa) -> {len(gdf_out)} "
-        f"(disolbatuta, '{EREMU_DISOLBA}' balio bakoitzeko bat)."
-    )
+    if disolbatu:
+        # Eremuak: fid, type, geometry.
+        gdf_out = gpd.GeoDataFrame(
+            {
+                "fid": list(range(1, len(irteera_geom) + 1)),
+                EREMU_DISOLBA: irteera_gakoak,
+                "geometry": irteera_geom,
+            },
+            geometry="geometry",
+            crs=gdf_azpi.crs,
+        )
+        log.info(
+            f"Elementuak: {len(gdf_azpi)} (azpikoa) -> {len(gdf_out)} "
+            f"(disolbatuta, '{EREMU_DISOLBA}' balio bakoitzeko bat)."
+        )
+    else:
+        # A-ren atributu guztiak mantendu (irteeran geratzen diren
+        # elementuenak, jatorrizko ordenan) eta 'fid' berria sortu.
+        gdf_out = gdf_azpi.iloc[irteera_gakoak].copy()
+        gdf_out["geometry"] = irteera_geom
+        gdf_out = gdf_out.reset_index(drop=True)
+        if "fid" in gdf_out.columns:
+            gdf_out = gdf_out.drop(columns=["fid"])
+            log.info("'fid' zaharra kendu da azpiko GPKGtik.")
+        gdf_out.insert(0, "fid", range(1, len(gdf_out) + 1))
+        zutabeak = [c for c in gdf_out.columns if c != "geometry"]
+        gdf_out = gdf_out[zutabeak + ["geometry"]].set_geometry("geometry")
+        log.info(
+            f"Elementuak: {len(gdf_azpi)} (azpikoa) -> {len(gdf_out)} "
+            f"({len(gdf_azpi) - len(gdf_out)} ezabatu dira guztiz "
+            f"estalita zeudelako)."
+        )
     log.info(f"Eremuak: {list(gdf_out.columns)}")
 
     # --- 12. Emaitza gorde (atomikoki) -----------------------------------
