@@ -66,15 +66,19 @@ python3 vt_beach.py /home5/SHP/Edificios/playas.shp ./dat/vt_landcover_beach.gpk
 python3 vt_water.py /home5/SHP/Agua/ITSASOind.shp ./dat/vt_landcover_water.gpkg $log # 1s
 python3 vt_barru_ukitu.py /home9/SHP/vt_landcover/gipuzkoa.gpkg ./dat/vt_landcover_beach.gpkg ./dat/vt_landcover_beach_gip.gpkg $log # 1s
 python3 vt_barru_ukitu.py /home9/SHP/vt_landcover/gipuzkoa.gpkg ./dat/vt_landcover_water.gpkg ./dat/vt_landcover_water_gip.gpkg $log # 61s
-python3 vt_fusionatu_bi.py ./dat/vt_landcover_beach_gip.gpkg ./dat/vt_landcover_water_gip.gpkg ./dat/vt_landcover_beach_water_gip.gpkg $log # 2s
-python3 vt_trokelatu2.py ./dat/SIOSEAR_20_07.gpkg ./dat/vt_landcover_beach_water_gip.gpkg ./dat/SIOSEAR_20_08.gpkg $log # 2m12s
-python3 vt_fusionatu_bi.py ./dat/SIOSEAR_20_08.gpkg ./dat/vt_landcover_beach_water_gip.gpkg ./dat/SIOSEAR_20_09.gpkg $log # 1m24s
+python3 vt_trokelatu2.py ./dat/vt_landcover_water_gip.gpkg ./dat/vt_landcover_beach_gip.gpkg ./dat/vt_landcover_water_gip_trk.gpkg $log # 4s
+python3 vt_fusionatu_bi.py ./dat/vt_landcover_beach_gip.gpkg ./dat/vt_landcover_water_gip_trk.gpkg ./dat/vt_landcover_beach_water_gip.gpkg $log # 3s
+python3 vt_trokelatu2.py ./dat/SIOSEAR_20_07.gpkg ./dat/vt_landcover_beach_water_gip.gpkg ./dat/SIOSEAR_20_08.gpkg $log # 2m14s
+python3 vt_fusionatu_bi.py ./dat/SIOSEAR_20_08.gpkg ./dat/vt_landcover_beach_water_gip.gpkg ./dat/SIOSEAR_20_09.gpkg $log # 1m29s
 #rm ./dat/vt_landcover_beach.gpkg 2> /dev/null
 #rm ./dat/vt_landcover_beach_gip.gpkg 2> /dev/null
 #rm ./dat/vt_landcover_water.gpkg 2> /dev/null
 #rm ./dat/vt_landcover_water_gip.gpkg 2> /dev/null
+#rm ./dat/vt_landcover_water_gip_trk.gpkg 2> /dev/null
 #rm ./dat/SIOSEAR_20_07.gpkg 2> /dev/null
 #rm ./dat/SIOSEAR_20_08.gpkg 2> /dev/null
+
+fi
 
 # 4. Padurak (marsh) txertatu
 echo "$(date +"%Y-%m-%d %H:%M:%S") - 4. Padurak (marsh) txertatu" >> "$log"
@@ -243,8 +247,6 @@ python3 vt_fusionatu_bi.py ./dat/SIOSEAR_20_12.gpkg ./dat/vt_water_holes_03.gpkg
 #rm ./dat/vt_water_holes_03.gpkg 2> /dev/null
 #rm ./dat/SIOSEAR_20_12.gpkg 2> /dev/null
 
-fi
-
 # 7. Trokelatu zubiak, pasabideak, errepideak eta eraikinak...
 echo "$(date +"%Y-%m-%d %H:%M:%S") - 7. Trokelatu zubiak, pasabideak, errepideak eta eraikinak..." >> "$log"
 # Zubiak
@@ -257,38 +259,49 @@ rm ./dat/vt_tmp_errepideak.gpkg 2> /dev/null
 rm ./dat/vt_tmp_eraikinak.gpkg 2> /dev/null
 /usr/local/bin/ogr2ogr -f GPKG ./dat/vt_tmp_eraikinak.gpkg /home5/SHP/Edificios/a_edifind.shp -sql "SELECT 'eraikina' as type FROM a_edifind" -nln "vt_tmp_eraikinak" 2>> "$log" >> "$log" # 6s
 # Honeraino 51m03s
-python3 vt_fusionatu_bi.py ./dat/vt_tmp_zubiak.gpkg ./dat/vt_tmp_pasabideak.gpkg ./dat/vt_tmp_artifizial_01.gpkg $log # 1s
-python3 vt_fusionatu_bi.py ./dat/vt_tmp_artifizial_01.gpkg ./dat/vt_tmp_errepideak.gpkg ./dat/vt_tmp_artifizial_02.gpkg $log # 2s
-rm ./dat/vt_tmp_artifizial_01.gpkg 2> /dev/null
-python3 vt_fusionatu_bi.py ./dat/vt_tmp_artifizial_02.gpkg ./dat/vt_tmp_eraikinak.gpkg ./dat/vt_tmp_artifizial_03.gpkg $log # 26s
-rm ./dat/vt_tmp_artifizial_02.gpkg 2> /dev/null
+python3 vt_fusionatu_bi.py ./dat/vt_tmp_zubiak.gpkg ./dat/vt_tmp_pasabideak.gpkg ./dat/vt_tmp_artificial_01.gpkg $log # 1s
+python3 vt_fusionatu_bi.py ./dat/vt_tmp_artificial_01.gpkg ./dat/vt_tmp_errepideak.gpkg ./dat/vt_tmp_artificial_02.gpkg $log # 2s
+rm ./dat/vt_tmp_artificial_01.gpkg 2> /dev/null
+python3 vt_fusionatu_bi.py ./dat/vt_tmp_artificial_02.gpkg ./dat/vt_tmp_eraikinak.gpkg ./dat/vt_tmp_artificial_03.gpkg $log # 26s
+rm ./dat/vt_tmp_artificial_02.gpkg 2> /dev/null
 #rm ./dat/vt_tmp_zubiak.gpkg 2> /dev/null
 #rm ./dat/vt_tmp_pasabideak.gpkg 2> /dev/null
 #rm ./dat/vt_tmp_errepideak.gpkg 2> /dev/null
 #rm ./dat/vt_tmp_eraikinak.gpkg 2> /dev/null
-python3 vt_trokelatu2.py ./dat/SIOSEAR_20_13.gpkg ./dat/vt_tmp_artifizial_03.gpkg ./dat/SIOSEAR_20_14.gpkg $log # 14m48s
-#rm ./dat/vt_tmp_artifizial_03.gpkg 2> /dev/null
+python3 vt_trokelatu2.py ./dat/SIOSEAR_20_13.gpkg ./dat/vt_tmp_artificial_03.gpkg ./dat/SIOSEAR_20_14.gpkg $log # 16m08s
+#rm ./dat/vt_tmp_artificial_03.gpkg 2> /dev/null
 #rm ./dat/SIOSEAR_20_13.gpkg 2> /dev/null
+/usr/local/bin/ogrinfo ./dat/SIOSEAR_20_14.gpkg -dialect SQLITE -sql "UPDATE SIOSEAR_20_14 SET type = CASE WHEN type IN ('inner water','pond','pool','reservoir','sea','swimming pool') THEN 'water' ELSE type END" 2>> "$log" >> "$log" # 4s
+python3 vt_reclass_water.py ./dat/SIOSEAR_20_14.gpkg ./dat/SIOSEAR_20_15.gpkg $log # 1m56s
+#rm ./dat/SIOSEAR_20_14.gpkg 2> /dev/null
 
 # 8. Emaitza txukundu
 echo "$(date +"%Y-%m-%d %H:%M:%S") - 8. Emaitza txukundu" >> "$log"
-/usr/local/bin/ogrinfo ./dat/SIOSEAR_20_14.gpkg -dialect SQLITE -sql "UPDATE SIOSEAR_20_14 SET type = CASE WHEN type IN ('inner water','pond','pool','reservoir','sea','swimming pool','water other') THEN 'water' ELSE type END" 2>> "$log" >> "$log" # 14s
-python3 vt_disolbatu3.py ./dat/SIOSEAR_20_14.gpkg ./dat/SIOSEAR_20_15.gpkg $log # 4m55s
+python3 vt_disolbatu3.py ./dat/SIOSEAR_20_15.gpkg ./dat/SIOSEAR_20_16.gpkg $log # 5m16s
+#rm ./dat/SIOSEAR_20_15.gpkg 2> /dev/null
 
-# 9. Behin behineko GPKGa eta estiloa kargatu
-echo "$(date +"%Y-%m-%d %H:%M:%S") - 9. Behin behineko GPKGa eta estiloa kargatu" >> "$log"
+# 9. Artificial
+echo "$(date +"%Y-%m-%d %H:%M:%S") - 9. Artificial" >> "$log"
+python3 vt_trokelatu3.py /home9/SHP/vt_landcover/gipuzkoa.gpkg ./dat/SIOSEAR_20_16.gpkg ./dat/vt_tmp_artificial_04.gpkg $log # 5m48s
+python3 vt_multi2poly.py ./dat/vt_tmp_artificial_04.gpkg ./dat/vt_tmp_artificial_05.gpkg $log # 26s
+#rm ./dat/vt_tmp_artificial_04.gpkg 2> /dev/null
+/usr/local/bin/ogrinfo ./dat/vt_tmp_artificial_05.gpkg -dialect SQLITE -sql "UPDATE vt_tmp_artificial_05 SET type = 'artificial'" 2>> "$log" >> "$log" # 1s
+python3 vt_fusionatu_bi.py ./dat/SIOSEAR_20_16.gpkg ./dat/vt_tmp_artificial_05.gpkg ./dat/SIOSEAR_20_17.gpkg $log # 57s
+#rm ./dat/vt_tmp_artificial_05.gpkg 2> /dev/null
+#rm ./dat/SIOSEAR_20_16.gpkg 2> /dev/null
+
+# 10. Behin behineko GPKGa eta estiloa kargatu
+echo "$(date +"%Y-%m-%d %H:%M:%S") - 10. Behin behineko GPKGa eta estiloa kargatu" >> "$log"
 rm ./dat/vt_landcover_gipu.gpkg 2> /dev/null
-/usr/local/bin/ogr2ogr -f GPKG ./dat/vt_landcover_gipu.gpkg ./dat/SIOSEAR_20_15.gpkg -nln vt_landcover_gipu 2>> "$log" >> "$log" # 2s
+/usr/local/bin/ogr2ogr -f GPKG ./dat/vt_landcover_gipu.gpkg ./dat/SIOSEAR_20_17.gpkg -nln vt_landcover_gipu 2>> "$log" >> "$log" # 2s
+#rm ./dat/SIOSEAR_20_17.gpkg 2> /dev/null
 python3 vt_landcover_styles.py ./dat/vt_landcover_gipu.gpkg vt_landcover_gipu geom vt_landcover_gipu /home9/SHP/vt_landcover/styles/vt_landcover_gipu.qml $log # 1s
-rm ./dat/vt_landcover_gipu_base.gpkg 2> /dev/null
-/usr/local/bin/ogr2ogr -f GPKG ./dat/vt_landcover_gipu_base.gpkg /home9/SHP/vt_landcover/gipuzkoa.gpkg -nln vt_landcover_gipu_base 2>> "$log" >> "$log" # 1s
-#python3 vt_landcover_styles.py ./dat/vt_landcover_gipu_base.gpkg vt_landcover_gipu_base geom vt_landcover_gipu_base /home9/SHP/vt_landcover/styles/vt_landcover_gipu_base.qml $log # 1s
-/usr/local/bin/ogr2ogr -f GPKG -update -nln vt_landcover_gipu_base ./dat/vt_landcover_gipu.gpkg ./dat/vt_landcover_gipu_base.gpkg vt_landcover_gipu_base 2>> "$log" >> "$log" # 1s
-rm ./dat/vt_landcover_gipu_base.gpkg 2> /dev/null
-python3 vt_landcover_styles.py ./dat/vt_landcover_gipu.gpkg vt_landcover_gipu_base geom vt_landcover_gipu_base /home9/SHP/vt_landcover/styles/vt_landcover_gipu_base.qml $log # 1s
+#rm ./dat/vt_landcovergipu_base.gpkg 2> /dev/null
+#/usr/local/bin/ogr2ogr -f GPKG ./dat/vt_landcover_gipu_base.gpkg /home9/SHP/vt_landcover/gipuzkoa.gpkg -nln vt_landcover_gipu_base 2>> "$log" >> "$log" # 1s
+#/usr/local/bin/ogr2ogr -f GPKG -update -nln vt_landcover_gipu_base ./dat/vt_landcover_gipu.gpkg ./dat/vt_landcover_gipu_base.gpkg vt_landcover_gipu_base 2>> "$log" >> "$log" # 1s
+#rm ./dat/vt_landcover_gipu_base.gpkg 2> /dev/null
+#python3 vt_landcover_styles.py ./dat/vt_landcover_gipu.gpkg vt_landcover_gipu_base geom vt_landcover_gipu_base /home9/SHP/vt_landcover/styles/vt_landcover_gipu_base.qml $log # 1s
 /usr/local/bin/ogrinfo ./dat/vt_landcover_gipu.gpkg -sql "VACUUM" 2>> "$log" >> "$log" # 3s
-python3 vt_landcover_styles.py /home9/SHP/vt_landcover/vt_landcover_b5mveg.gpkg vt_landcover_b5mveg geom vt_landcover_b5mveg_style /home9/SHP/vt_landcover/styles/vt_landcover_b5mveg.qml
-
 
 
 # Bukaera ??m??s
