@@ -24,11 +24,13 @@ Prozesuaren laburpena
 
 Erabilera
 ---------
-    python3 vt_reclass_water.py sarrera.gpkg irteera.gpkg log_fitxategia.log
+    python3 vt_reclass_water.py sarrera.gpkg irteera.gpkg [log_fitxategia.log]
 
     sarrera.gpkg      : sarrerako GPKG fitxategia (existitu behar du)
     irteera.gpkg      : irteerako GPKG fitxategia (existitzen bada, ezabatu egiten da)
-    log_fitxategia.log: log fitxategia (append moduan irekitzen da)
+    log_fitxategia.log: HAUTAZKOA. Log fitxategia (append moduan irekitzen da).
+                        Ematen ez bada, mezuak terminalera soilik joaten dira
+                        (terminal interaktiboa bada; ikus log_utils.py).
 
 Scriptaren izena sys.argv[0]-tik hartzen da; beraz, fitxategiaren izena
 aldatuz gero ez da kodea aldatu behar.
@@ -79,7 +81,7 @@ BILAKETA_MUGA = 50000.0
 
 def erabilera():
     """Erabileraren mezua itzuli (scriptaren izena argv-tik)."""
-    return "Erabilera: {} sarrera.gpkg irteera.gpkg log_fitxategia.log".format(
+    return "Erabilera: {} sarrera.gpkg irteera.gpkg [log_fitxategia.log]".format(
         SCRIPT_IZENA
     )
 
@@ -255,16 +257,23 @@ def main(log, sarrera, irteera):
 # ----------------------------------------------------------------------
 
 if __name__ == "__main__":
-    # Argumentuak egiaztatu Log sortu aurretik: log fitxategia hirugarren
-    # argumentuan baitator. Errorea stderr-era doa, oraindik ez dagoelako log-ik.
-    if len(sys.argv) != 4:
+    # Argumentuak egiaztatu Log sortu aurretik: log fitxategia (hautazkoa)
+    # hirugarren argumentuan baitator. Errorea stderr-era doa, oraindik ez
+    # dagoelako log-ik. Onartzen dira 2 edo 3 parametro (scriptaren izena
+    # kenduta), hau da, sys.argv-n 3 edo 4 elementu.
+    if len(sys.argv) not in (3, 4):
         print("Parametro kopuru okerra. " + erabilera(), file=sys.stderr)
         sys.exit(1)
 
-    SARRERA, IRTEERA, LOG_BIDEA = sys.argv[1], sys.argv[2], sys.argv[3]
+    SARRERA, IRTEERA = sys.argv[1], sys.argv[2]
+
+    # Log fitxategia hautazkoa da: ematen ez bada, None pasatzen zaio Log-i
+    # eta mezuak terminalera soilik joango dira.
+    LOG_BIDEA = sys.argv[3] if len(sys.argv) == 4 else None
 
     # Log fitxategiaren direktorioa sortu, ez badago.
-    os.makedirs(os.path.dirname(os.path.abspath(LOG_BIDEA)), exist_ok=True)
+    if LOG_BIDEA:
+        os.makedirs(os.path.dirname(os.path.abspath(LOG_BIDEA)), exist_ok=True)
 
     # 'with' erabiliz, Hasiera/Bukaera mezuak automatikoki idazten dira, baita
     # salbuespenik gertatuz gero ere. sys.exit 'with'-etik kanpo dago,
