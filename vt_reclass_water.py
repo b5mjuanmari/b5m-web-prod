@@ -13,8 +13,8 @@ Prozesuaren laburpena
 2. Sarrerako GPKG fitxategia irakurri.
 3. Poligonoak bi taldetan banatu:
      - XEDEAK     : type = 'water other'  (birsailkatu beharrekoak)
-     - KANDIDATUAK: type ez dena 'water' ez 'water other'
-                    (hartu daitezkeen balioen jabeak)
+     - KANDIDATUAK: type ez dena 'water', 'intertidal water' ez
+                    'water other' (hartu daitezkeen balioen jabeak)
 4. Xede bakoitzerako, gertuen dagoen kandidatua bilatu (distantzia
    geometrikoa, ez bounding box-arena) eta bere 'type' balioa kopiatu.
    Bilaketa indize espazialarekin azkartzen da (ikus 'gertuena').
@@ -66,7 +66,7 @@ TARGET = "water other"
 
 # Kandidatu gisa onartzen ez diren 'type' balioak. 'water other' ere
 # kanpoan dago, xede batek beste xede baten balioa har ez dezan.
-EXCLUDE = ("water", "water other")
+EXCLUDE = ("water", "intertidal water", "water other")
 
 # Bilaketa-erradioaren hasierako balioa eta muga (CRS-aren unitateetan).
 BILAKETA_HASIERA = 50.0
@@ -152,7 +152,8 @@ def birsailkatu(gdf, log):
     mask = gdf["type"] == TARGET
     n_target = int(mask.sum())
 
-    # Kandidatuak: 'water' eta 'water other' ez diren poligonoak.
+    # Kandidatuak: 'water', 'intertidal water' eta 'water other' ez diren
+    # poligonoak (ikus EXCLUDE).
     # Indizea berrezarri behar da, indize espazialaren posizioak (0..n-1)
     # 'geoms' eta 'types' arrayen posizioekin bat etor daitezen.
     cands = gdf.loc[~gdf["type"].isin(EXCLUDE), ["type", "geometry"]]
