@@ -268,7 +268,7 @@ rm ./dat/vt_tmp_artificial_02.gpkg 2> /dev/null
 #rm ./dat/vt_tmp_pasabideak.gpkg 2> /dev/null
 #rm ./dat/vt_tmp_errepideak.gpkg 2> /dev/null
 #rm ./dat/vt_tmp_eraikinak.gpkg 2> /dev/null
-python3 vt_trokelatu2.py ./dat/SIOSEAR_20_13.gpkg ./dat/vt_tmp_artificial_03.gpkg ./dat/SIOSEAR_20_14.gpkg $log # 16m08s
+python3 vt_trokelatu2.py ./dat/SIOSEAR_20_13.gpkg ./dat/vt_tmp_artificial_03.gpkg ./dat/SIOSEAR_20_14.gpkg $log # 10m23s
 #rm ./dat/vt_tmp_artificial_03.gpkg 2> /dev/null
 #rm ./dat/SIOSEAR_20_13.gpkg 2> /dev/null
 /usr/local/bin/ogrinfo ./dat/SIOSEAR_20_14.gpkg -dialect SQLITE -sql "UPDATE SIOSEAR_20_14 SET type = CASE WHEN type IN ('inner water','pond','pool','reservoir','sea','swimming pool') THEN 'water' ELSE type END" 2>> "$log" >> "$log" # 4s
@@ -290,11 +290,17 @@ python3 vt_fusionatu_bi.py ./dat/SIOSEAR_20_16.gpkg ./dat/vt_tmp_artificial_05.g
 #rm ./dat/vt_tmp_artificial_05.gpkg 2> /dev/null
 #rm ./dat/SIOSEAR_20_16.gpkg 2> /dev/null
 
-# 10. Behin behineko GPKGa eta estiloa kargatu
-echo "$(date +"%Y-%m-%d %H:%M:%S") - 10. Behin behineko GPKGa eta estiloa kargatu" >> "$log"
-rm ./dat/vt_landcover_gipu.gpkg 2> /dev/null
-/usr/local/bin/ogr2ogr -f GPKG ./dat/vt_landcover_gipu.gpkg ./dat/SIOSEAR_20_17.gpkg -nln vt_landcover_gipu 2>> "$log" >> "$log" # 2s
+# 10. Azalera handiak moztu (oraingoz type = 'artificial')
+echo "$(date +"%Y-%m-%d %H:%M:%S") - 10. Azalera handiak moztu" >> "$log"
+python3 vt_split.py ./dat/SIOSEAR_20_17.gpkg ./dat/SIOSEAR_20_18.gpkg "type = 'artificial'" $log # 6m19s
 #rm ./dat/SIOSEAR_20_17.gpkg 2> /dev/null
+
+# 11. Behin behineko GPKGa eta estiloa kargatu
+echo "$(date +"%Y-%m-%d %H:%M:%S") - 11. Behin behineko GPKGa eta estiloa kargatu" >> "$log"
+rm ./dat/vt_landcover_gipu.gpkg 2> /dev/null
+/usr/local/bin/ogr2ogr -f GPKG ./dat/vt_landcover_gipu.gpkg ./dat/SIOSEAR_20_18.gpkg -nln vt_landcover_gipu 2>> "$log" >> "$log" # 2s
+#/usr/local/bin/ogr2ogr -f GPKG ./dat/vt_landcover_gipu2.gpkg ./dat/vt_landcover_gipu.gpkg -nln vt_landcover_gipu2
+#rm ./dat/SIOSEAR_20_18.gpkg 2> /dev/null
 python3 vt_landcover_styles.py ./dat/vt_landcover_gipu.gpkg vt_landcover_gipu geom vt_landcover_gipu /home9/SHP/vt_landcover/styles/vt_landcover_gipu.qml $log # 1s
 #rm ./dat/vt_landcovergipu_base.gpkg 2> /dev/null
 #/usr/local/bin/ogr2ogr -f GPKG ./dat/vt_landcover_gipu_base.gpkg /home9/SHP/vt_landcover/gipuzkoa.gpkg -nln vt_landcover_gipu_base 2>> "$log" >> "$log" # 1s
