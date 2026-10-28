@@ -270,54 +270,36 @@ rm ./dat/vt_tmp_artificial_02.gpkg 2> /dev/null
 #rm ./dat/vt_tmp_eraikinak.gpkg 2> /dev/null
 python3 vt_disolbatu3.py ./dat/vt_tmp_artificial_03.gpkg ./dat/vt_tmp_artificial_04.gpkg $log # 2m49s
 rm ./dat/vt_tmp_artificial_03.gpkg 2> /dev/null
-python3 vt_disolbatu3.py ./dat/SIOSEAR_20_13.gpkg ./dat/SIOSEAR_20_14.gpkg $log # 4m34s
+python3 vt_disolbatu4.py ./dat/SIOSEAR_20_13.gpkg ./dat/SIOSEAR_20_14.gpkg type $log # 4m06s
 #rm ./dat/SIOSEAR_20_13.gpkg 2> /dev/null
-python3 vt_trokelatu3.py ./dat/SIOSEAR_20_14.gpkg ./dat/vt_tmp_artificial_04.gpkg ./dat/SIOSEAR_20_15.gpkg $log # 2m53s
+python3 vt_trokelatu3.py ./dat/SIOSEAR_20_14.gpkg ./dat/vt_tmp_artificial_04.gpkg ./dat/SIOSEAR_20_15.gpkg $log # 2m23s
 #rm ./dat/vt_tmp_artificial_04.gpkg 2> /dev/null
 #rm ./dat/SIOSEAR_20_14.gpkg 2> /dev/null
 
-# 8. Itsasoa modu eraginkor batean disolbatu
-echo "$(date +"%Y-%m-%d %H:%M:%S") - 8. Itsasoa modu eraginkor batean disolbatu" >> "$log"
-#?/usr/local/bin/ogrinfo ./dat/SIOSEAR_20_15.gpkg -dialect SQLITE -sql "UPDATE SIOSEAR_20_15 SET type = CASE WHEN type IN ('inner water','pond','pool','reservoir','sea','swimming pool') THEN 'water' ELSE type END" 2>> "$log" >> "$log" # 4s
-rm ./dat/vt_tmp_water_01.gpkg 2> /dev/null
-/usr/local/bin/ogr2ogr -f GPKG ./dat/vt_tmp_water_01.gpkg ./dat/SIOSEAR_20_15.gpkg -sql "SELECT * FROM SIOSEAR_20_15 WHERE type IN ('inner water','pond','pool','reservoir','sea','swimming pool')" -nln "vt_tmp_water_01" 2>> "$log" >> "$log" # 1s
-/usr/local/bin/ogrinfo ./dat/vt_tmp_water_01.gpkg -dialect SQLITE -sql "UPDATE vt_tmp_water_01 SET type = CASE WHEN type IN ('inner water','pond','pool','reservoir','sea','swimming pool') THEN 'water' ELSE type END" # 1s
-python3 vt_disolbatu3.py ./dat/vt_tmp_water_01.gpkg ./dat/vt_tmp_water_02.gpkg $log # 11s
-rm ./dat/vt_tmp_water_01.gpkg 2> /dev/null
-rm ./dat/vt_tmp_water_no_01.gpkg 2> /dev/null
-/usr/local/bin/ogr2ogr -f GPKG ./dat/vt_tmp_water_no_01.gpkg ./dat/SIOSEAR_20_15.gpkg -sql "SELECT * FROM SIOSEAR_20_15 WHERE type NOT IN ('inner water','pond','pool','reservoir','sea','swimming pool')" -nln "vt_tmp_water_no_01" 2>> "$log" >> "$log" # 1s
-python3 vt_multi2poly.py ./dat/vt_tmp_water_no_01.gpkg ./dat/vt_tmp_water_no_02.gpkg $log # 36s
-rm ./dat/vt_tmp_water_no_01.gpkg 2> /dev/null
-python3 vt_fusionatu_bi.py ./dat/vt_tmp_water_no_02.gpkg ./dat/vt_tmp_water_02.gpkg ./dat/SIOSEAR_20_16.gpkg $log # 37s
+# 8. Ura disolbatu
+echo "$(date +"%Y-%m-%d %H:%M:%S") - 8. Ura disolbatu" >> "$log"
+/usr/local/bin/ogrinfo ./dat/SIOSEAR_20_15.gpkg -dialect SQLITE -sql "UPDATE SIOSEAR_20_15 SET type = CASE WHEN type IN ('inner water','pond','pool','reservoir','sea','swimming pool') THEN 'water' ELSE type END" # 2s
+python3 vt_disolbatu4.py ./dat/SIOSEAR_20_15.gpkg ./dat/SIOSEAR_20_16.gpkg type $log # 3m29s
 #rm ./dat/SIOSEAR_20_15.gpkg 2> /dev/null
-rm ./dat/vt_tmp_water_02.gpkg 2> /dev/null
-rm ./dat/vt_tmp_water_no_02.gpkg 2> /dev/null
-######python3 vt_reclass_water.py ./dat/SIOSEAR_20_14.gpkg ./dat/SIOSEAR_20_15.gpkg $log # 1m56s
-######rm ./dat/SIOSEAR_20_14.gpkg 2> /dev/null
-
-# 8. Emaitza txukundu
-##echo "$(date +"%Y-%m-%d %H:%M:%S") - 8. Emaitza txukundu" >> "$log"
-##python3 vt_disolbatu3.py ./dat/SIOSEAR_20_15.gpkg ./dat/SIOSEAR_20_16.gpkg $log # 5m16s
-###rm ./dat/SIOSEAR_20_15.gpkg 2> /dev/null
 
 # 9. Artificial
 echo "$(date +"%Y-%m-%d %H:%M:%S") - 9. Artificial" >> "$log"
-python3 vt_trokelatu3.py /home9/SHP/vt_landcover/gipuzkoa.gpkg ./dat/SIOSEAR_20_16.gpkg ./dat/vt_tmp_artificial_05.gpkg $log # 5m29s
-python3 vt_multi2poly.py ./dat/vt_tmp_artificial_05.gpkg ./dat/vt_tmp_artificial_06.gpkg $log # 23s
+python3 vt_trokelatu3.py /home9/SHP/vt_landcover/gipuzkoa.gpkg ./dat/SIOSEAR_20_16.gpkg ./dat/vt_tmp_artificial_05.gpkg $log # 3m33s
+python3 vt_multi2poly.py ./dat/vt_tmp_artificial_05.gpkg ./dat/vt_tmp_artificial_06.gpkg $log # 17s
 #rm ./dat/vt_tmp_artificial_05.gpkg 2> /dev/null
 /usr/local/bin/ogrinfo ./dat/vt_tmp_artificial_06.gpkg -dialect SQLITE -sql "UPDATE vt_tmp_artificial_06 SET type = 'artificial'" 2>> "$log" >> "$log" # 1s
-python3 vt_fusionatu_bi.py ./dat/SIOSEAR_20_16.gpkg ./dat/vt_tmp_artificial_06.gpkg ./dat/SIOSEAR_20_17.gpkg $log # 59s
+python3 vt_fusionatu_bi.py ./dat/SIOSEAR_20_16.gpkg ./dat/vt_tmp_artificial_06.gpkg ./dat/SIOSEAR_20_17.gpkg $log # 43s
 #rm ./dat/vt_tmp_artificial_06.gpkg 2> /dev/null
 #rm ./dat/SIOSEAR_20_16.gpkg 2> /dev/null
 
 # 10. 'water other' (SIOSEAR) birsailkatu
 echo "$(date +"%Y-%m-%d %H:%M:%S") - 10. 'water other' (SIOSEAR) birsailkatu" >> "$log"
-####python3 vt_disolbatu3.py ./dat/SIOSEAR_20_16.gpkg ./dat/SIOSEAR_20_17.gpkg $log #
-#####rm ./dat/SIOSEAR_20_16.gpkg 2> /dev/null
-python3 vt_reclass_water.py ./dat/SIOSEAR_20_17.gpkg ./dat/SIOSEAR_20_18.gpkg $log # 12m31s
+python3 vt_multi2poly.py ./dat/SIOSEAR_20_17.gpkg ./dat/SIOSEAR_20_18.gpkg $log # 53s
 #rm ./dat/SIOSEAR_20_17.gpkg 2> /dev/null
-# Disolbatu banan bana!!!!!!!!
-python3 vt_disolbatu3.py ./dat/SIOSEAR_20_18.gpkg ./dat/SIOSEAR_20_19.gpkg $log #
+python3 vt_reclass_water.py ./dat/SIOSEAR_20_18.gpkg ./dat/SIOSEAR_20_19.gpkg $log # 12m26s
+#rm ./dat/SIOSEAR_20_18.gpkg 2> /dev/null
+#python3 vt_disolbatu3.py ./dat/SIOSEAR_20_18.gpkg ./dat/SIOSEAR_20_19.gpkg $log #
+python3 vt_disolbatu4.py ./dat/SIOSEAR_20_19.gpkg ./dat/SIOSEAR_20_20.gpkg type $log #
 #rm ./dat/SIOSEAR_20_18.gpkg 2> /dev/null
 
 # 10. Azalera handiak moztu (oraingoz type = 'artificial')
