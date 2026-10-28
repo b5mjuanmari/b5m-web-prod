@@ -14,10 +14,6 @@ rm "$log" 2> /dev/null
 has="$(date +"%Y-%m-%d %H:%M:%S")"
 echo "${has} - Hasiera" >> "$log"
 
-a=0
-if [ $a -eq 0 ]
-then
-
 # SIOSEAR
 # 1. SIOSEAR trokelatu eta fusionatu
 echo "$(date +"%Y-%m-%d %H:%M:%S") - 1. SIOSEAR trokelatu eta fusionatu" >> "$log"
@@ -43,13 +39,13 @@ python3 vt_fusionatu_bi.py ./dat/SIOSEAR_01_02.gpkg ./dat/SIOSEAR_48_02.gpkg ./d
 python3 vt_fusionatu_bi.py ./dat/SIOSEAR_20_03.gpkg ./dat/SIOSEAR_31_02.gpkg ./dat/SIOSEAR_20_04.gpkg $log # 1s
 python3 vt_fusionatu_bi.py ./dat/SIOSEAR_20_04.gpkg ./dat/SIOSEAR_20_02.gpkg ./dat/SIOSEAR_20_05.gpkg $log # 5m35s
 #rm ./dat/SIOSEAR_01_01.gpkg 2> /dev/null
-#rm ./dat/SIOSEAR_01_02.gpkg 2> /dev/null
+rm ./dat/SIOSEAR_01_02.gpkg 2> /dev/null
 #rm ./dat/SIOSEAR_31_01.gpkg 2> /dev/null
-#rm ./dat/SIOSEAR_31_02.gpkg 2> /dev/null
+rm ./dat/SIOSEAR_31_02.gpkg 2> /dev/null
 #rm ./dat/SIOSEAR_48_01.gpkg 2> /dev/null
-#rm ./dat/SIOSEAR_48_02.gpkg 2> /dev/null
+rm ./dat/SIOSEAR_48_02.gpkg 2> /dev/null
 #rm ./dat/SIOSEAR_20_01.gpkg 2> /dev/null
-#rm ./dat/SIOSEAR_20_02.gpkg 2> /dev/null
+rm ./dat/SIOSEAR_20_02.gpkg 2> /dev/null
 rm ./dat/SIOSEAR_20_03.gpkg 2> /dev/null
 rm ./dat/SIOSEAR_20_04.gpkg 2> /dev/null
 
@@ -78,8 +74,6 @@ rm ./dat/vt_landcover_water_gip_trk.gpkg 2> /dev/null
 rm ./dat/SIOSEAR_20_07.gpkg 2> /dev/null
 rm ./dat/SIOSEAR_20_08.gpkg 2> /dev/null
 
-fi
-
 # 4. Padurak (marsh) txertatu
 echo "$(date +"%Y-%m-%d %H:%M:%S") - 4. Padurak (marsh) txertatu" >> "$log"
 rm ./dat/SIOSEAR_20_07_marsh.gpkg
@@ -102,7 +96,7 @@ python3 vt_trokelatu2.py ./dat/vt_pier_01.gpkg /home9/SHP/vt_landcover/gipuzkoa.
 rm ./dat/vt_pier_01.gpkg 2> /dev/null
 rm ./dat/vt_landcover_intertidal_gip.gpkg 2> /dev/null
 /usr/local/bin/ogr2ogr -f GPKG ./dat/vt_landcover_intertidal_gip.gpkg ./dat/vt_landcover_beach_water_gip.gpkg -sql "SELECT * FROM vt_landcover_beach_water_gip WHERE type = 'intertidal'" -nln "vt_landcover_intertidal_gip" 2>> "$log" >> "$log" # 1s
-#rm ./dat/vt_landcover_beach_water_gip.gpkg 2> /dev/null
+rm ./dat/vt_landcover_beach_water_gip.gpkg 2> /dev/null
 python3 vt_trokelatu2.py ./dat/vt_pier_02.gpkg ./dat/vt_landcover_intertidal_gip.gpkg ./dat/vt_pier_03.gpkg $log # 1s
 rm ./dat/vt_pier_02.gpkg 2> /dev/null
 rm ./dat/vt_landcover_intertidal_gip.gpkg 2> /dev/null
@@ -227,7 +221,7 @@ for coord in "${coords[@]}"; do
         2>> "$log" >> "$log"
 done
 python3 vt_fusionatu_bi.py ./dat/SIOSEAR_20_11.gpkg ./dat/vt_pier_07.gpkg ./dat/SIOSEAR_20_12.gpkg $log # 1m26s
-#rm ./dat/vt_pier_07.gpkg 2> /dev/null
+rm ./dat/vt_pier_07.gpkg 2> /dev/null
 rm ./dat/SIOSEAR_20_11.gpkg 2> /dev/null
 
 # 6. Ur hutsuneak bete (ken Bidasoko pantalana)
@@ -235,16 +229,16 @@ echo "$(date +"%Y-%m-%d %H:%M:%S") - 6. Ur hutsuneak bete" >> "$log"
 rm ./dat/vt_water_holes_01.gpkg 2> /dev/null
 /usr/local/bin/ogr2ogr ./dat/vt_water_holes_01.gpkg ./dat/SIOSEAR_20_06.gpkg -sql "SELECT type, geom FROM SIOSEAR_20_06 WHERE type = 'water'" -nln "vt_water_holes_01" 2>> "$log" >> "$log" # 1s
 /usr/local/bin/ogrinfo ./dat/vt_water_holes_01.gpkg -dialect SQLITE -sql "UPDATE vt_water_holes_01 SET type = 'water other'" 2>> "$log" >> "$log"
-#rm ./dat/SIOSEAR_20_06.gpkg 2> /dev/null
+rm ./dat/SIOSEAR_20_06.gpkg 2> /dev/null
 python3 vt_trokelatu2.py ./dat/vt_water_holes_01.gpkg ./dat/SIOSEAR_20_12.gpkg ./dat/vt_water_holes_02.gpkg $log # 55s
-#rm ./dat/vt_water_holes_01.gpkg 2> /dev/null
+rm ./dat/vt_water_holes_01.gpkg 2> /dev/null
 rm ./dat/vt_tmp_bida_01.gpkg
 echo '{"type":"Polygon","coordinates":[[[598420,4800000],[598480,4800000],[598480,4800050],[598420,4800050],[598420,4800000]]]}' | /usr/local/bin/ogr2ogr -f GPKG ./dat/vt_tmp_bida_01.gpkg /vsistdin/ -a_srs EPSG:25830 -nln vt_tmp_bida_01 2>> "$log" >> "$log" # 1s
 python3 vt_trokelatu2.py ./dat/vt_water_holes_02.gpkg ./dat/vt_tmp_bida_01.gpkg ./dat/vt_water_holes_03.gpkg $log # 5s
-#rm ./dat/vt_water_holes_02.gpkg 2> /dev/null
-#rm ./dat/vt_tmp_bida_01.gpkg
+rm ./dat/vt_water_holes_02.gpkg 2> /dev/null
+rm ./dat/vt_tmp_bida_01.gpkg
 python3 vt_fusionatu_bi.py ./dat/SIOSEAR_20_12.gpkg ./dat/vt_water_holes_03.gpkg ./dat/SIOSEAR_20_13.gpkg $log # 1m30s
-#rm ./dat/vt_water_holes_03.gpkg 2> /dev/null
+rm ./dat/vt_water_holes_03.gpkg 2> /dev/null
 rm ./dat/SIOSEAR_20_12.gpkg 2> /dev/null
 
 # 7. Trokelatu zubiak, pasabideak, errepideak eta eraikinak...
@@ -264,62 +258,62 @@ python3 vt_fusionatu_bi.py ./dat/vt_tmp_artificial_01.gpkg ./dat/vt_tmp_errepide
 rm ./dat/vt_tmp_artificial_01.gpkg 2> /dev/null
 python3 vt_fusionatu_bi.py ./dat/vt_tmp_artificial_02.gpkg ./dat/vt_tmp_eraikinak.gpkg ./dat/vt_tmp_artificial_03.gpkg $log # 26s
 rm ./dat/vt_tmp_artificial_02.gpkg 2> /dev/null
-#rm ./dat/vt_tmp_zubiak.gpkg 2> /dev/null
-#rm ./dat/vt_tmp_pasabideak.gpkg 2> /dev/null
-#rm ./dat/vt_tmp_errepideak.gpkg 2> /dev/null
-#rm ./dat/vt_tmp_eraikinak.gpkg 2> /dev/null
+rm ./dat/vt_tmp_zubiak.gpkg 2> /dev/null
+rm ./dat/vt_tmp_pasabideak.gpkg 2> /dev/null
+rm ./dat/vt_tmp_errepideak.gpkg 2> /dev/null
+rm ./dat/vt_tmp_eraikinak.gpkg 2> /dev/null
 python3 vt_disolbatu3.py ./dat/vt_tmp_artificial_03.gpkg ./dat/vt_tmp_artificial_04.gpkg $log # 2m49s
 rm ./dat/vt_tmp_artificial_03.gpkg 2> /dev/null
 python3 vt_disolbatu4.py ./dat/SIOSEAR_20_13.gpkg ./dat/SIOSEAR_20_14.gpkg type $log # 4m06s
-#rm ./dat/SIOSEAR_20_13.gpkg 2> /dev/null
+rm ./dat/SIOSEAR_20_13.gpkg 2> /dev/null
 python3 vt_trokelatu3.py ./dat/SIOSEAR_20_14.gpkg ./dat/vt_tmp_artificial_04.gpkg ./dat/SIOSEAR_20_15.gpkg $log # 2m23s
-#rm ./dat/vt_tmp_artificial_04.gpkg 2> /dev/null
-#rm ./dat/SIOSEAR_20_14.gpkg 2> /dev/null
+rm ./dat/vt_tmp_artificial_04.gpkg 2> /dev/null
+rm ./dat/SIOSEAR_20_14.gpkg 2> /dev/null
 
 # 8. Ura disolbatu
 echo "$(date +"%Y-%m-%d %H:%M:%S") - 8. Ura disolbatu" >> "$log"
 /usr/local/bin/ogrinfo ./dat/SIOSEAR_20_15.gpkg -dialect SQLITE -sql "UPDATE SIOSEAR_20_15 SET type = CASE WHEN type IN ('inner water','pond','pool','reservoir','sea','swimming pool') THEN 'water' ELSE type END" # 2s
 python3 vt_disolbatu4.py ./dat/SIOSEAR_20_15.gpkg ./dat/SIOSEAR_20_16.gpkg type $log # 3m29s
-#rm ./dat/SIOSEAR_20_15.gpkg 2> /dev/null
+rm ./dat/SIOSEAR_20_15.gpkg 2> /dev/null
 
 # 9. Artificial
 echo "$(date +"%Y-%m-%d %H:%M:%S") - 9. Artificial" >> "$log"
 python3 vt_trokelatu3.py /home9/SHP/vt_landcover/gipuzkoa.gpkg ./dat/SIOSEAR_20_16.gpkg ./dat/vt_tmp_artificial_05.gpkg $log # 3m33s
 python3 vt_multi2poly.py ./dat/vt_tmp_artificial_05.gpkg ./dat/vt_tmp_artificial_06.gpkg $log # 17s
-#rm ./dat/vt_tmp_artificial_05.gpkg 2> /dev/null
+rm ./dat/vt_tmp_artificial_05.gpkg 2> /dev/null
 /usr/local/bin/ogrinfo ./dat/vt_tmp_artificial_06.gpkg -dialect SQLITE -sql "UPDATE vt_tmp_artificial_06 SET type = 'artificial'" 2>> "$log" >> "$log" # 1s
 python3 vt_fusionatu_bi.py ./dat/SIOSEAR_20_16.gpkg ./dat/vt_tmp_artificial_06.gpkg ./dat/SIOSEAR_20_17.gpkg $log # 43s
-#rm ./dat/vt_tmp_artificial_06.gpkg 2> /dev/null
-#rm ./dat/SIOSEAR_20_16.gpkg 2> /dev/null
+rm ./dat/vt_tmp_artificial_06.gpkg 2> /dev/null
+rm ./dat/SIOSEAR_20_16.gpkg 2> /dev/null
 
 # 10. 'water other' (SIOSEAR) birsailkatu
 echo "$(date +"%Y-%m-%d %H:%M:%S") - 10. 'water other' (SIOSEAR) birsailkatu" >> "$log"
 python3 vt_multi2poly.py ./dat/SIOSEAR_20_17.gpkg ./dat/SIOSEAR_20_18.gpkg $log # 53s
-#rm ./dat/SIOSEAR_20_17.gpkg 2> /dev/null
+rm ./dat/SIOSEAR_20_17.gpkg 2> /dev/null
 python3 vt_reclass_water.py ./dat/SIOSEAR_20_18.gpkg ./dat/SIOSEAR_20_19.gpkg $log # 12m26s
-#rm ./dat/SIOSEAR_20_18.gpkg 2> /dev/null
+rm ./dat/SIOSEAR_20_18.gpkg 2> /dev/null
 python3 vt_multi2poly.py ./dat/SIOSEAR_20_19.gpkg ./dat/SIOSEAR_20_20.gpkg $log # 53s
-#rm ./dat/SIOSEAR_20_19.gpkg 2> /dev/null
+rm ./dat/SIOSEAR_20_19.gpkg 2> /dev/null
 python3 vt_disolbatu4.py ./dat/SIOSEAR_20_20.gpkg ./dat/SIOSEAR_20_21.gpkg type $log # 14m04s
-#rm ./dat/SIOSEAR_20_20.gpkg 2> /dev/null
+rm ./dat/SIOSEAR_20_20.gpkg 2> /dev/null
 python3 vt_multi2poly.py ./dat/SIOSEAR_20_21.gpkg ./dat/SIOSEAR_20_22.gpkg $log # 49s
-#rm ./dat/SIOSEAR_20_21.gpkg 2> /dev/null
+rm ./dat/SIOSEAR_20_21.gpkg 2> /dev/null
 
 # 10. Azalera handiak moztu (oraingoz type = 'artificial')
 echo "$(date +"%Y-%m-%d %H:%M:%S") - 10. Azalera handiak moztu" >> "$log"
 #python3 vt_split.py ./dat/SIOSEAR_20_22.gpkg ./dat/SIOSEAR_20_23.gpkg "type = 'artificial'" $log # ?
-python3 vt_split.py ./dat/SIOSEAR_20_22.gpkg ./dat/SIOSEAR_20_23.gpkg $log # 6m19s
-#rm ./dat/SIOSEAR_20_21.gpkg 2> /dev/null
+python3 vt_split.py ./dat/SIOSEAR_20_22.gpkg ./dat/SIOSEAR_20_23.gpkg $log # 2m35s
+rm ./dat/SIOSEAR_20_22.gpkg 2> /dev/null
 
 # 11. Behin behineko GPKGa eta estiloa kargatu
 echo "$(date +"%Y-%m-%d %H:%M:%S") - 11. Behin behineko GPKGa eta estiloa kargatu" >> "$log"
-####/usr/local/bin/ogr2ogr -f GPKG ./dat/vt_landcover_gipu3.gpkg ./dat/vt_landcover_gipu.gpkg -nln vt_landcover_gipu3
+####rm /home9/SHP/vt_landcover/vt_landcover_gipu2.gpkg 2> /dev/null
+####/usr/local/bin/ogr2ogr -f GPKG /home9/SHP/vt_landcover/vt_landcover_gipu2.gpkg /home9/SHP/vt_landcover/vt_landcover_gipu.gpkg -nln vt_landcover_gipu2 # 11s
 rm ./dat/vt_landcover_gipu.gpkg 2> /dev/null
 /usr/local/bin/ogr2ogr -f GPKG ./dat/vt_landcover_gipu.gpkg ./dat/SIOSEAR_20_23.gpkg -nln vt_landcover_gipu 2>> "$log" >> "$log" # 2s
-#rm ./dat/SIOSEAR_20_19.gpkg 2> /dev/null
+rm ./dat/SIOSEAR_20_23.gpkg 2> /dev/null
 python3 vt_landcover_styles.py ./dat/vt_landcover_gipu.gpkg vt_landcover_gipu geom vt_landcover_gipu /home9/SHP/vt_landcover/styles/vt_landcover_gipu.qml $log # 1s
 /usr/local/bin/ogrinfo ./dat/vt_landcover_gipu.gpkg -sql "VACUUM" 2>> "$log" >> "$log" # 3s
-
 
 # Bukaera ??m??s
 echo >> "$log"
