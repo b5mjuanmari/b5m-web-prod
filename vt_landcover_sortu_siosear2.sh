@@ -298,28 +298,26 @@ python3 vt_multi2poly.py ./dat/SIOSEAR_20_17.gpkg ./dat/SIOSEAR_20_18.gpkg $log 
 #rm ./dat/SIOSEAR_20_17.gpkg 2> /dev/null
 python3 vt_reclass_water.py ./dat/SIOSEAR_20_18.gpkg ./dat/SIOSEAR_20_19.gpkg $log # 12m26s
 #rm ./dat/SIOSEAR_20_18.gpkg 2> /dev/null
-#python3 vt_disolbatu3.py ./dat/SIOSEAR_20_18.gpkg ./dat/SIOSEAR_20_19.gpkg $log #
-python3 vt_disolbatu4.py ./dat/SIOSEAR_20_19.gpkg ./dat/SIOSEAR_20_20.gpkg type $log #
-#rm ./dat/SIOSEAR_20_18.gpkg 2> /dev/null
+python3 vt_multi2poly.py ./dat/SIOSEAR_20_19.gpkg ./dat/SIOSEAR_20_20.gpkg $log # 53s
+#rm ./dat/SIOSEAR_20_19.gpkg 2> /dev/null
+python3 vt_disolbatu4.py ./dat/SIOSEAR_20_20.gpkg ./dat/SIOSEAR_20_21.gpkg type $log # 14m04s
+#rm ./dat/SIOSEAR_20_20.gpkg 2> /dev/null
+python3 vt_multi2poly.py ./dat/SIOSEAR_20_21.gpkg ./dat/SIOSEAR_20_22.gpkg $log # 49s
+#rm ./dat/SIOSEAR_20_21.gpkg 2> /dev/null
 
 # 10. Azalera handiak moztu (oraingoz type = 'artificial')
 echo "$(date +"%Y-%m-%d %H:%M:%S") - 10. Azalera handiak moztu" >> "$log"
-#python3 vt_split.py ./dat/SIOSEAR_20_18.gpkg ./dat/SIOSEAR_20_19.gpkg "type = 'artificial'" $log # 6m19s
-python3 vt_split.py ./dat/SIOSEAR_20_18.gpkg ./dat/SIOSEAR_20_19.gpkg $log # 6m19s
-#rm ./dat/SIOSEAR_20_18.gpkg 2> /dev/null
+#python3 vt_split.py ./dat/SIOSEAR_20_22.gpkg ./dat/SIOSEAR_20_23.gpkg "type = 'artificial'" $log # ?
+python3 vt_split.py ./dat/SIOSEAR_20_22.gpkg ./dat/SIOSEAR_20_23.gpkg $log # 6m19s
+#rm ./dat/SIOSEAR_20_21.gpkg 2> /dev/null
 
 # 11. Behin behineko GPKGa eta estiloa kargatu
 echo "$(date +"%Y-%m-%d %H:%M:%S") - 11. Behin behineko GPKGa eta estiloa kargatu" >> "$log"
-#/usr/local/bin/ogr2ogr -f GPKG ./dat/vt_landcover_gipu3.gpkg ./dat/vt_landcover_gipu.gpkg -nln vt_landcover_gipu3
+####/usr/local/bin/ogr2ogr -f GPKG ./dat/vt_landcover_gipu3.gpkg ./dat/vt_landcover_gipu.gpkg -nln vt_landcover_gipu3
 rm ./dat/vt_landcover_gipu.gpkg 2> /dev/null
-/usr/local/bin/ogr2ogr -f GPKG ./dat/vt_landcover_gipu.gpkg ./dat/SIOSEAR_20_19.gpkg -nln vt_landcover_gipu 2>> "$log" >> "$log" # 2s
+/usr/local/bin/ogr2ogr -f GPKG ./dat/vt_landcover_gipu.gpkg ./dat/SIOSEAR_20_23.gpkg -nln vt_landcover_gipu 2>> "$log" >> "$log" # 2s
 #rm ./dat/SIOSEAR_20_19.gpkg 2> /dev/null
 python3 vt_landcover_styles.py ./dat/vt_landcover_gipu.gpkg vt_landcover_gipu geom vt_landcover_gipu /home9/SHP/vt_landcover/styles/vt_landcover_gipu.qml $log # 1s
-#rm ./dat/vt_landcovergipu_base.gpkg 2> /dev/null
-#/usr/local/bin/ogr2ogr -f GPKG ./dat/vt_landcover_gipu_base.gpkg /home9/SHP/vt_landcover/gipuzkoa.gpkg -nln vt_landcover_gipu_base 2>> "$log" >> "$log" # 1s
-#/usr/local/bin/ogr2ogr -f GPKG -update -nln vt_landcover_gipu_base ./dat/vt_landcover_gipu.gpkg ./dat/vt_landcover_gipu_base.gpkg vt_landcover_gipu_base 2>> "$log" >> "$log" # 1s
-#rm ./dat/vt_landcover_gipu_base.gpkg 2> /dev/null
-#python3 vt_landcover_styles.py ./dat/vt_landcover_gipu.gpkg vt_landcover_gipu_base geom vt_landcover_gipu_base /home9/SHP/vt_landcover/styles/vt_landcover_gipu_base.qml $log # 1s
 /usr/local/bin/ogrinfo ./dat/vt_landcover_gipu.gpkg -sql "VACUUM" 2>> "$log" >> "$log" # 3s
 
 
