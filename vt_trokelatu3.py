@@ -137,7 +137,7 @@ import geopandas as gpd
 from shapely.ops import unary_union, clip_by_rect
 from shapely.validation import make_valid
 from shapely.prepared import prep
-from shapely.geometry import MultiPolygon
+from shapely.geometry import MultiPolygon, box
 
 from log_utils import Log
 
@@ -403,6 +403,43 @@ def sortu_laukiak(bounds, tamaina):
 
 
 # ---------------------------------------------------------------------------
+# Mozketa sendoa
+# ---------------------------------------------------------------------------
+# Prozesu bakoitzean (fork) mozketa-ordezkoen kontagailua. Zerrenda bat da
+# (ez zenbaki bat) funtzioak 'global' erabili gabe alda dezan.
+_ORDEZKOAK = [0]
+
+
+def _moztu(geom, xmin, ymin, xmax, ymax):
+    """
+    Geometria bat laukizuzen batera mozten du.
+
+    Lehenik clip_by_rect erabiltzen da (azkarra). GEOS-en bertsio
+    batzuetan, clip_by_rect-ek huts egin dezake geometria konplexu
+    batzuekin ('IllegalArgumentException: Invalid number of points in
+    LinearRing found 3...'; Shapely-k orduan ValueError jaurtitzen du,
+    'No Shapely geometry can be created from null value'). Kasu horretan
+    ordezko mozketa erabiltzen da: geom.intersection(box) (motelagoa baina
+    sendoagoa), eta hori ere huts eginez gero, buffer(0)-rekin zuzendutako
+    geometriarekin. Ordezko bakoitza kontagailuan zenbatzen da.
+
+    Ordezko guztiek huts egiten badute, salbuespena jaurtitzen da (zatia
+    isilean galtzea baino hobea).
+    """
+    try:
+        return clip_by_rect(geom, xmin, ymin, xmax, ymax)
+    except Exception:
+        pass
+
+    _ORDEZKOAK[0] += 1
+    leihoa = box(xmin, ymin, xmax, ymax)
+    try:
+        return geom.intersection(leihoa)
+    except Exception:
+        return geom.buffer(0).intersection(leihoa)
+
+
+# ---------------------------------------------------------------------------
 # Lauki bakoitzaren kalkulua (prozesu-bikote bakoitzean exekutatzen da)
 # ---------------------------------------------------------------------------
 def _prozesatu_laukia(k):
@@ -410,22 +447,25 @@ def _prozesatu_laukia(k):
     k. laukiaren (A ken B) diferentzia kalkulatzen du. 'fork'-ean
     heredatutako globalak erabiltzen ditu.
 
-    Itzulera: (k, [(A-ren indizea, geometria), ...], akatsak)
+    Itzulera: (k, [(A-ren indizea, geometria), ...], akatsak, ordezkoak)
       - Zerrendak A-ren zatiak ditu laukiaren barruan, trokelatuta
         (guztiz estalitakoak ez dira agertzen).
       - 'akatsak': diferentzia kalkulatu ezinik zatia aldatu gabe utzi den
         aldiak (logean abisatzeko).
+      - 'ordezkoak': clip_by_rect huts egin eta ordezko mozketa (_moztu)
+        erabili den aldiak (logean abisatzeko).
     """
     lauki = _LAUKIAK[k]
     a_ids = _LAUKI_A[k]
     b_ids = _LAUKI_B[k]
     akatsak = 0
+    _ORDEZKOAK[0] = 0
 
     # 6.1. TROKELA: B kandidatuak laukira moztu eta batu.
     # clip_by_rect azkarra da (ez du topologia osoa kalkulatzen).
     zatiak_b = []
     for b in b_ids:
-        z = _soilik_poligonoak(clip_by_rect(_GAIN[b], *lauki))
+        z = _soilik_poligonoak(_moztu(_GAIN[b], *lauki))
         if z is not None:
             zatiak_b.append(z)
 
@@ -446,7 +486,7 @@ def _prozesatu_laukia(k):
         # 6.2. A-ren zatia laukian.
         # Laukiaren ertzean ukitzen duen geometriak lerro/puntu hutsak sor
         # ditzake; _soilik_poligonoak-ek baztertzen ditu.
-        zatia = _soilik_poligonoak(clip_by_rect(_AZPI[a], *lauki))
+        zatia = _soilik_poligonoak(_moztu(_AZPI[a], *lauki))
         if zatia is None:
             continue
 
@@ -460,7 +500,7 @@ def _prozesatu_laukia(k):
         # Trokela zatiaren inguruko leihora moztu (diferentzia txikiagoa).
         minx, miny, maxx, maxy = zatia.bounds
         marjina = max(maxx - minx, maxy - miny) * MARGINA_ERATIOA + 1e-9
-        t = _soilik_poligonoak(clip_by_rect(
+        t = _soilik_poligonoak(_moztu(
             trokela,
             minx - marjina, miny - marjina,
             maxx + marjina, maxy + marjina,
@@ -484,7 +524,7 @@ def _prozesatu_laukia(k):
         if r is not None:
             emaitza.append((a, r))
 
-    return (k, emaitza, akatsak)
+    return (k, emaitza, akatsak, _ORDEZKOAK[0])
 
 
 # ---------------------------------------------------------------------------
@@ -742,13 +782,22 @@ def trokelatu(gpkg_azpikoa, gpkg_gainekoa, gpkg_irteera, log):
     taldeak = {}
     zati_guztira = 0
     akats_guztira = 0
-    for _, zatiak, akatsak in emaitzak:
+    ordezko_guztira = 0
+    for _, zatiak, akatsak, ordezkoak in emaitzak:
         akats_guztira += akatsak
+        ordezko_guztira += ordezkoak
         for a, geom in zatiak:
             gakoa = tipoak[a] if disolbatu else a
             taldeak.setdefault(gakoa, []).append(geom)
             zati_guztira += 1
 
+    if ordezko_guztira > 0:
+        log.abisua(
+            f"clip_by_rect {ordezko_guztira} aldiz huts egin du eta "
+            f"intersection(box) erabili da ordez (GEOS-en "
+            f"'IllegalArgumentException' mezuak stderr-en ikus daitezke; "
+            f"kasu horietan kaltegabeak dira)."
+        )
     if akats_guztira > 0:
         log.abisua(
             f"{akats_guztira} zatitan diferentzia ezin izan da kalkulatu; "
