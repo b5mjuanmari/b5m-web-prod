@@ -18,6 +18,8 @@ Prozesuaren laburpena
 4. Xede bakoitzerako, gertuen dagoen kandidatua bilatu (distantzia
    geometrikoa, ez bounding box-arena) eta bere 'type' balioa kopiatu.
    Bilaketa indize espazialarekin azkartzen da (ikus 'gertuena').
+   Xede bakoitzeko lerro bat idazten da log-ean: [ordena/guztira], xedearen
+   fid eta type, eta aukeratutako gertuenaren fid, type eta distantzia.
 5. Irteerako GPKG-a ezabatu existitzen bada, eta emaitza idatzi.
    Geruzaren izena = irteerako fitxategiaren izena (.gpkg gabe).
 6. Denbora totala erregistratu.
@@ -53,6 +55,7 @@ import sys
 import time
 
 import geopandas as gpd
+import pandas as pd
 
 from log_utils import Log
 
@@ -99,10 +102,11 @@ def ezabatu_gpkg(bidea):
             os.remove(bidea + atzizkia)
 
 
-def gertuena(geom, sidx, geoms, types,
+def gertuena(geom, sidx, geoms,
              d=BILAKETA_HASIERA, dmax=BILAKETA_MUGA):
     """
-    Emandako geometriaren gertuen dagoen kandidatuaren 'type' balioa itzuli.
+    Emandako geometriaren gertuen dagoen kandidatuaren posizioa eta
+    distantzia itzuli.
 
     Algoritmoa:
       1. Geometriaren bounding box-a 'd' distantziaz zabaldu eta indize
@@ -110,17 +114,21 @@ def gertuena(geom, sidx, geoms, types,
       2. Aurkitutako kandidatuen distantzia exaktua kalkulatu.
       3. Distantzia minimoa <= d bada, kandidatu hori da benetan gertuena:
          kaxatik kanpo dagoen edozein kandidatuk d baino urrunago egon
-         behar du. Kasu horretan, bere 'type' itzuli.
+         behar du. Kasu horretan, bere posizioa eta distantzia itzuli.
       4. Bestela (ez dago kandidaturik edo minimoa d baino handiagoa da),
          d bikoiztu eta berriz saiatu, dmax gainditu arte.
+
+    Funtzioak ez du 'type' ez 'fid' balioik itzultzen: deitzaileak
+    (birsailkatu) posizioarekin bilatzen ditu bere arrayetan eta log-ean
+    erregistratzen ditu.
 
     :param geom: xede-geometria (shapely)
     :param sidx: kandidatuen indize espaziala (GeoDataFrame.sindex)
     :param geoms: kandidatuen geometriak (indizearen posizio berean)
-    :param types: kandidatuen 'type' balioak (indizearen posizio berean)
     :param d: hasierako bilaketa-erradioa
     :param dmax: bilaketa-erradio maximoa
-    :return: 'type' balioa, edo None ez bada kandidaturik aurkitu
+    :return: (kandidatuaren posizioa, distantzia) tupla, edo None ez bada
+             kandidaturik aurkitu (edo geometria hutsa bada)
     """
     # Geometria hutsa edo faltan: ezin da distantziarik kalkulatu.
     if geom is None or geom.is_empty:
@@ -136,17 +144,60 @@ def gertuena(geom, sidx, geoms, types,
             dists = [geoms[i].distance(geom) for i in pos]
             dmin = min(dists)
             if dmin <= d:
-                return types[pos[dists.index(dmin)]]
+                return pos[dists.index(dmin)], dmin
         d *= 2  # erradioa bikoiztu eta berriz saiatu
 
     return None
 
 
-def birsailkatu(gdf, log):
+def lortu_fid(sarrera, gdf, log):
+    """
+    Poligono bakoitzaren 'fid' balioa lortu (GPKG-ko feature id-a).
+
+    GeoPandas-ek (fiona motorrarekin) ez du 'fid' eremua zutabe gisa
+    kargatzen, beraz hurrenkera honetan bilatzen da:
+      1. 'fid' zutabea gdf-n badago, hura erabili.
+      2. Bestela, fiona-rekin sarrera berriro zeharkatu eta feature id-ak
+         hartu (irakurketa-ordena berdina da, beraz errenkadekin bat dator).
+      3. Hori ere huts egiten badu, gdf-ren indizea + 1 erabili (abisu batekin).
+
+    'fid' balioak gdf-ren kanpoan gordetzen dira (ez zutabe gisa), irteerako
+    GPKG-an 'fid' gako nagusiarekin gatazkarik ez izateko.
+
+    :param sarrera: sarrerako GPKG-aren bidea
+    :param gdf: sarrerako GeoDataFrame-a
+    :param log: Log objektua
+    :return: pandas Series bat, gdf-ren indize berarekin
+    """
+    for zutabea in gdf.columns:
+        if str(zutabea).lower() == "fid":
+            return gdf[zutabea]
+
+    try:
+        import fiona
+        with fiona.open(sarrera) as src:
+            idak = [int(f["id"]) for f in src]
+        if len(idak) == len(gdf):
+            return pd.Series(idak, index=gdf.index)
+        log.abisua("fiona-k {} id eman ditu, baina {} errenkada daude."
+                   .format(len(idak), len(gdf)))
+    except Exception as e:
+        log.abisua("Ezin izan dira fid-ak fiona-rekin irakurri: {}".format(e))
+
+    log.abisua("fid ezin izan da lortu; indizea + 1 erabiliko da fid gisa.")
+    return pd.Series(list(gdf.index + 1), index=gdf.index)
+
+
+def birsailkatu(gdf, fids, log):
     """
     'water other' poligonoak birsailkatu, GeoDataFrame-a bertan aldatuz.
 
+    Xede bakoitzeko lerro bat idazten da log-ean: prozesuaren ordena eta
+    guztira zenbat dauden ([i/N]), xedearen fid eta type balioak, eta
+    aurkitutako gertuenaren fid, type eta distantzia.
+
     :param gdf: sarrerako GeoDataFrame-a ('type' eremua behar du)
+    :param fids: gdf-ren errenkada bakoitzaren fid-a (Series, gdf-ren indizearekin)
     :param log: Log objektua
     :return: (birsailkatuak, kandidaturik gabe geratuak) kopuruak
     """
@@ -158,8 +209,13 @@ def birsailkatu(gdf, log):
     # poligonoak (ikus EXCLUDE).
     # Indizea berrezarri behar da, indize espazialaren posizioak (0..n-1)
     # 'geoms' eta 'types' arrayen posizioekin bat etor daitezen.
-    cands = gdf.loc[~gdf["type"].isin(EXCLUDE), ["type", "geometry"]]
+    cand_mask = ~gdf["type"].isin(EXCLUDE)
+    cands = gdf.loc[cand_mask, ["type", "geometry"]]
     cands = cands.reset_index(drop=True)
+
+    # Kandidatuen fid-ak, 'cands'-en posizio berean (indizea berrezarri
+    # aurretik hartutako ordena berdina da).
+    cand_fids = fids[cand_mask].values
 
     log.info("'{}' poligonoak: {} | kandidatuak: {}".format(
         TARGET, n_target, len(cands)))
@@ -177,17 +233,37 @@ def birsailkatu(gdf, log):
     types = cands["type"].values
     sidx = cands.sindex
 
-    # Xede bakoitzaren gertuen dagoen kandidatuaren 'type' balioa kalkulatu.
-    # Emaitza: Series bat, xedeen indizearekin (None = kandidaturik gabe).
-    new_types = gdf.loc[mask, "geometry"].apply(
-        lambda g: gertuena(g, sidx, geoms, types)
-    )
+    # Xede bakoitza banan-banan prozesatu, ordena zenbatuz. Zenbakiak
+    # zeroz betetzen dira, log-ean lerrokatuta geratzeko (adib. [007/120]).
+    zabalera = len(str(n_target))
+    xedeak = list(gdf.index[mask])
+    berriak = {}   # {gdf-ren indizea: 'type' balio berria}
 
-    # Balio bat aurkitu duten xedeak soilik eguneratu.
-    ok = new_types.notna()
-    gdf.loc[new_types[ok].index, "type"] = new_types[ok]
+    for k, idx in enumerate(xedeak, start=1):
+        aurrizkia = "[{:0{w}d}/{}]".format(k, n_target, w=zabalera)
+        fid = fids.at[idx]
+        xede_type = gdf.at[idx, "type"]
 
-    return int(ok.sum()), int((~ok).sum())
+        emaitza = gertuena(gdf.at[idx, "geometry"], sidx, geoms)
+
+        if emaitza is None:
+            # Ez da kandidaturik aurkitu (edo geometria hutsa da).
+            log.abisua("{} fid={} type='{}' -> kandidaturik gabe, ez da "
+                       "aldatzen".format(aurrizkia, fid, xede_type))
+            continue
+
+        pos, dist = emaitza
+        berria = types[pos]
+        berriak[idx] = berria
+        log.info("{} fid={} type='{}' -> gertuena: fid={} type='{}' "
+                 "distantzia={:.2f}".format(
+                     aurrizkia, fid, xede_type, cand_fids[pos], berria, dist))
+
+    # Balio berria aurkitu duten xedeak soilik eguneratu (batera, azkarrago).
+    if berriak:
+        gdf.loc[list(berriak.keys()), "type"] = list(berriak.values())
+
+    return len(berriak), n_target - len(berriak)
 
 
 def main(log, sarrera, irteera):
@@ -230,7 +306,10 @@ def main(log, sarrera, irteera):
                    "dira. Hobe da CRS proiektatu batean lan egitea.")
 
     # --- 3. Birsailkapena ------------------------------------------------
-    birsailkatuak, geratuak = birsailkatu(gdf, log)
+    # Poligono bakoitzaren fid-a, log xehetuan erabiltzeko.
+    fids = lortu_fid(sarrera, gdf, log)
+
+    birsailkatuak, geratuak = birsailkatu(gdf, fids, log)
     log.info("Birsailkatuak: {} | kandidaturik gabe geratuak: {}".format(
         birsailkatuak, geratuak))
 
