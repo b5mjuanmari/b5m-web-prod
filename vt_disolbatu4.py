@@ -30,7 +30,11 @@ QGISen portaerarekin bat datozen xehetasunak:
 
 Oharrak:
     - GPKG fitxategiak geruza bat baino gehiago baditu, lehena erabiltzen da
-      (abisu bat idazten da logean). Irteerako geruzak izen bera du.
+      (abisu bat idazten da logean).
+    - Irteerako geruzaren (taularen) izena helburuko fitxategiaren izena da,
+      ".gpkg" atzizkia kenduta (adib.: "emaitza.gpkg" -> "emaitza" geruza).
+    - Prozesuaren iraupena MM:SS formatuan idazten da logean, Bukaera
+      mezuaren aurretik (errore kasuan ere bai).
     - Python 3.6rekin bateragarria (GeoPandas, Shapely, Fiona).
 
 Irteera-kodeak:
@@ -43,6 +47,7 @@ aldatuz gero ez da kodea aldatu behar.
 
 import os
 import sys
+import time
 import argparse
 
 import fiona
@@ -164,6 +169,18 @@ def disolbatu(gdf, eremua, log):
     )
 
 
+def iraupena_formatua(segundoak):
+    """
+    Segundo kopurua MM:SS formatura bihurtzen du. Minutuak ez dira 59tik
+    gora mozten (ordu 1 = 60:00).
+
+    :param segundoak: iraupena segundotan (float edo int)
+    :return: testua, adib. "03:07"
+    """
+    minutuak, seg = divmod(int(round(segundoak)), 60)
+    return f"{minutuak:02d}:{seg:02d}"
+
+
 def helburua_ezabatu(bidea, log):
     """
     Helburuko GPKG fitxategia ezabatzen du existitzen bada, baita SQLite-ren
@@ -251,14 +268,17 @@ def prozesatu(args, log):
         return 1
     log.info(f"Disolbatzea amaituta: {len(emaitza)} objektu emaitzan.")
 
-    # 5. Helburua ezabatu (badago) eta idatzi
+    # 5. Helburua ezabatu (badago) eta idatzi.
+    # Irteerako geruzaren izena = helburuko fitxategiaren izena, ".gpkg"
+    # atzizkirik gabe.
+    irteera_geruza = os.path.splitext(os.path.basename(helburua))[0]
     try:
         helburua_ezabatu(helburua, log)
-        emaitza.to_file(helburua, driver="GPKG", layer=geruza)
+        emaitza.to_file(helburua, driver="GPKG", layer=irteera_geruza)
     except Exception as e:
         log.errorea(f"Errorea emaitza idaztean: {e}")
         return 1
-    log.info(f"Emaitza idatzi da: {helburua} (geruza: {geruza})")
+    log.info(f"Emaitza idatzi da: {helburua} (geruza: {irteera_geruza})")
 
     return 0
 
@@ -289,8 +309,15 @@ def main():
     # Log-a hasieratu: Hasiera/Bukaera mezuak automatikoki idazten dira.
     # 'with' erabiliz, salbuespenik gertatuz gero ere Bukaera mezua idazten da.
     kodea = 1
+    hasiera = time.monotonic()
     with Log(args.log, script_izena, sys.argv[1:]) as log:
-        kodea = prozesatu(args, log)
+        try:
+            kodea = prozesatu(args, log)
+        finally:
+            # Iraupena beti idazten da (baita errore/salbuespenean ere),
+            # Bukaera mezuaren aurretik.
+            iraupena = time.monotonic() - hasiera
+            log.info(f"Iraupena (MM:SS): {iraupena_formatua(iraupena)}")
     return kodea
 
 
